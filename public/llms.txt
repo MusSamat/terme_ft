@@ -1,0 +1,40 @@
+# Terme
+
+> Terme is a peer-to-peer intercity carpooling platform for Kyrgyzstan. Drivers publish trips, passengers book seats or leave requests along the route.
+
+Terme — сервис поиска попутчиков для междугородних поездок по Кыргызстану. Водители публикуют поездки, пассажиры бронируют места или оставляют заявки на нужный маршрут.
+
+Terme — Кыргызстан боюнча облустар аралык сапарларга жол шерик издөө кызматы. Айдоочулар сапарларды жарыялашат, жүргүнчүлөр орун ээлешет же керектүү багытка өтүнмө калтырышат.
+
+## Coverage
+Bishkek — Osh, Karakol, Naryn, Talas, Batken, Cholpon-Ata, Jalal-Abad, Issyk-Kul, and hundreds of villages across Kyrgyzstan.
+
+## Key pages
+- Home: https://terme.kg/
+- Find a trip: https://terme.kg/trips
+- Popular route Bishkek — Osh: https://terme.kg/route/bishkek-osh
+- Popular route Bishkek — Karakol: https://terme.kg/route/bishkek-karakol
+- About: https://terme.kg/about
+- FAQ: https://terme.kg/faq
+- Terms of use: https://terme.kg/terms
+- Privacy policy: https://terme.kg/privacy
+
+## How it works
+- Drivers publish an intercity trip with route, date, time, number of seats and price per seat (in KGS).
+- Passengers search by route and date, then book a seat or leave a request for a route that has no trips yet.
+- Driver documents and vehicles are checked by moderation; the driver's phone number is revealed only after a booking is confirmed.
+- In-app chat and post-trip ratings keep both sides accountable. Terme is an information platform — trip terms are agreed directly between participants.
+
+## FAQ
+- How do I book a seat on Terme? Open the trip you need, choose the number of seats and tap "Book". The driver confirms the booking; only then is the driver's phone number revealed and you agree on the pickup point in the in-app chat.
+- How is the price of a trip set? The driver sets the price per seat in Kyrgyzstani som (KGS) when publishing the trip. Terme adds no commission on top — you pay the driver directly, and the price shown is the price per seat.
+- How do I become a driver and publish a trip? Sign in, open "Publish a trip", enter the route, date, time, free seats and price, then submit your driver documents and car for moderation. Once verified, your trips become visible to passengers.
+- Which routes and cities does Terme cover? Intercity routes across Kyrgyzstan — Bishkek to Osh, Karakol, Naryn, Talas, Batken, Cholpon-Ata, Jalal-Abad and Issyk-Kul, plus hundreds of villages. If no trip exists yet, you can leave a request for your route.
+- Can I cancel a booking, and what is the policy? Yes. You can cancel a booking under "My trips" before departure; cancel as early as possible so the seat is freed for others. Repeated last-minute cancellations affect your rating.
+- Is it safe to travel with Terme? Driver documents and vehicles are checked by moderation, every trip ends with a two-way rating, and phone numbers are shared only after a booking is confirmed. Terme connects drivers and passengers; trip terms are agreed directly between them.
+
+## Category
+Travel and Transportation / Ridesharing / Carpooling
+
+## Languages
+Russian (ru), Kyrgyz (ky), English (en)

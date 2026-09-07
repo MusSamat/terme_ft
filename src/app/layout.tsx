@@ -18,7 +18,12 @@ import { OfflineBanner } from "@/components/layout/offline-banner";
 import { ThemeProvider, THEME_INIT_SCRIPT } from "@/components/theme-provider";
 import { WebVitals } from "@/components/web-vitals";
 import { LogoMark, Spinner } from "@/components/ui";
+import { buildServiceJsonLd } from "@/lib/seo/org-jsonld";
 import "./globals.css";
+
+// Single source for the site meta description — reused in <metadata> and the
+// Service JSON-LD so the two never drift apart.
+const SITE_DESCRIPTION = "Найди попутчика Бишкек — Ош, Каракол, Нарын, Иссык-Куль.";
 
 // Runs before first paint (after telegram-web-app.js). Inside a Telegram Mini
 // App, initData is a non-empty string synchronously — mark <html> so the CSS
@@ -44,7 +49,7 @@ export const metadata: Metadata = {
     default: "Terme — попутчики Кыргызстана",
     template: "%s | Terme",
   },
-  description: "Найди попутчика Бишкек — Ош, Каракол, Нарын, Иссык-Куль.",
+  description: SITE_DESCRIPTION,
   openGraph: {
     siteName: "Terme",
     type: "website",
@@ -84,6 +89,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Script id="tma-splash-init" strategy="beforeInteractive">
           {TMA_SPLASH_INIT_SCRIPT}
         </Script>
+        {/* Sitewide Service structured data — safe: static values, JSON.stringify escapes. */}
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildServiceJsonLd(SITE_DESCRIPTION)) }}
+        />
       </head>
       <body className="min-h-screen font-sans">
         {/* Server-rendered boot splash — visibility is CSS-driven by the
