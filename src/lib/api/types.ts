@@ -67,6 +67,7 @@ export type ErrorCode =
   | "OTP_TOO_MANY_ATTEMPTS"
   | "INTERNAL_ERROR"
   | "SERVICE_UNAVAILABLE"
+  | "WHATSAPP_WINDOW_EXPIRED"
   // Client-side synthetic code: request failed without a response while
   // navigator.onLine === false (never sent by the backend).
   | "NETWORK_OFFLINE";

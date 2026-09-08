@@ -20,6 +20,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 
 const NAV = [
@@ -27,6 +28,7 @@ const NAV = [
   { href: "/admin/verifications", label: "Верификации", icon: ShieldCheck },
   { href: "/admin/users", label: "Пользователи", icon: Users },
   { href: "/admin/complaints", label: "Жалобы", icon: MessageSquareWarning },
+  { href: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircle },
   { href: "/admin/trips", label: "Поездки", icon: Car },
   { href: "/admin/requests", label: "Заявки", icon: Inbox },
   { href: "/admin/cities", label: "Города", icon: Map },

@@ -673,3 +673,48 @@ export async function listAuditLog(params?: {
   });
   return data;
 }
+
+// ─── WhatsApp inbox ─────────────────────────────────────────────────────────
+
+export type WhatsappDirection = "INBOUND" | "OUTBOUND";
+export type WhatsappStatus = "SENT" | "DELIVERED" | "READ" | "FAILED";
+
+export interface WhatsappMessageItem {
+  id: string;
+  conversationId: string;
+  direction: WhatsappDirection;
+  body: string;
+  status: WhatsappStatus | null;
+  whatsappMessageId: string | null;
+  createdAt: string;
+}
+
+export interface WhatsappConversationItem {
+  id: string;
+  phoneNumber: string;
+  lastMessageAt: string;
+  lastMessagePreview: string | null;
+}
+
+export async function listWhatsappConversations(): Promise<WhatsappConversationItem[]> {
+  const { data } = await adminApi.get<WhatsappConversationItem[]>("/admin/whatsapp/conversations");
+  return data;
+}
+
+export async function getWhatsappMessages(conversationId: string): Promise<WhatsappMessageItem[]> {
+  const { data } = await adminApi.get<WhatsappMessageItem[]>(
+    `/admin/whatsapp/conversations/${conversationId}/messages`,
+  );
+  return data;
+}
+
+export async function sendWhatsappReply(
+  conversationId: string,
+  text: string,
+): Promise<WhatsappMessageItem> {
+  const { data } = await adminApi.post<WhatsappMessageItem>(
+    `/admin/whatsapp/conversations/${conversationId}/reply`,
+    { text },
+  );
+  return data;
+}
