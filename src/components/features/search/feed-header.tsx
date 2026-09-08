@@ -96,8 +96,11 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
         <MapRoute />
       </div>
 
-      {/* Role toggle FIRST, then the point inputs — pulled up over the band. */}
-      <div className="relative z-10 -mt-9 space-y-2.5 px-4 pb-4">
+      {/* Role toggle FIRST, then the point inputs — pulled up over the band.
+          focus-within raises this above the sticky filter bar (z-20) only while
+          a city field is focused, so the autocomplete dropdown isn't covered by
+          the «Фильтры» chip; when unfocused it drops back so the bar wins on scroll. */}
+      <div className="relative z-10 -mt-9 space-y-2.5 px-4 pb-4 focus-within:z-30">
         <IntentToggle
           value={tab === "requests" ? "driver" : "passenger"}
           onChange={(v) => switchTab(v === "driver" ? "requests" : "trips")}
