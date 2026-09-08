@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Providers } from "@/components/providers";
 import { AuthBootstrap } from "@/components/auth-bootstrap";
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { TermsGate } from "@/components/layout/terms-gate";
 import { OnboardingGate } from "@/components/features/onboarding/onboarding-gate";
 import { TmaInit } from "@/components/tma-init";
@@ -109,6 +110,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <WebVitals />
               <TmaInit />
               <AuthBootstrap />
+              <PresenceHeartbeat />
               <OnboardingGate />
               <TermsGate />
               <TopNav />

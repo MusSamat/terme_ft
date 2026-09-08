@@ -1623,6 +1623,10 @@
     "pick_from_list": "Выберите город из списка",
     "no_matches": "Ничего не найдено — проверьте написание"
   },
+  "presence": {
+    "online": "онлайн",
+    "online_title": "{count} человек сейчас онлайн"
+  },
   "route_stops": {
     "boarding_en_route": "Посадка по пути",
     "boarding": "Посадка",

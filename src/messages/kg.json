@@ -1623,6 +1623,10 @@
     "pick_from_list": "Тизмеден шаарды тандаңыз",
     "no_matches": "Эч нерсе табылган жок — жазылышын текшериңиз"
   },
+  "presence": {
+    "online": "онлайн",
+    "online_title": "{count} адам азыр онлайн"
+  },
   "route_stops": {
     "boarding_en_route": "Жол боюнда отургузуу",
     "boarding": "Отургузуу",

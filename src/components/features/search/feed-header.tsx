@@ -4,6 +4,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowDownUp, Circle, MapPin, SlidersHorizontal } from "lucide-react";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
+import { OnlineBadge } from "@/components/ui/online-badge";
 import { Chip } from "@/components/ui/chip";
 import { IntentToggle } from "./intent-toggle";
 import { SmartDateNav } from "./smart-date-nav";
@@ -90,10 +91,11 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
     <div>
       {/* Decorative map band */}
       <div
-        className="h-24 w-full"
+        className="relative h-24 w-full"
         style={{ background: "linear-gradient(135deg,#D0FBEF,#E0E7FF)" }}
       >
         <MapRoute />
+        <OnlineBadge className="absolute right-3 top-3 bg-white/80 backdrop-blur dark:bg-ink-900/70" />
       </div>
 
       {/* Role toggle FIRST, then the point inputs — pulled up over the band.

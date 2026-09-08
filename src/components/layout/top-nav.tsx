@@ -17,6 +17,7 @@ import { useRoleTheme } from "@/lib/hooks/use-role-colors";
 import { normalizeMediaUrl } from "@/lib/utils/media-url";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LogoMark, Wordmark } from "@/components/ui/logo-mark";
+import { OnlineBadge } from "@/components/ui/online-badge";
 import { cn } from "@/lib/utils/cn";
 
 // Desktop top navbar — design-spec §1.3.
@@ -190,6 +191,7 @@ export function TopNav() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
+          <OnlineBadge className="mr-1" />
           {isAuthenticated ? (
             <>
               <Link

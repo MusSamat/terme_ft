@@ -107,6 +107,8 @@ export interface KpiCards {
   mau: number;
   cancellationRate7d: number | null;
   openRequests: number;
+  onlineNow: number;
+  activeByPlatform: { web: number; mini: number; mobile: number; unknown: number };
 }
 
 // ── Verifications ─────────────────────────────────────────────────────────────

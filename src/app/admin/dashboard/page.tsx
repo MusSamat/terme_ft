@@ -7,7 +7,7 @@ import Link from "next/link";
 import { getAdminKpi, getAdminChart, type KpiCards } from "@/lib/api/admin";
 import {
   Users, Car, CheckCircle2, ShieldAlert, MessageSquareWarning,
-  TrendingUp, Star, UserCheck, AlertCircle,
+  TrendingUp, Star, UserCheck, AlertCircle, Radio, MonitorSmartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { KpiCard, KpiSkeleton } from "./_components/kpi-card";
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
       {/* KPI Grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {kpi.isLoading ? (
-          Array.from({ length: 8 }).map((_, i) => <KpiSkeleton key={i} />)
+          Array.from({ length: 10 }).map((_, i) => <KpiSkeleton key={i} />)
         ) : (
           <>
             <KpiCard label="Пользователи" value={k?.users.total ?? 0} sub={`+${k?.users.last_7d ?? 0} за 7 дней`} icon={Users} />
@@ -142,6 +142,14 @@ export default function AdminDashboard() {
             <KpiCard label="Верификации" value={k?.pendingVerifications ?? 0} sub="ожидают проверки" icon={ShieldAlert} accent={k?.pendingVerifications ? "text-accent-600" : undefined} href="/admin/verifications" />
             <KpiCard label="Открытые жалобы" value={k?.openComplaints ?? 0} sub="требуют реакции" icon={MessageSquareWarning} accent={k?.openComplaints ? "text-danger-600" : undefined} href="/admin/complaints" />
             <KpiCard label="Рейтинг водителей" value={k?.avgDriverRating != null ? k.avgDriverRating.toFixed(2) : "—"} sub="среднее (≥3 отзывов)" icon={Star} accent="text-accent-500" />
+            <KpiCard label="Онлайн сейчас" value={k?.onlineNow ?? "—"} sub="активны за 60 сек" icon={Radio} accent="text-emerald-600" />
+            <KpiCard
+              label="Актив по платформам"
+              value={k ? `${k.activeByPlatform.web} / ${k.activeByPlatform.mini} / ${k.activeByPlatform.mobile}` : "—"}
+              sub="web / mini / моб · за 24ч"
+              icon={MonitorSmartphone}
+              accent="text-sky-600"
+            />
             <KpiCard label="DAU / MAU" value={k ? `${k.dau} / ${k.mau}` : "—"} sub="актив за 24ч / 30 дней" icon={Star} accent="text-brand-500" />
             <KpiCard label="Отмены поездок" value={k?.cancellationRate7d != null ? `${k.cancellationRate7d}%` : "—"} sub="от исходов за 7 дней" icon={Star} accent="text-coral-500" />
             <KpiCard label="Открытые запросы" value={k?.openRequests ?? "—"} sub="запросы пассажиров сейчас" icon={Star} accent="text-grape-500" />
