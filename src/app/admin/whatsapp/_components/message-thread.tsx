@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils/cn";
 import { Button, Spinner } from "@/components/ui";
 import { Check, CheckCheck, AlertTriangle, Send, MessageSquare, X } from "lucide-react";
@@ -46,14 +46,27 @@ export function MessageThread({
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Whether the reader is pinned to the newest message. Flipped false as soon as
+  // they scroll up to read history, so 10s polling doesn't yank them back down.
+  const stickToBottom = useRef(true);
 
-  // Autoscroll to the newest message whenever the thread grows or switches.
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages.length, conversation?.id]);
+  function onThreadScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }
 
-  // Focus the composer when a conversation is opened.
+  // New/updated messages: only follow to the bottom if the reader was already there.
   useEffect(() => {
+    if (stickToBottom.current) {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    }
+  }, [messages.length]);
+
+  // Switching conversation: always jump to the bottom and re-arm sticky follow.
+  useEffect(() => {
+    stickToBottom.current = true;
+    scrollRef.current?.scrollTo({ top: scrollRef.current?.scrollHeight ?? 0 });
     if (conversation) inputRef.current?.focus();
   }, [conversation?.id]);
 
@@ -74,19 +87,29 @@ export function MessageThread({
   function submit() {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
+    stickToBottom.current = true; // always follow our own outgoing message
     onSend(trimmed);
     setText("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Ignore Enter mid-IME-composition (Cyrillic/other) so it doesn't send early.
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       submit();
     }
   }
 
+  function onInput(e: ChangeEvent<HTMLTextAreaElement>) {
+    setText(e.target.value);
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }
+
   return (
-    <section className="flex flex-1 flex-col bg-ink-100">
+    <section className="flex min-h-0 flex-1 flex-col bg-ink-100">
       {/* Header */}
       <header className="flex items-center gap-3 border-b border-ink-200 bg-white px-5 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-[12px] font-extrabold text-brand-700">
@@ -101,7 +124,11 @@ export function MessageThread({
       </header>
 
       {/* Thread */}
-      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto px-5 py-4">
+      <div
+        ref={scrollRef}
+        onScroll={onThreadScroll}
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-5 py-4"
+      >
         {isLoading && messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <Spinner />
@@ -173,7 +200,7 @@ export function MessageThread({
           <textarea
             ref={inputRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={onInput}
             onKeyDown={onKeyDown}
             rows={1}
             placeholder="Напишите сообщение…"

@@ -15,7 +15,7 @@ interface Props {
 
 export function ConversationList({ conversations, selectedId, onSelect, isLoading }: Props) {
   return (
-    <aside className="flex w-80 flex-shrink-0 flex-col border-r border-ink-200 bg-white">
+    <aside className="flex min-h-0 w-80 flex-shrink-0 flex-col border-r border-ink-200 bg-white">
       <header className="flex items-center gap-2 border-b border-ink-200 px-4 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
           <MessageCircle className="h-5 w-5" />
@@ -30,7 +30,7 @@ export function ConversationList({ conversations, selectedId, onSelect, isLoadin
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {isLoading && conversations.length === 0 ? (
           <div className="flex h-full items-center justify-center py-10">
             <Spinner />

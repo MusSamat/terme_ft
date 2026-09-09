@@ -80,7 +80,7 @@ export default function AdminWhatsappPage() {
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
 
   return (
-    <div className="flex h-full overflow-hidden bg-ink-100">
+    <div className="flex h-full min-h-0 overflow-hidden bg-ink-100">
       <ConversationList
         conversations={conversations}
         selectedId={selectedId}
