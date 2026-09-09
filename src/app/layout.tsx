@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Providers } from "@/components/providers";
@@ -123,6 +124,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Providers>
           </ThemeProvider>
         </NextIntlClientProvider>
+        {/* Analytics — loaded only in production so localhost/dev traffic
+            doesn't pollute GA4 / Yandex Metrika. No CSP in the app blocks them. */}
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <GoogleAnalytics gaId="G-11LG0MCB8P" />
+            <Script id="yandex-metrika" strategy="afterInteractive">
+              {`
+                (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                m[i].l=1*new Date();
+                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+                (window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+                ym(112423146, 'init', { ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer" });
+              `}
+            </Script>
+            <noscript>
+              <div>
+                <img
+                  src="https://mc.yandex.ru/watch/112423146"
+                  style={{ position: "absolute", left: "-9999px" }}
+                  alt=""
+                />
+              </div>
+            </noscript>
+          </>
+        )}
       </body>
     </html>
   );
