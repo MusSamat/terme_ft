@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { getLocale } from "next-intl/server";
 import { LegalPage, type LegalDoc } from "../legal/_components/legal-page";
+import { absoluteUrl, hreflangAlternates } from "@/lib/seo/site";
+
+// Self-canonical — collapses www/trailing-slash/param variants to one URL.
+export const metadata: Metadata = {
+  alternates: { canonical: absoluteUrl("/privacy"), languages: hreflangAlternates("/privacy") },
+};
 
 // ЗАПОЛНИТЬ ПРИ РЕГИСТРАЦИИ ЮРЛИЦА: название ОсОО, ИНН, адрес.
 const COMPANY = "ОсОО «Terme» (реквизиты будут указаны после регистрации)";
-const CONTACT = "support@tappjet.kg";
+const CONTACT = "support@terme.kg";
 
 const RU: LegalDoc = {
   title: "Политика конфиденциальности",

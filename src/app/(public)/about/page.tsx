@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { getLocale } from "next-intl/server";
 import { LegalPage, type LegalDoc } from "../legal/_components/legal-page";
+import { absoluteUrl, hreflangAlternates } from "@/lib/seo/site";
 
-const CONTACT = "support@tappjet.kg";
+// Self-canonical — collapses www/trailing-slash/param variants to one URL.
+export const metadata: Metadata = {
+  alternates: { canonical: absoluteUrl("/about"), languages: hreflangAlternates("/about") },
+};
+
+const CONTACT = "support@terme.kg";
 
 const RU: LegalDoc = {
   title: "О нас",

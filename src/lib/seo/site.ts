@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { Locale } from "@/i18n.config";
 
 /** Canonical origin for every absolute SEO URL (sitemap, canonical, OG, JSON-LD). */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tappjet.kg";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://terme.kg";
 
 /** Turn a path (or already-absolute URL) into an absolute canonical URL. */
 export function absoluteUrl(path: string): string {

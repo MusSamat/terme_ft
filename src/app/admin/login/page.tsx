@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
             required
             autoComplete="username"
             className="w-full rounded-xl border border-ink-200 px-4 py-3 text-[14px] outline-none focus:border-ink-500"
-            placeholder="admin@tappjet.kg"
+            placeholder="admin@terme.kg"
           />
         </div>
 

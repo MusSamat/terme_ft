@@ -46,7 +46,7 @@ const manrope = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://tappjet.kg"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://terme.kg"),
   title: {
     default: "Terme — попутчики Кыргызстана",
     template: "%s | Terme",

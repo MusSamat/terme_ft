@@ -15,6 +15,13 @@ const DISALLOW = [
   "/complaint",
   "/onboarding",
   "/dev/*",
+  // Transactional/action pages — no search value, keep them out of the index
+  // so they don't surface as thin/duplicate results under the allowed /trips/*.
+  "/trips/create",
+  "/trips/create-request",
+  "/trips/*/book",
+  "/trips/*/rate/*",
+  "/requests/create",
 ];
 
 // AI answer-engine crawlers, explicitly welcomed to the public content (GEO).
