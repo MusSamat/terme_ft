@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, Eye, EyeOff, AlertTriangle, Send } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, AlertTriangle, MessageCircle } from "lucide-react";
 import { checkPhone, register, sendTelegramOtp } from "@/lib/api/auth";
 import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
@@ -206,16 +206,16 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Telegram-blue: this button triggers Telegram delivery. */}
+                {/* WhatsApp-green: this button triggers WhatsApp OTP delivery. */}
                 <button
                   type="button"
                   disabled={!FULL_PHONE_RE.test(phone) || startMutation.isPending}
                   onClick={handleStart}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0088CC] text-[16px] font-900 text-white shadow-cta transition-colors hover:bg-[#0077B5] disabled:opacity-40"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] text-[16px] font-900 text-white shadow-cta transition-colors hover:bg-[#20BD5A] disabled:opacity-40"
                 >
                   {startMutation.isPending
                     ? <><Spinner size={16} />{t("sending")}</>
-                    : <><Send className="h-4 w-4" />{t("send_code_btn")}</>}
+                    : <><MessageCircle className="h-4 w-4" />{t("send_code_btn")}</>}
                 </button>
 
                 <p className="mt-5 text-center text-[14px] font-700 text-ink-400">
@@ -232,8 +232,8 @@ export default function RegisterPage() {
         {/* ── Step 2: OTP code only ── */}
         {step === "otp" && (
           <>
-            <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-[15px] font-700 text-[#0088CC]">
-              <Send className="h-4 w-4" />
+            <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-[15px] font-700 text-[#128C7E]">
+              <MessageCircle className="h-4 w-4" />
               {t("otp_dm_hint")}
             </p>
             <p className="mb-5 text-center text-[16px] font-800 text-ink-900 dark:text-white">

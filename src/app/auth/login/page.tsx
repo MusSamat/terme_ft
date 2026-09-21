@@ -97,7 +97,7 @@ export default function LoginPage() {
     onError: (e) => setServerError(fe(extractError(e))),
   });
 
-  // ── Forgot password: DM the OTP over Telegram (Dexatel) to the phone ───
+  // ── Forgot password: send the OTP to the phone over WhatsApp ───
   const sendOtpMutation = useMutation({
     mutationFn: () => sendTelegramOtp(phone),
     onSuccess: () => {
