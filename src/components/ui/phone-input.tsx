@@ -20,7 +20,10 @@ export interface PhoneInputProps extends BaseProps {
  */
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ value, onValueChange, invalid, hint, className, disabled, ...rest }, ref) => {
-    const [e164, setE164] = useState<string>(() => sanitizePhone(value ?? "") || DEFAULT_DIAL);
+    const [e164, setE164] = useState<string>(() => {
+      const s = sanitizePhone(value ?? "");
+      return s === "+" ? DEFAULT_DIAL : s; // seed +996 only when starting empty
+    });
     const seeded = useRef(false);
 
     // Seed the caller's state with +996 once when it starts empty, so validation
@@ -38,8 +41,9 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     }, [value]);
 
     const handleChange = (raw: string) => {
-      // Keep a leading "+"; if the field is fully cleared, fall back to "+996".
-      const next = sanitizePhone(raw) || DEFAULT_DIAL;
+      // Keep only the leading "+"; every digit (incl. the whole +996) is
+      // deletable so the user can type another country code.
+      const next = sanitizePhone(raw);
       setE164(next);
       onValueChange?.(next);
     };

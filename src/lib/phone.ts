@@ -5,10 +5,10 @@
 
 export const DEFAULT_DIAL = "+996";
 
-/** Normalize free text to `+<digits>`. +996 caps the national part at 9 digits. */
+/** Normalize free text to `+<digits>`. The leading "+" is always kept (never
+ * deletable); digits can be cleared down to just "+". +996 caps at 9 national. */
 export function sanitizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
-  if (!digits) return "";
   const capped = digits.startsWith("996") ? digits.slice(0, 12) : digits.slice(0, 15);
   return `+${capped}`;
 }
@@ -21,7 +21,7 @@ export function isValidPhone(v: string): boolean {
 /** Light readability grouping for display: "+996 700 123 456". */
 export function formatPhoneDisplay(v: string): string {
   const digits = v.replace(/\D/g, "");
-  if (!digits) return v || "";
+  if (!digits) return "+";
   const groups = digits.match(/.{1,3}/g) ?? [];
   return `+${groups.join(" ")}`;
 }
