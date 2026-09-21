@@ -23,12 +23,8 @@ export function OtpStep({
 }: Props) {
   return (
     <>
-      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-500/15">
-        <span className="text-[32px] leading-none">✈️</span>
-      </div>
       <div className="mb-2 text-center">
-        <p className="text-[18px] font-700 text-ink-600 dark:text-ink-300">{tl("otp_reset_sent")}</p>
-        <p className="mt-1 text-[15px] font-600 text-brand-700 dark:text-brand-300">
+        <p className="text-[15px] font-600 text-brand-700 dark:text-brand-300">
           {tl("otp_dm_hint")}
         </p>
         <p className="mt-1 text-[18px] font-700 text-ink-900 dark:text-white">+996 {displayPhone}</p>
