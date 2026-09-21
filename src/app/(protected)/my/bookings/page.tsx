@@ -7,12 +7,14 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Inbox, Star, Heart } from "lucide-react";
 import { listMyBookings, cancelBooking, listIncomingBookings } from "@/lib/api/bookings";
+import { listMyTrips } from "@/lib/api/my-trips";
+import { listMyPassengerRequests } from "@/lib/api/passenger-requests";
 import { getPendingRatings, type PendingRating } from "@/lib/api/ratings";
 import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { toastSuccess, toastError } from "@/components/layout/quick-toast";
 import { RateModal } from "@/components/features/ratings/rate-modal";
-import { BackButton, Container, PullToRefresh, QueryError } from "@/components/ui";
+import { BackButton, Container, PullToRefresh, QueryError, Spinner } from "@/components/ui";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { useScrollRestoration } from "@/lib/hooks/use-scroll-restoration";
 import { Confetti } from "@/components/ui/confetti";
@@ -76,7 +78,13 @@ export default function MyBookingsPage() {
   const fe = useFriendlyError();
   const searchParams = useSearchParams();
 
-  const [filter, setFilter] = useState<Filter>(() => mapTabToFilter(searchParams.get("tab")));
+  // Dynamic default: with no ?tab in the URL, open the tab the user actually has
+  // content in — trips first, then requests, else bookings. `null` = deciding.
+  const explicitTab = searchParams.get("tab");
+  const autoDefault = !explicitTab;
+  const [filter, setFilter] = useState<Filter | null>(() =>
+    explicitTab ? mapTabToFilter(explicitTab) : null,
+  );
   useScrollRestoration();
   const [rateTarget, setRateTarget] = useState<PendingRating | null>(null);
   const [cancelTarget, setCancelTarget] = useState<BookingExt | null>(null);
@@ -98,6 +106,27 @@ export default function MyBookingsPage() {
     queryFn: () => listIncomingBookings(),
     staleTime: 30_000,
   });
+  // Presence probes for the dynamic default (only when no explicit tab).
+  const myTripsHas = useQuery({
+    queryKey: ["trips", "my", "has"],
+    queryFn: () => listMyTrips("active", undefined, 1),
+    enabled: autoDefault,
+    staleTime: 30_000,
+  });
+  const myReqsHas = useQuery({
+    queryKey: ["passenger-requests", "my", "has"],
+    queryFn: () => listMyPassengerRequests(),
+    enabled: autoDefault,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (!autoDefault || filter !== null) return;
+    if (myTripsHas.isLoading || myReqsHas.isLoading) return;
+    const hasTrips = (myTripsHas.data?.data?.length ?? 0) > 0;
+    const hasReqs = (myReqsHas.data?.data?.length ?? 0) > 0;
+    setFilter(hasTrips ? "trips" : hasReqs ? "requests" : "bookings");
+  }, [autoDefault, filter, myTripsHas.isLoading, myReqsHas.isLoading, myTripsHas.data, myReqsHas.data]);
 
   const cancelMut = useMutation({
     mutationFn: (id: string) => cancelBooking(id),
@@ -215,6 +244,12 @@ export default function MyBookingsPage() {
             );
           })}
         </div>
+
+        {filter === null && (
+          <div className="flex justify-center py-16">
+            <Spinner />
+          </div>
+        )}
 
         {filter === "bookings" && outgoing.isError && (
           <QueryError error={outgoing.error} onRetry={() => void outgoing.refetch()} />
