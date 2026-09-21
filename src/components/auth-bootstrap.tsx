@@ -131,10 +131,11 @@ export function AuthBootstrap() {
       return true;
     };
 
-    // Classical auth only: silent Telegram Mini App login is disabled — users
-    // sign in with phone + password (see /auth/login). Flag kept so the flow can
-    // be re-enabled without restoring deleted code.
-    const ALLOW_TELEGRAM_SILENT_LOGIN = false;
+    // Telegram Mini App silent login: inside Telegram we auto-authenticate from
+    // initData and auto-register the account (backend /auth/telegram creates the
+    // user with a +prov: placeholder phone and returns a full session). Outside
+    // Telegram this is a no-op and users fall back to phone + password.
+    const ALLOW_TELEGRAM_SILENT_LOGIN = true;
 
     if (!sessionLikely) {
       // No prior session — attempt Telegram Mini App silent login if enabled.

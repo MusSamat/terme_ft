@@ -21,10 +21,9 @@ import { LogoMark, Wordmark, PhoneInput, Spinner, type OtpInputHandle } from "@/
 import { OtpStep } from "./_steps/otp-step";
 import { ResetStep } from "./_steps/reset-step";
 import { cn } from "@/lib/utils/cn";
+import { isValidPhone, formatPhoneDisplay } from "@/lib/phone";
 
 type Step = "login" | "forgot" | "otp" | "reset";
-
-const FULL_PHONE_RE = /^\+996\d{9}$/;
 
 /** Terme brand mark from the prototype (paper-plane + amber dot). */
 function AuthLogo() {
@@ -53,8 +52,8 @@ export default function LoginPage() {
   const newPasswordRef = useRef<HTMLInputElement>(null);
   const otpRef = useRef<OtpInputHandle>(null);
 
-  const displayPhone = phone.replace(/^\+996/, "");
-  const canSubmitLogin = FULL_PHONE_RE.test(phone) && password.length > 0;
+  const displayPhone = formatPhoneDisplay(phone);
+  const canSubmitLogin = isValidPhone(phone) && password.length > 0;
   const canReset = newPassword.length >= 8 && newPassword === confirmPassword;
 
   useEffect(() => {
@@ -74,7 +73,7 @@ export default function LoginPage() {
     // The user initiates the reset with an explicit tap.
     const params = new URLSearchParams(window.location.search);
     const p = params.get("phone");
-    if (p && FULL_PHONE_RE.test(p)) setPhone(p);
+    if (p && isValidPhone(p)) setPhone(p);
   }, []);
 
   // Already authenticated (e.g. Telegram Mini App silent login) → no OTP needed.
@@ -113,7 +112,7 @@ export default function LoginPage() {
   // Send the reset code (used by the phone-only "forgot" step and the ?reset=1
   // deep-link). The login step never sends directly — it switches to "forgot".
   const sendResetCode = () => {
-    if (!FULL_PHONE_RE.test(phone)) {
+    if (!isValidPhone(phone)) {
       setServerError(tl("enter_phone_first"));
       return;
     }
@@ -167,6 +166,7 @@ export default function LoginPage() {
             setServerError(null);
             if (step === "forgot") setStep("login");
             else if (step === "otp") setStep("forgot");
+            else if (step === "reset") setStep("login");
             else router.back();
           }}
           aria-label={tl("back_btn")}
@@ -207,7 +207,7 @@ export default function LoginPage() {
                 invalid={false}
                 placeholder="000 000 000"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && FULL_PHONE_RE.test(phone)) passwordRef.current?.focus();
+                  if (e.key === "Enter" && isValidPhone(phone)) passwordRef.current?.focus();
                 }}
               />
             </div>
@@ -278,14 +278,14 @@ export default function LoginPage() {
                 value={phone}
                 onValueChange={(v) => { setPhone(v); setServerError(null); }}
                 invalid={false}
-                placeholder="000 000 000"
-                onKeyDown={(e) => { if (e.key === "Enter" && FULL_PHONE_RE.test(phone)) sendResetCode(); }}
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter" && isValidPhone(phone)) sendResetCode(); }}
               />
             </div>
 
             <button
               type="button"
-              disabled={!FULL_PHONE_RE.test(phone) || sendOtpMutation.isPending || resendSeconds > 0}
+              disabled={!isValidPhone(phone) || sendOtpMutation.isPending || resendSeconds > 0}
               onClick={sendResetCode}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
             >

@@ -10,6 +10,7 @@ import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { TermsGate } from "@/components/layout/terms-gate";
 import { OnboardingGate } from "@/components/features/onboarding/onboarding-gate";
 import { TmaInit } from "@/components/tma-init";
+import { PhoneGate } from "@/components/features/auth/phone-gate";
 import { TopNav } from "@/components/layout/top-nav";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MainRegion } from "@/components/layout/main-region";
@@ -111,6 +112,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <WebVitals />
               <TmaInit />
               <AuthBootstrap />
+              <PhoneGate />
               <PresenceHeartbeat />
               <OnboardingGate />
               <TermsGate />

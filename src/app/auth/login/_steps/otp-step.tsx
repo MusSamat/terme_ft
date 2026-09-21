@@ -27,7 +27,7 @@ export function OtpStep({
         <p className="text-[15px] font-600 text-brand-700 dark:text-brand-300">
           {tl("otp_dm_hint")}
         </p>
-        <p className="mt-1 text-[18px] font-700 text-ink-900 dark:text-white">+996 {displayPhone}</p>
+        <p className="mt-1 text-[18px] font-700 text-ink-900 dark:text-white">{displayPhone}</p>
       </div>
 
       <p className="mb-4 text-center text-[14px] font-600 text-accent-700">{tl("otp_reset_hint")}</p>

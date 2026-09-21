@@ -1,12 +1,14 @@
 import { z } from "zod";
 
+// E.164: +996 must be exactly 9 national digits; other country codes follow
+// general E.164 (7–15 total digits). Mirrors lib/phone.isValidPhone.
 export const phoneSchema = z
   .string()
-  .regex(/^\+996[0-9]{9}$/, "Формат: +996 и 9 цифр");
+  .regex(/^(?:\+996\d{9}|\+(?!996)[1-9]\d{6,14})$/, "Неверный формат номера");
 
 export const otpSchema = z
   .string()
-  .regex(/^[0-9]{6}$/, "6 цифр из Telegram");
+  .regex(/^[0-9]{6}$/, "6 цифр из кода");
 
 export const passwordSchema = z
   .string()

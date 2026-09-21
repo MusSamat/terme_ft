@@ -134,7 +134,7 @@ export function TelegramStep({ phone, onVerified, onBack, onError }: Props) {
         </p>
         <p className="mt-1.5 text-[15px] font-700 leading-relaxed text-ink-500">
           {isDeepLink ? t("telegram_start_hint") : t("telegram_hint")}{" "}
-          <span className="font-900 text-brand-700">@tappjet_bot</span>
+          <span className="font-900 text-brand-700">@terme_kg_bot</span>
         </p>
       </div>
 

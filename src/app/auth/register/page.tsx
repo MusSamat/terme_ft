@@ -21,10 +21,9 @@ import {
   type OtpInputHandle,
 } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
+import { isValidPhone, formatPhoneDisplay } from "@/lib/phone";
 
 type Step = "phone" | "otp" | "details";
-
-const FULL_PHONE_RE = /^\+996\d{9}$/;
 
 export default function RegisterPage() {
   const t = useTranslations("auth.register");
@@ -47,7 +46,7 @@ export default function RegisterPage() {
 
   const otpRef = useRef<OtpInputHandle>(null);
 
-  const displayPhone = phone.replace(/^\+996/, "");
+  const displayPhone = formatPhoneDisplay(phone);
   // Mirror the backend RegisterBody contract: password ≥8 AND contains a digit,
   // and the OTP is a full 6 digits — otherwise the button submits an invalid
   // payload that only fails at the backend.
@@ -132,7 +131,7 @@ export default function RegisterPage() {
   });
 
   const handleStart = () => {
-    if (!FULL_PHONE_RE.test(phone)) {
+    if (!isValidPhone(phone)) {
       setServerError(t("err_phone_invalid"));
       return;
     }
@@ -202,16 +201,18 @@ export default function RegisterPage() {
                     value={phone}
                     onValueChange={(v) => { setPhone(v); setServerError(null); }}
                     invalid={false}
-                    onKeyDown={(e) => { if (e.key === "Enter" && FULL_PHONE_RE.test(phone)) handleStart(); }}
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter" && isValidPhone(phone)) handleStart(); }}
                   />
                 </div>
 
-                {/* WhatsApp-green: this button triggers WhatsApp OTP delivery. */}
+                {/* Primary CTA = brand Amber (consistent across auth). The
+                    WhatsApp delivery channel is signalled by the green hint below. */}
                 <button
                   type="button"
-                  disabled={!FULL_PHONE_RE.test(phone) || startMutation.isPending}
+                  disabled={!isValidPhone(phone) || startMutation.isPending}
                   onClick={handleStart}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] text-[16px] font-900 text-white shadow-cta transition-colors hover:bg-[#20BD5A] disabled:opacity-40"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
                 >
                   {startMutation.isPending
                     ? <><Spinner size={16} />{t("sending")}</>
@@ -237,7 +238,7 @@ export default function RegisterPage() {
               {t("otp_dm_hint")}
             </p>
             <p className="mb-5 text-center text-[16px] font-800 text-ink-900 dark:text-white">
-              +996 {displayPhone}
+              {displayPhone}
             </p>
 
             <div className="mb-4 flex justify-center">
