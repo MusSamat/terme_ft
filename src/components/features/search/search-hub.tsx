@@ -72,12 +72,15 @@ export function SearchHub() {
   const dateLabel = !date || date === today ? t("today") : date;
 
   return (
-    <div className="mx-auto w-full max-w-[560px] px-4 pt-3 pb-[336px] md:pb-12">
-        <div className="mb-3 flex items-center justify-end">
-          <OnlineBadge className="bg-ink-50 dark:bg-ink-900" />
+    <div className="mx-auto w-full max-w-[560px] px-4 pb-[336px] md:pb-12">
+        {/* Sticky role header — stays put while the rails scroll (web-mobile);
+            plain in-flow on desktop. */}
+        <div className="sticky top-0 z-20 -mx-4 bg-ink-50/95 px-4 pt-3 pb-2.5 backdrop-blur md:static md:mx-0 md:bg-transparent md:px-0 md:pb-0 md:backdrop-blur-none dark:bg-ink-950/95 dark:md:bg-transparent">
+          <div className="mb-2.5 flex items-center justify-end">
+            <OnlineBadge className="bg-ink-50 dark:bg-ink-900" />
+          </div>
+          <IntentToggle value={driver ? "driver" : "passenger"} onChange={(v) => setActiveMode(v)} showHint />
         </div>
-
-        <IntentToggle value={driver ? "driver" : "passenger"} onChange={(v) => setActiveMode(v)} showHint />
 
         <div className="mt-4">
           <BecomeDriverBanner />

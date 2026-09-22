@@ -95,8 +95,9 @@ export function BottomNav() {
 
   const isThread = pathname.startsWith("/my/bookings/") && pathname.endsWith("/chat");
   const isChat = isThread || startsWith("/chat");
-  const feedHref = "/trips";
-  const feedActive = startsWith("/trips") || startsWith("/requests");
+  // «Поиск» → the search HUB (main page), not the results list.
+  const feedHref = "/";
+  const feedActive = pathname === "/" || startsWith("/trips") || startsWith("/requests");
   // One create route — the intent (drive / need a ride) is chosen inside the form.
   const createHref = "/trips/create";
 
@@ -176,10 +177,10 @@ export function BottomNav() {
         ) : (
           <>
             <NavTab
-              href="/trips"
+              href="/"
               label={t("feed")}
               icon={Search}
-              active={isActive("/trips", feedActive)}
+              active={isActive("/", feedActive)}
               pillOn={theme.navPillOn}
               textOn={theme.navTextOn}
               onNavigate={setPendingHref}
