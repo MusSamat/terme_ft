@@ -21,9 +21,9 @@ export function Footer() {
     pathname.startsWith("/onboarding");
   if (hidden) return null;
 
-  // Mobile has a floating bottom-nav as its chrome, so the footer is desktop-only
-  // there — except on the home/landing page, where it reads as marketing content.
-  const desktopOnly = pathname !== "/";
+  // Mobile has a floating bottom-nav as its chrome → the marketing footer is
+  // desktop-only everywhere on mobile (the app-like home hub has no room for it).
+  const desktopOnly = true;
 
   const COLUMNS = [
     {

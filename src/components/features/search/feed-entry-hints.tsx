@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Clock, X } from "lucide-react";
+import { ArrowRight, CarFront, ChevronRight, Clock, User, X } from "lucide-react";
 import { getRecentRoutes, clearRecentRoutes, type RecentRoute } from "@/lib/recent-routes";
 import { getPopularRoutes, type PopularRoute } from "@/lib/api/cities";
+import { listMyTrips } from "@/lib/api/my-trips";
+import { listMyPassengerRequests } from "@/lib/api/passenger-requests";
+import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
 
 // Home entry body (redesign): three horizontal rails shown before a route is
@@ -40,6 +44,26 @@ export function FeedEntryHints({ onPick, tab = "trips" }: { onPick: (from: strin
   });
 
   const popular = routes ?? [];
+
+  // My active trips/requests → a compact block (no header) linking to «Мои».
+  const authed = useAuth((s) => s.status === "authenticated");
+  const { data: myTrips } = useQuery({
+    queryKey: ["trips", "my", "active", "hub"],
+    queryFn: () => listMyTrips("active"),
+    enabled: authed,
+    staleTime: 30_000,
+  });
+  const { data: myReqs } = useQuery({
+    queryKey: ["passenger-requests", "my", "hub"],
+    queryFn: listMyPassengerRequests,
+    enabled: authed,
+    staleTime: 30_000,
+  });
+  const activeTrips = (myTrips?.data ?? []).filter((x) => (x as { status?: string }).status === "active");
+  const activeReqs = (myReqs?.data ?? []).filter((x) => (x as { status?: string }).status === "open");
+  const mineIsTrip = activeTrips.length > 0;
+  const mineCount = mineIsTrip ? activeTrips.length : activeReqs.length;
+  const showMine = authed && mineCount > 0;
 
   // Top destinations — one best (highest-count) route per destination city.
   const destinations: PopularRoute[] = [];
@@ -106,6 +130,31 @@ export function FeedEntryHints({ onPick, tab = "trips" }: { onPick: (from: strin
             </button>
           ))}
         </Rail>
+      )}
+
+      {showMine && (
+        <Link
+          href={`/my/bookings?tab=${mineIsTrip ? "trips" : "requests"}`}
+          className="mb-5 flex items-center gap-3 rounded-2xl bg-white p-2.5 shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
+        >
+          <span
+            className={cn(
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+              mineIsTrip ? "bg-brand-600/10 text-brand-600 dark:text-brand-300" : "bg-grape-600/10 text-grape-600 dark:text-grape-300",
+            )}
+          >
+            {mineIsTrip ? <CarFront className="h-5 w-5" aria-hidden="true" /> : <User className="h-5 w-5" aria-hidden="true" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[14px] font-900 text-ink-900 dark:text-white">
+              {t(mineIsTrip ? "mine_trips_line" : "mine_requests_line", { n: mineCount })}
+            </span>
+            <span className="block truncate text-[12.5px] font-700 text-ink-400">
+              {t(mineIsTrip ? "mine_trips_sub" : "mine_requests_sub")}
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-ink-400" aria-hidden="true" />
+        </Link>
       )}
 
       {recent.length > 0 && (
