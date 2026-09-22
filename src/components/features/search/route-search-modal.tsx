@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Check, Circle, Flag, MapPin, X } from "lucide-react";
 import { searchCities, getCities, type City } from "@/lib/api/cities";
+
+// «Баткен району, Самаркандек айылы» — district + aiyl, never the oblast.
+// Empty for republican cities (Бишкек/Ош) with no district.
+function citySubtitle(city: City, kg: boolean): string {
+  const d = (kg ? city.districtNameKg : city.districtNameRu)?.trim();
+  const a = (kg ? city.aiylAimakNameKg : city.aiylAimakNameRu)?.trim();
+  return [d, a].filter((s): s is string => !!s).join(", ");
+}
 
 // Route search modal (Yandex «Межгород» style): Откуда + Куда together at the
 // top, one shared suggestions list below, max 95vh. Mirrors the Flutter
@@ -24,6 +32,7 @@ export function RouteSearchModal({
   onApply: (from: string, to: string) => void;
 }) {
   const t = useTranslations("feed");
+  const kg = useLocale() === "kg";
   const [from, setFrom] = useState(initialFrom);
   const [to, setTo] = useState(initialTo);
   const [activeTo, setActiveTo] = useState(focusTo);
@@ -148,8 +157,8 @@ export function RouteSearchModal({
               <MapPin className="h-[18px] w-[18px] shrink-0 text-ink-400" aria-hidden="true" />
               <span className="min-w-0">
                 <span className="block truncate text-[14px] font-700 text-ink-900 dark:text-white">{city.nameRu}</span>
-                {city.regionNameRu && (
-                  <span className="block truncate text-[12px] font-600 text-ink-400">{city.regionNameRu}</span>
+                {citySubtitle(city, kg) && (
+                  <span className="block truncate text-[12px] font-600 text-ink-400">{citySubtitle(city, kg)}</span>
                 )}
               </span>
             </button>
