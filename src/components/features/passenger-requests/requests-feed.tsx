@@ -85,7 +85,8 @@ export function RequestsFeed() {
   const params = useSearchParams();
   const t = useTranslations("requests");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  // Arrive with ?filters=1 (from the hub's filter icon) → open the sheet.
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(() => params.get("filters") === "1");
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   // Chips write YYYY-MM-DD; the API wants full ISO. Anchor at KG midnight (+06:00).

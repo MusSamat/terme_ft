@@ -21,6 +21,8 @@ interface Props {
   compact?: boolean;
   /** Remove border + ring — use when the input is inside a card that provides its own border */
   borderless?: boolean;
+  /** Open the results dropdown UPWARD (above the input) — use when docked near the screen bottom */
+  dropUp?: boolean;
 }
 
 function useDebounce<T>(value: T, ms: number): T {
@@ -73,6 +75,7 @@ export function CityAutocomplete({
   id: externalId,
   compact = false,
   borderless = false,
+  dropUp = false,
 }: Props) {
   const t = useTranslations("city_autocomplete");
   const locale = useLocale() as Locale;
@@ -272,7 +275,10 @@ export function CityAutocomplete({
             ref={listRef}
             id={`${inputId}-list`}
             role="listbox"
-            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[45vh] min-w-[240px] overflow-y-auto overscroll-contain rounded-2xl border border-ink-100 bg-white shadow-soft dark:border-ink-800 dark:bg-ink-900"
+            className={cn(
+              "absolute left-0 right-0 z-50 max-h-[45vh] min-w-[240px] overflow-y-auto overscroll-contain rounded-2xl border border-ink-100 bg-white shadow-soft dark:border-ink-800 dark:bg-ink-900",
+              dropUp ? "bottom-full mb-2" : "top-full mt-2",
+            )}
           >
             {showingPopular && (
               <li className="border-b border-ink-100 px-4 py-2 dark:border-ink-800">

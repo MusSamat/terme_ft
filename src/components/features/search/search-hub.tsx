@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowDownUp, Circle, MapPin, Search, X } from "lucide-react";
+import { ArrowDownUp, CalendarDays, Circle, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { DatePickerModal } from "@/components/ui/date-picker";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { IntentToggle } from "./intent-toggle";
@@ -14,10 +15,11 @@ import { addRecentRoute } from "@/lib/recent-routes";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
 
-// Search HUB (home `/`): the entry surface only — rails on top (destinations ·
-// popular · history) and a docked search bar at the bottom (above the tab bar).
-// Tapping the bar opens the search MODAL; submitting NAVIGATES to the results
-// page (/trips or /requests). Results never render here — the hub stays a hub.
+// Home `/` — the search HUB. Rails on top (destinations · popular · history) and
+// a docked search card at the bottom with the SAME inline inputs as before
+// (Откуда/Куда autocomplete). Search happens here; «Найти» NAVIGATES to the
+// results page — /trips (passenger) or /requests (driver) — by role. Results
+// never render on the main page.
 
 function readLastRoute(): { from: string; to: string } {
   try {
@@ -36,24 +38,23 @@ export function SearchHub() {
   const driver = useAuth((s) => s.activeMode === "driver");
   const setActiveMode = useAuth((s) => s.setActiveMode);
 
-  const [open, setOpen] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [whole, setWhole] = useState(false);
+  const [date, setDate] = useState(""); // "" = today
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  // Seed the last route so the docked bar shows where the user last searched.
   useEffect(() => {
     const r = readLastRoute();
     setFrom(r.from);
     setTo(r.to);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  const today = new Date(Date.now() + 6 * 3_600_000).toISOString().slice(0, 10);
 
-  const go = (f: string, tt: string, wholeCabin: boolean) => {
+  // Submit → go to the results page for the active role (as before), carrying
+  // the route + ride-type (+ date, + open-filters). Also used by the rails.
+  const goRoute = (f: string, tt: string, wholeCabin: boolean, openFilters = false) => {
     if (!f || !tt) return;
     addRecentRoute(f, tt);
     try {
@@ -63,77 +64,38 @@ export function SearchHub() {
     qs.set("from", f);
     qs.set("to", tt);
     if (wholeCabin) qs.set("seats", "4");
-    setOpen(false);
+    if (date && date !== today) qs.set("date", date);
+    if (openFilters) qs.set("filters", "1");
     router.push(`/${driver ? "requests" : "trips"}?${qs.toString()}`);
   };
 
-  const barLabel = from && to ? `${from} → ${to}` : t("hub_search_placeholder");
+  const ready = Boolean(from && to);
+  const dateLabel = !date || date === today ? t("today") : date;
 
   return (
     <div className="mx-auto w-full max-w-[560px]">
-      <div className="px-4 pt-3 pb-[172px]">
+      <div className="px-4 pt-3 pb-[248px]">
         <div className="mb-3 flex items-center justify-end">
           <OnlineBadge className="bg-ink-50 dark:bg-ink-900" />
         </div>
 
-        <IntentToggle
-          value={driver ? "driver" : "passenger"}
-          onChange={(v) => setActiveMode(v)}
-          showHint
-        />
+        <IntentToggle value={driver ? "driver" : "passenger"} onChange={(v) => setActiveMode(v)} showHint />
 
         <div className="mt-4">
           <BecomeDriverBanner />
-          <FeedEntryHints
-            tab={driver ? "requests" : "trips"}
-            onPick={(f, tt) => go(f, tt, whole)}
-          />
+          <FeedEntryHints tab={driver ? "requests" : "trips"} onPick={(f, tt) => goRoute(f, tt, whole)} />
         </div>
       </div>
 
-      {/* Docked search bar — above the tab bar; taps open the search modal */}
+      {/* Docked search card — inline Откуда/Куда inputs; «Найти» → results page */}
       <div className="fixed inset-x-0 bottom-[calc(80px+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[560px] px-4 md:bottom-6">
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="flex w-full items-center gap-3 rounded-3xl bg-white p-2.5 pl-4 text-left shadow-lift ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
-        >
-          <span className={cn("min-w-0 flex-1 truncate text-[15px] font-800", from && to ? "text-ink-900 dark:text-white" : "text-ink-400")}>
-            {barLabel}
-          </span>
-          <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-accent-ink shadow-cta", driver ? "bg-grape-600 text-white shadow-indigocta" : "bg-accent-500")}>
-            <Search className="h-5 w-5" aria-hidden="true" />
-          </span>
-        </button>
-      </div>
-
-      {/* Search modal */}
-      {open && (
-        <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setOpen(false)} />
-      )}
-      <div
-        className={`search-sheet sheet-nav-pad fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-t-4xl bg-white dark:bg-ink-900${open ? " open" : ""}`}
-      >
-        <div className="flex items-center justify-between px-5 pt-5">
-          <h2 className="text-[18px] font-900 text-ink-900 dark:text-white">
-            {driver ? t("mode_requests_title") : t("mode_trips_title")}
-          </h2>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label={t("close")}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="px-5 pb-6 pt-4">
+        <div className="rounded-3xl bg-white p-3 shadow-lift ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
           <div className="rounded-2xl bg-ink-50 p-1.5 dark:bg-ink-800/60">
             <div className="flex items-center gap-2.5 pl-2.5">
               <Circle className="h-3 w-3 shrink-0 fill-brand-600 text-brand-600" aria-hidden="true" />
               <CityAutocomplete
                 borderless
+                dropUp
                 value={from}
                 onChange={(v) => { if (v) setFrom(v); }}
                 placeholder={t("from_placeholder")}
@@ -154,6 +116,7 @@ export function SearchHub() {
               <MapPin className="h-3.5 w-3.5 shrink-0 fill-accent-500/20 text-accent-500" aria-hidden="true" />
               <CityAutocomplete
                 borderless
+                dropUp
                 value={to}
                 onChange={(v) => { if (v) setTo(v); }}
                 placeholder={t("to_placeholder")}
@@ -162,28 +125,56 @@ export function SearchHub() {
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-2.5 flex items-stretch gap-2">
             <RideTypeToggle whole={whole} onChange={setWhole} accent={driver ? "grape" : "brand"} />
+            <button
+              type="button"
+              onClick={() => goRoute(from, to, whole, true)}
+              disabled={!ready}
+              aria-label={t("filters")}
+              className="flex w-11 shrink-0 items-center justify-center rounded-2xl bg-ink-100 text-ink-600 transition-colors hover:bg-ink-200 disabled:opacity-40 dark:bg-ink-800 dark:text-ink-300"
+            >
+              <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => go(from, to, whole)}
-            disabled={!from || !to}
-            className={cn(
-              "mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-900 shadow-cta transition-colors",
-              from && to
-                ? driver
-                  ? "bg-grape-600 text-white shadow-indigocta hover:bg-grape-500"
-                  : "bg-accent-500 text-accent-ink hover:bg-accent-400"
-                : "cursor-not-allowed bg-ink-200 text-ink-400 shadow-none dark:bg-ink-800 dark:text-ink-500",
-            )}
-          >
-            <Search className="h-5 w-5" aria-hidden="true" />
-            {driver ? t("find_passenger") : t("find_trip")}
-          </button>
+          <div className="mt-2.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="flex h-12 shrink-0 items-center gap-1.5 rounded-2xl bg-ink-50 px-3.5 text-[13px] font-800 text-ink-800 dark:bg-ink-800/60 dark:text-ink-100"
+            >
+              <CalendarDays className="h-4 w-4 text-brand-500" aria-hidden="true" />
+              {dateLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => goRoute(from, to, whole)}
+              disabled={!ready}
+              className={cn(
+                "flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl text-[15px] font-900 transition-colors",
+                ready
+                  ? driver
+                    ? "bg-grape-600 text-white shadow-indigocta hover:bg-grape-500"
+                    : "bg-accent-500 text-accent-ink shadow-cta hover:bg-accent-400"
+                  : "cursor-not-allowed bg-ink-200 text-ink-400 dark:bg-ink-800 dark:text-ink-500",
+              )}
+            >
+              <Search className="h-5 w-5" aria-hidden="true" />
+              {driver ? t("find_passenger") : t("find_trip")}
+            </button>
+          </div>
         </div>
       </div>
+
+      <DatePickerModal
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        value={date}
+        onChange={(v) => setDate(v)}
+        min={today}
+        title={t("pick_date")}
+      />
     </div>
   );
 }

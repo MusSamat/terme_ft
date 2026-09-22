@@ -112,7 +112,8 @@ export function SearchLayout({ initial }: Props) {
   // Route-first: only fetch/show results once both cities are set.
   const hasRoute = Boolean(params.from_city && params.to_city);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  // Arrive with ?filters=1 (from the hub's filter icon) → open the sheet.
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(() => searchParams.get("filters") === "1");
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isError, error, refetch, isPlaceholderData, isFetching } = useInfiniteQuery({
