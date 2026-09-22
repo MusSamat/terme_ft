@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { ArrowDownUp, CalendarDays, Circle, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { DatePickerModal } from "@/components/ui/date-picker";
 import { RouteSearchModal } from "./route-search-modal";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { IntentToggle } from "./intent-toggle";
 import { RideTypeToggle } from "./ride-type-toggle";
@@ -102,13 +103,21 @@ export function SearchHub() {
           <div className="rounded-2xl bg-ink-50 p-1.5 dark:bg-ink-800/60">
             <div className="flex items-center gap-2.5 pl-2.5">
               <Circle className="h-3 w-3 shrink-0 fill-brand-600 text-brand-600" aria-hidden="true" />
+              {/* mobile: tap opens the route sheet · desktop: inline dropdown */}
               <button
                 type="button"
                 onClick={() => openSearch(false)}
-                className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700"
+                className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700 md:hidden"
               >
                 <span className={from ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{from || t("from_placeholder")}</span>
               </button>
+              <CityAutocomplete
+                borderless
+                value={from}
+                onChange={(v) => { if (v) setFrom(v); }}
+                placeholder={t("from_placeholder")}
+                className="hidden min-w-0 flex-1 md:block"
+              />
               <button
                 type="button"
                 onClick={() => { setFrom(to); setTo(from); }}
@@ -125,10 +134,17 @@ export function SearchHub() {
               <button
                 type="button"
                 onClick={() => openSearch(true)}
-                className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700"
+                className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700 md:hidden"
               >
                 <span className={to ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{to || t("to_placeholder")}</span>
               </button>
+              <CityAutocomplete
+                borderless
+                value={to}
+                onChange={(v) => { if (v) setTo(v); }}
+                placeholder={t("to_placeholder")}
+                className="hidden min-w-0 flex-1 md:block"
+              />
             </div>
           </div>
 

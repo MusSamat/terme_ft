@@ -2,6 +2,7 @@ import { api } from "./client";
 
 export interface City {
   id: number;
+  type?: string; // city | town | village | raion … — used to tag район/город
   nameRu: string;
   nameKg: string;
   nameEn: string;

@@ -5,12 +5,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { Check, Circle, Flag, MapPin, X } from "lucide-react";
 import { searchCities, getCities, type City } from "@/lib/api/cities";
 
-// «Баткен району, Самаркандек айылы» — district + aiyl, never the oblast.
-// Empty for republican cities (Бишкек/Ош) with no district.
+// Result tag: раionы show «район», settlements show their «район, айыл» context
+// (never the oblast), and an oblast-level город with no district shows «город»
+// — so «Баткен · район» vs «Баткен · город» read clearly.
 function citySubtitle(city: City, kg: boolean): string {
+  if (city.type === "raion") return "район";
   const d = (kg ? city.districtNameKg : city.districtNameRu)?.trim();
   const a = (kg ? city.aiylAimakNameKg : city.aiylAimakNameRu)?.trim();
-  return [d, a].filter((s): s is string => !!s).join(", ");
+  const parts = [d, a].filter((s): s is string => !!s);
+  if (parts.length) return parts.join(", ");
+  if (city.type === "city") return kg ? "шаар" : "город";
+  return "";
 }
 
 // Route search modal (Yandex «Межгород» style): Откуда + Куда together at the

@@ -12,7 +12,8 @@ export const KG_CITIES: CityCoord[] = [
   { nameRu: "Нарын", nameKg: "Нарын", lat: 41.4287, lng: 75.9911 },
   { nameRu: "Талас", nameKg: "Талас", lat: 42.5185, lng: 72.2428 },
   { nameRu: "Чолпон-Ата", nameKg: "Чолпон-Ата", lat: 42.6497, lng: 77.0811 },
-  { nameRu: "Джалал-Абад", nameKg: "Жалал-Абад", lat: 40.9333, lng: 72.9861 },
+  { nameRu: "Жалал-Абад", nameKg: "Жалал-Абад", lat: 40.9333, lng: 72.9861 },
+  { nameRu: "Манас", nameKg: "Манас", lat: 41.2333, lng: 72.9333 },
   { nameRu: "Иссык-Куль", nameKg: "Ысык-Көл", lat: 42.45, lng: 77.75 },
 ];
 

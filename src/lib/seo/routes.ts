@@ -24,7 +24,7 @@ const CITIES: Record<string, RouteCity> = {
   "jalal-abad": {
     key: "jalal-abad",
     slug: "jalal-abad",
-    nameRu: "Джалал-Абад",
+    nameRu: "Жалал-Абад",
     nameKg: "Жалал-Абад",
   },
   "issyk-kul": {
