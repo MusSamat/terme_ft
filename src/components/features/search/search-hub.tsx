@@ -15,11 +15,10 @@ import { addRecentRoute } from "@/lib/recent-routes";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
 
-// Home `/` — the search HUB. Rails on top (destinations · popular · history) and
-// a docked search card at the bottom with the SAME inline inputs as before
-// (Откуда/Куда autocomplete). Search happens here; «Найти» NAVIGATES to the
-// results page — /trips (passenger) or /requests (driver) — by role. Results
-// never render on the main page.
+// Home `/` — the search HUB. Rails on top (destinations · popular · history)
+// then an in-flow search card (Откуда/Куда autocomplete) that sits above the
+// footer. Search happens here; «Найти» NAVIGATES to the results page — /trips
+// (passenger) or /requests (driver) — by role. Results never render here.
 
 function readLastRoute(): { from: string; to: string } {
   try {
@@ -73,8 +72,7 @@ export function SearchHub() {
   const dateLabel = !date || date === today ? t("today") : date;
 
   return (
-    <div className="mx-auto w-full max-w-[560px]">
-      <div className="px-4 pt-3 pb-[248px]">
+    <div className="mx-auto w-full max-w-[560px] px-4 pt-3 pb-12">
         <div className="mb-3 flex items-center justify-end">
           <OnlineBadge className="bg-ink-50 dark:bg-ink-900" />
         </div>
@@ -85,17 +83,14 @@ export function SearchHub() {
           <BecomeDriverBanner />
           <FeedEntryHints tab={driver ? "requests" : "trips"} onPick={(f, tt) => goRoute(f, tt, whole)} />
         </div>
-      </div>
 
-      {/* Docked search card — inline Откуда/Куда inputs; «Найти» → results page */}
-      <div className="fixed inset-x-0 bottom-[calc(80px+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[560px] px-4 md:bottom-6">
-        <div className="rounded-3xl bg-white p-3 shadow-lift ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+      {/* Search card — normal flow, sits above the footer (not over it) */}
+      <div className="mt-2 rounded-3xl bg-white p-3 shadow-lift ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
           <div className="rounded-2xl bg-ink-50 p-1.5 dark:bg-ink-800/60">
             <div className="flex items-center gap-2.5 pl-2.5">
               <Circle className="h-3 w-3 shrink-0 fill-brand-600 text-brand-600" aria-hidden="true" />
               <CityAutocomplete
                 borderless
-                dropUp
                 value={from}
                 onChange={(v) => { if (v) setFrom(v); }}
                 placeholder={t("from_placeholder")}
@@ -116,7 +111,6 @@ export function SearchHub() {
               <MapPin className="h-3.5 w-3.5 shrink-0 fill-accent-500/20 text-accent-500" aria-hidden="true" />
               <CityAutocomplete
                 borderless
-                dropUp
                 value={to}
                 onChange={(v) => { if (v) setTo(v); }}
                 placeholder={t("to_placeholder")}
@@ -165,7 +159,6 @@ export function SearchHub() {
             </button>
           </div>
         </div>
-      </div>
 
       <DatePickerModal
         open={pickerOpen}

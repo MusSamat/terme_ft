@@ -28,7 +28,7 @@ export function RideTypeToggle({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "flex h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl text-[12.5px] font-800 transition-colors",
+        "flex h-10 min-w-0 items-center justify-center gap-1 whitespace-nowrap rounded-xl px-1 text-[11.5px] font-800 transition-colors",
         active ? cn("bg-white shadow-xs dark:bg-ink-900", onTone) : "text-ink-500 dark:text-ink-400",
       )}
     >
@@ -39,8 +39,8 @@ export function RideTypeToggle({
 
   return (
     <div className="grid flex-1 grid-cols-2 gap-1.5 rounded-2xl bg-ink-100 p-1 dark:bg-ink-800">
-      {seg(!whole, t("ride_shared"), <Users className="h-4 w-4 shrink-0" aria-hidden="true" />, () => onChange(false))}
-      {seg(whole, t("ride_whole"), <CarFront className="h-4 w-4 shrink-0" aria-hidden="true" />, () => onChange(true))}
+      {seg(!whole, t("ride_shared"), <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />, () => onChange(false))}
+      {seg(whole, t("ride_whole"), <CarFront className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />, () => onChange(true))}
     </div>
   );
 }
