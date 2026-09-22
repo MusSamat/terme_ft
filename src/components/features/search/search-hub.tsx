@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowDownUp, CalendarDays, Circle, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { DatePickerModal } from "@/components/ui/date-picker";
-import { CityAutocomplete } from "@/components/ui/city-autocomplete";
+import { RouteSearchModal } from "./route-search-modal";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { IntentToggle } from "./intent-toggle";
 import { RideTypeToggle } from "./ride-type-toggle";
@@ -42,6 +42,9 @@ export function SearchHub() {
   const [whole, setWhole] = useState(false);
   const [date, setDate] = useState(""); // "" = today
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchFocusTo, setSearchFocusTo] = useState(false);
+  const openSearch = (focusTo: boolean) => { setSearchFocusTo(focusTo); setSearchOpen(true); };
 
   useEffect(() => {
     const r = readLastRoute();
@@ -99,13 +102,13 @@ export function SearchHub() {
           <div className="rounded-2xl bg-ink-50 p-1.5 dark:bg-ink-800/60">
             <div className="flex items-center gap-2.5 pl-2.5">
               <Circle className="h-3 w-3 shrink-0 fill-brand-600 text-brand-600" aria-hidden="true" />
-              <CityAutocomplete
-                borderless
-                value={from}
-                onChange={(v) => { if (v) setFrom(v); }}
-                placeholder={t("from_placeholder")}
-                className="min-w-0 flex-1"
-              />
+              <button
+                type="button"
+                onClick={() => openSearch(false)}
+                className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700"
+              >
+                <span className={from ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{from || t("from_placeholder")}</span>
+              </button>
               <button
                 type="button"
                 onClick={() => { setFrom(to); setTo(from); }}
@@ -119,13 +122,13 @@ export function SearchHub() {
             <div className="my-1 ml-[26px] border-t border-dashed border-ink-200 dark:border-ink-700" aria-hidden="true" />
             <div className="flex items-center gap-2.5 pl-2.5 pr-11">
               <MapPin className="h-3.5 w-3.5 shrink-0 fill-accent-500/20 text-accent-500" aria-hidden="true" />
-              <CityAutocomplete
-                borderless
-                value={to}
-                onChange={(v) => { if (v) setTo(v); }}
-                placeholder={t("to_placeholder")}
-                className="min-w-0 flex-1"
-              />
+              <button
+                type="button"
+                onClick={() => openSearch(true)}
+                className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700"
+              >
+                <span className={to ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{to || t("to_placeholder")}</span>
+              </button>
             </div>
           </div>
 
@@ -178,6 +181,15 @@ export function SearchHub() {
         onChange={(v) => setDate(v)}
         min={today}
         title={t("pick_date")}
+      />
+
+      <RouteSearchModal
+        open={searchOpen}
+        initialFrom={from}
+        initialTo={to}
+        focusTo={searchFocusTo}
+        onClose={() => setSearchOpen(false)}
+        onApply={(f, tt) => { setFrom(f); setTo(tt); setSearchOpen(false); }}
       />
     </div>
   );
