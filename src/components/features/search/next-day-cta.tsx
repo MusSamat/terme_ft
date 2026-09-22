@@ -31,7 +31,9 @@ export function NextDayCta({ kind }: { kind: "trips" | "requests" }) {
   const counts = useCalendarCounts(kind, from, to, Boolean(from && to));
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  if (!from || !to || !counts) return null;
+  // Only when the per-day counts are loaded AND non-empty — an all-empty map
+  // means «no calendar data yet», so don't flash a dead-end calendar link.
+  if (!from || !to || !counts || Object.keys(counts).length === 0) return null;
 
   const today = ymdKg(0);
   const tomorrow = ymdKg(1);

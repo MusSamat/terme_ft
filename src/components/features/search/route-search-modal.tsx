@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check, Circle, MapPin, X } from "lucide-react";
+import { Check, Circle, Flag, MapPin, X } from "lucide-react";
 import { searchCities, getCities, type City } from "@/lib/api/cities";
 
 // Route search modal (Yandex «Межгород» style): Откуда + Куда together at the
@@ -116,15 +116,15 @@ export function RouteSearchModal({
   return (
     <>
       <div className="fixed inset-0 z-[80] bg-black/40" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-[90] mx-auto flex max-h-[95vh] w-full max-w-[560px] flex-col rounded-t-4xl bg-ink-50 shadow-lift dark:bg-ink-950">
+      <div className="fixed inset-x-0 bottom-0 z-[90] mx-auto flex max-h-[82vh] w-full max-w-[560px] flex-col rounded-t-4xl bg-ink-50 shadow-lift dark:bg-ink-950">
         <div className="flex items-start gap-2 p-4">
           <div className="min-w-0 flex-1 rounded-2xl border border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-900">
             {field(from, setFrom, fromRef, false,
-              <Circle className="h-3 w-3 shrink-0 fill-brand-600 text-brand-600" aria-hidden="true" />,
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-600"><Circle className="h-2.5 w-2.5 fill-white text-white" aria-hidden="true" /></span>,
               t("from_placeholder"))}
-            <div className="ml-[26px] border-t border-ink-100 dark:border-ink-800" />
+            <div className="ml-[46px] border-t border-ink-100 dark:border-ink-800" />
             {field(to, setTo, toRef, true,
-              <MapPin className="h-3.5 w-3.5 shrink-0 fill-accent-500/20 text-accent-500" aria-hidden="true" />,
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-500"><Flag className="h-4 w-4 text-white" aria-hidden="true" /></span>,
               t("to_placeholder"))}
           </div>
           <button
