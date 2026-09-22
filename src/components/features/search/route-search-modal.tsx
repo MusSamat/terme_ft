@@ -10,12 +10,12 @@ import { searchCities, getCities, type City } from "@/lib/api/cities";
 // — so «Баткен · район» vs «Баткен · город» read clearly.
 function citySubtitle(city: City, kg: boolean): string {
   if (city.type === "raion") return "район";
+  // Oblast-level город → tag «город/шаар» (its district is often the same name,
+  // e.g. «Баткен» город in «Баткен» район — showing the district would be noise).
+  if (city.type === "city") return kg ? "шаар" : "город";
   const d = (kg ? city.districtNameKg : city.districtNameRu)?.trim();
   const a = (kg ? city.aiylAimakNameKg : city.aiylAimakNameRu)?.trim();
-  const parts = [d, a].filter((s): s is string => !!s);
-  if (parts.length) return parts.join(", ");
-  if (city.type === "city") return kg ? "шаар" : "город";
-  return "";
+  return [d, a].filter((s): s is string => !!s).join(", ");
 }
 
 // Route search modal (Yandex «Межгород» style): Откуда + Куда together at the

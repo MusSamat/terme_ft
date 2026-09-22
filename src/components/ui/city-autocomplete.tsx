@@ -42,13 +42,12 @@ function useDebounce<T>(value: T, ms: number): T {
 function getSubtitle(city: City, locale: Locale): string {
   const kg = locale === "kg";
   if (city.type === "raion") return "район";
+  // Oblast-level город → tag «город/шаар» (never the oblast, and skip a district
+  // that just repeats the name, e.g. «Баткен» город in «Баткен» район).
+  if (city.type === "city") return kg ? "шаар" : "город";
   const district = (kg ? city.districtNameKg : city.districtNameRu)?.trim();
   const aimak = (kg ? city.aiylAimakNameKg : city.aiylAimakNameRu)?.trim();
-  const parts = [district, aimak].filter((p): p is string => !!p);
-  if (parts.length) return parts.join(", ");
-  // Oblast-level город with no district → tag it (never show the oblast).
-  if (city.type === "city") return kg ? "шаар" : "город";
-  return "";
+  return [district, aimak].filter((p): p is string => !!p).join(", ");
 }
 
 // Module-level cache — fetched once for the session, shared across all instances.
