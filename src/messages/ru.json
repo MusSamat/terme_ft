@@ -1259,6 +1259,8 @@
     "search_history": "История поиска",
     "from_price": "от {n} сом",
     "clear": "очистить",
+    "close": "Закрыть",
+    "hub_search_placeholder": "Куда едем?",
     "filters": "Фильтры",
     "today": "Сегодня",
     "tomorrow": "Завтра",
