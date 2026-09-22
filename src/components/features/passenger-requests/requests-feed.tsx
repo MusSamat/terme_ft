@@ -172,7 +172,7 @@ export function RequestsFeed() {
 
         <div className="px-4 pb-6">
           {!hasRoute ? (
-            <FeedEntryHints onPick={pickRoute} />
+            <FeedEntryHints onPick={pickRoute} tab="requests" />
           ) : isLoading ? (
             <CardSkeletonList variant="request" />
           ) : isError ? (

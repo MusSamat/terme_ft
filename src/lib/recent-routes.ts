@@ -34,3 +34,11 @@ export function addRecentRoute(from: string, to: string): void {
     /* quota / private mode */
   }
 }
+
+export function clearRecentRoutes(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* private mode */
+  }
+}

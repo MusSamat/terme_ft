@@ -208,7 +208,7 @@ export function SearchLayout({ initial }: Props) {
         <div className="px-4 pb-6">
           <BecomeDriverBanner />
           {!hasRoute ? (
-            <FeedEntryHints onPick={pickRoute} />
+            <FeedEntryHints onPick={pickRoute} tab="trips" />
           ) : isFetching && trips.length === 0 ? (
             <CardSkeletonList variant="trip" />
           ) : trips.length === 0 ? (
