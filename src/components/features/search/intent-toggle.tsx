@@ -1,8 +1,30 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CarFront, User, Search } from "lucide-react";
+import { CarFront, Search } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+
+// Role image (driver = person+wheel, passenger = person), tinted via CSS mask
+// so it matches the segment/hint colour — same art as the role-switch loader.
+function RoleIcon({ role, className }: { role: Intent; className?: string }) {
+  const img = `url(/role-${role}.png)`;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("shrink-0", className)}
+      style={{
+        maskImage: img,
+        WebkitMaskImage: img,
+        maskSize: "contain",
+        WebkitMaskSize: "contain",
+        maskRepeat: "no-repeat",
+        WebkitMaskRepeat: "no-repeat",
+        maskPosition: "center",
+        WebkitMaskPosition: "center",
+      }}
+    />
+  );
+}
 
 // Role / intent switch — a segmented control with one sliding thumb in the
 // active role colour (teal = passenger, grape = driver). Reads as a single
@@ -45,7 +67,7 @@ export function IntentToggle({ value, onChange, className, showHint }: Props) {
             !driver ? "text-white" : "text-ink-500 dark:text-ink-400",
           )}
         >
-          <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <RoleIcon role="passenger" className={cn("h-4 w-4", !driver ? "bg-white" : "bg-ink-500 dark:bg-ink-400")} />
           <span className="truncate">{t("mode_trips_title")}</span>
         </button>
         <button
@@ -57,7 +79,7 @@ export function IntentToggle({ value, onChange, className, showHint }: Props) {
             driver ? "text-white" : "text-ink-500 dark:text-ink-400",
           )}
         >
-          <CarFront className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <RoleIcon role="driver" className={cn("h-4 w-4", driver ? "bg-white" : "bg-ink-500 dark:bg-ink-400")} />
           <span className="truncate">{t("mode_requests_title")}</span>
         </button>
       </div>

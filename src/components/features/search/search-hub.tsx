@@ -72,7 +72,7 @@ export function SearchHub() {
   const dateLabel = !date || date === today ? t("today") : date;
 
   return (
-    <div className="mx-auto w-full max-w-[560px] px-4 pt-3 pb-12">
+    <div className="mx-auto w-full max-w-[560px] px-4 pt-3 pb-[336px] md:pb-12">
         <div className="mb-3 flex items-center justify-end">
           <OnlineBadge className="bg-ink-50 dark:bg-ink-900" />
         </div>
@@ -81,11 +81,18 @@ export function SearchHub() {
 
         <div className="mt-4">
           <BecomeDriverBanner />
-          <FeedEntryHints tab={driver ? "requests" : "trips"} onPick={(f, tt) => goRoute(f, tt, whole)} />
+          <FeedEntryHints
+            tab={driver ? "requests" : "trips"}
+            onPick={(f, tt) => goRoute(f, tt, whole)}
+            onDestination={(city) => setTo(city)}
+          />
         </div>
 
-      {/* Search card — normal flow, sits above the footer (not over it) */}
-      <div className="mt-2 rounded-3xl bg-white p-3 shadow-lift ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+      {/* Search card — floats above the bottom-nav on mobile (footer hidden
+          there) so it's always visible while the rails scroll behind it; on
+          desktop it's in normal flow, above the footer. */}
+      <div className="fixed inset-x-0 bottom-[calc(94px+env(safe-area-inset-bottom))] z-30 px-4 md:static md:bottom-auto md:mt-2 md:px-0">
+      <div className="mx-auto max-w-[560px] rounded-3xl bg-white p-3 shadow-lift ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800 md:max-w-none">
           <div className="rounded-2xl bg-ink-50 p-1.5 dark:bg-ink-800/60">
             <div className="flex items-center gap-2.5 pl-2.5">
               <Circle className="h-3 w-3 shrink-0 fill-brand-600 text-brand-600" aria-hidden="true" />
@@ -159,6 +166,7 @@ export function SearchHub() {
             </button>
           </div>
         </div>
+      </div>
 
       <DatePickerModal
         open={pickerOpen}

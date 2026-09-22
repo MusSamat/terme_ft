@@ -31,7 +31,7 @@ function Rail({ title, action, children }: { title: string; action?: React.React
   );
 }
 
-export function FeedEntryHints({ onPick, tab = "trips" }: { onPick: (from: string, to: string) => void; tab?: Tab }) {
+export function FeedEntryHints({ onPick, onDestination, tab = "trips" }: { onPick: (from: string, to: string) => void; onDestination?: (to: string) => void; tab?: Tab }) {
   const t = useTranslations("feed");
   const grape = tab === "requests";
   const [recent, setRecent] = useState<RecentRoute[]>([]);
@@ -64,6 +64,8 @@ export function FeedEntryHints({ onPick, tab = "trips" }: { onPick: (from: strin
   const mineIsTrip = activeTrips.length > 0;
   const mineCount = mineIsTrip ? activeTrips.length : activeReqs.length;
   const showMine = authed && mineCount > 0;
+  // «Куда едем/везём» is a filler — only when there's no active + no history.
+  const showDests = !showMine && recent.length === 0;
 
   // Top destinations — one best (highest-count) route per destination city.
   const destinations: PopularRoute[] = [];
@@ -82,30 +84,6 @@ export function FeedEntryHints({ onPick, tab = "trips" }: { onPick: (from: strin
 
   return (
     <div className="pt-2">
-      {destinations.length > 0 && (
-        <Rail title={grape ? t("destinations_requests") : t("destinations_trips")}>
-          {destinations.map((r) => (
-            <button
-              key={`d-${r.to}`}
-              type="button"
-              onClick={() => onPick(r.from, r.to)}
-              className="flex shrink-0 items-center gap-2.5 rounded-2xl bg-white px-3.5 py-3 text-left shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
-            >
-              <div className="min-w-0">
-                <div className="whitespace-nowrap text-[14px] font-900 text-ink-900 dark:text-white">{r.to}</div>
-                {!grape && r.tripCount > 0 && (
-                  <div className={cn("text-[11px] font-800", countTone)}>{t("trips_count", { n: r.tripCount })}</div>
-                )}
-                {grape && r.minPrice != null && (
-                  <div className={cn("text-[11px] font-800", countTone)}>{t("from_price", { n: r.minPrice })}</div>
-                )}
-              </div>
-              <ArrowRight className={cn("h-4 w-4 shrink-0", goTone)} aria-hidden="true" />
-            </button>
-          ))}
-        </Rail>
-      )}
-
       {popular.length > 0 && (
         <Rail title={t("popular_title")}>
           {popular.map((r) => (
@@ -182,6 +160,30 @@ export function FeedEntryHints({ onPick, tab = "trips" }: { onPick: (from: strin
               {r.from}
               <span className="text-ink-400">→</span>
               {r.to}
+            </button>
+          ))}
+        </Rail>
+      )}
+
+      {showDests && destinations.length > 0 && (
+        <Rail title={grape ? t("destinations_requests") : t("destinations_trips")}>
+          {destinations.map((r) => (
+            <button
+              key={`d-${r.to}`}
+              type="button"
+              onClick={() => (onDestination ? onDestination(r.to) : onPick(r.from, r.to))}
+              className="flex shrink-0 items-center gap-2.5 rounded-2xl bg-white px-3.5 py-3 text-left shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
+            >
+              <div className="min-w-0">
+                <div className="whitespace-nowrap text-[14px] font-900 text-ink-900 dark:text-white">{r.to}</div>
+                {!grape && r.tripCount > 0 && (
+                  <div className={cn("text-[11px] font-800", countTone)}>{t("trips_count", { n: r.tripCount })}</div>
+                )}
+                {grape && r.minPrice != null && (
+                  <div className={cn("text-[11px] font-800", countTone)}>{t("from_price", { n: r.minPrice })}</div>
+                )}
+              </div>
+              <ArrowRight className={cn("h-4 w-4 shrink-0", goTone)} aria-hidden="true" />
             </button>
           ))}
         </Rail>

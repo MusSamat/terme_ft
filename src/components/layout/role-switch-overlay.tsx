@@ -21,7 +21,7 @@ export function RoleSwitchOverlay() {
     prev.current = mode;
     setDriver(mode === "driver");
     setShow(true);
-    const id = setTimeout(() => setShow(false), 1500);
+    const id = setTimeout(() => setShow(false), 900);
     return () => clearTimeout(id);
   }, [mode]);
 
