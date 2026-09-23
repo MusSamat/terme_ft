@@ -14,6 +14,7 @@ interface UseChatSocketOptions {
   onTyping?: (userId: string) => void;
   onRead?: (messageId: string, readAt: string) => void;
   onError?: (code: string) => void;
+  onLimitWarning?: (remaining: number) => void;
 }
 
 export interface ChatSocketApi {
@@ -31,6 +32,7 @@ export function useChatSocket({
   onTyping,
   onRead,
   onError,
+  onLimitWarning,
 }: UseChatSocketOptions): ChatSocketApi {
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -59,6 +61,7 @@ export function useChatSocket({
     const onReadEvent = (data: { message_id: string; read_at: string }) =>
       onRead?.(data.message_id, data.read_at);
     const onErrorEvent = (data: { code: string }) => onError?.(data.code);
+    const onLimitWarningEvent = (data: { remaining: number }) => onLimitWarning?.(data.remaining);
 
     // Re-join the booking room on EVERY (re)connect. `once` dropped the user
     // out of the room after any disconnect (tunnel restart, background tab):
@@ -73,6 +76,7 @@ export function useChatSocket({
     socket.on("chat:typing", onTypingEvent);
     socket.on("chat:read", onReadEvent);
     socket.on("chat:error", onErrorEvent);
+    socket.on("chat:limit_warning", onLimitWarningEvent);
 
     return () => {
       socket.emit("chat:leave", { booking_id: bookingId });
@@ -84,8 +88,9 @@ export function useChatSocket({
       socket.off("chat:typing", onTypingEvent);
       socket.off("chat:read", onReadEvent);
       socket.off("chat:error", onErrorEvent);
+      socket.off("chat:limit_warning", onLimitWarningEvent);
     };
-  }, [bookingId, onHistory, onMessage, onAck, onTyping, onRead, onError]);
+  }, [bookingId, onHistory, onMessage, onAck, onTyping, onRead, onError, onLimitWarning]);
 
   return {
     connected,

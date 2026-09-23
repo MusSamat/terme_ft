@@ -64,9 +64,13 @@ describe("findCity", () => {
     expect(findCity("")).toBeNull();
   });
 
-  it("finds Джалал-Абад by Kyrgyz variant (Жалал-Абад)", () => {
+  it("finds Жалал-Абад by name", () => {
     const city = findCity("Жалал-Абад");
     expect(city).not.toBeNull();
-    expect(city!.nameRu).toBe("Джалал-Абад");
+    expect(city!.nameRu).toBe("Жалал-Абад");
+  });
+
+  it("includes Манас", () => {
+    expect(findCity("Манас")).not.toBeNull();
   });
 });

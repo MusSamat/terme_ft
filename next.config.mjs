@@ -18,11 +18,8 @@ const nextConfig = {
       // dev — backend serves all static files (avatars, car photos, docs)
       { protocol: "http", hostname: "localhost", port: "3000", pathname: "/**" },
       // prod terme
-      { protocol: "https", hostname: "api.tappjet.kg", pathname: "/**" },
-      { protocol: "https", hostname: "files.tappjet.kg", pathname: "/**" },
-      // legacy popytchik domain
-      { protocol: "https", hostname: "api.popytchik.kg", pathname: "/**" },
-      { protocol: "https", hostname: "files.popytchik.kg", pathname: "/**" },
+      { protocol: "https", hostname: "api.terme.kg", pathname: "/**" },
+      { protocol: "https", hostname: "files.terme.kg", pathname: "/**" },
       // cloudflare tunnel (staging/testing)
       { protocol: "https", hostname: "*.trycloudflare.com", pathname: "/**" },
       { protocol: "https", hostname: "*.tile.openstreetmap.org" },

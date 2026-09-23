@@ -25,16 +25,21 @@ describe("phoneSchema", () => {
     expect(phoneSchema.safeParse("996700123456").success).toBe(false);
   });
 
-  it("rejects wrong country code", () => {
-    expect(phoneSchema.safeParse("+7700123456").success).toBe(false);
-    expect(phoneSchema.safeParse("+995700123456").success).toBe(false);
+  it("accepts other country codes as general E.164", () => {
+    // Backend KgPhoneSchema allows any E.164 number; only +996 is length-pinned.
+    expect(phoneSchema.safeParse("+7700123456").success).toBe(true);
+    expect(phoneSchema.safeParse("+995700123456").success).toBe(true);
   });
 
-  it("rejects too few digits after country code", () => {
+  it("rejects a bare country code with too few digits", () => {
+    expect(phoneSchema.safeParse("+7").success).toBe(false);
+  });
+
+  it("rejects +996 with too few national digits", () => {
     expect(phoneSchema.safeParse("+99670012345").success).toBe(false);  // 8 digits
   });
 
-  it("rejects too many digits after country code", () => {
+  it("rejects +996 with too many national digits", () => {
     expect(phoneSchema.safeParse("+9967001234567").success).toBe(false); // 10 digits
   });
 

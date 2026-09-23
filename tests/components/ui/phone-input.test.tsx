@@ -2,22 +2,30 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PhoneInput } from "@/components/ui/phone-input";
 
-describe("PhoneInput", () => {
-  it("displays the +996 prefix", () => {
-    render(<PhoneInput />);
-    expect(screen.getByText("+996")).toBeInTheDocument();
-  });
+// Post-redesign contract (commit "reg: changed input"): a single international
+// input seeded with +996 (Kyrgyzstan). The whole E.164 value is editable — the
+// user may delete +996 and type another country code. +996 caps at 9 national
+// digits; the value is displayed grouped as "+996 700 123 456".
 
+const PLACEHOLDER = "+996 700 123 456";
+
+describe("PhoneInput", () => {
   it("renders the placeholder", () => {
     render(<PhoneInput />);
-    expect(screen.getByPlaceholderText("XXX XX XX XX")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(PLACEHOLDER)).toBeInTheDocument();
   });
 
-  it("calls onValueChange with full E.164 number on input", () => {
+  it("seeds an empty caller with +996 on mount", () => {
     const onValueChange = vi.fn();
     render(<PhoneInput onValueChange={onValueChange} />);
-    fireEvent.change(screen.getByPlaceholderText("XXX XX XX XX"), {
-      target: { value: "700123456" },
+    expect(onValueChange).toHaveBeenCalledWith("+996");
+  });
+
+  it("calls onValueChange with the full E.164 number on input", () => {
+    const onValueChange = vi.fn();
+    render(<PhoneInput onValueChange={onValueChange} />);
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: "+996700123456" },
     });
     expect(onValueChange).toHaveBeenCalledWith("+996700123456");
   });
@@ -25,44 +33,43 @@ describe("PhoneInput", () => {
   it("strips non-digit characters from input", () => {
     const onValueChange = vi.fn();
     render(<PhoneInput onValueChange={onValueChange} />);
-    fireEvent.change(screen.getByPlaceholderText("XXX XX XX XX"), {
-      target: { value: "abc700def" },
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: "+996 700 abc" },
     });
     expect(onValueChange).toHaveBeenCalledWith("+996700");
   });
 
-  it("limits input to 9 digits", () => {
+  it("caps +996 numbers at 9 national digits", () => {
     const onValueChange = vi.fn();
     render(<PhoneInput onValueChange={onValueChange} />);
-    fireEvent.change(screen.getByPlaceholderText("XXX XX XX XX"), {
-      target: { value: "7001234567890" },
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: "+9967001234567890" },
     });
     expect(onValueChange).toHaveBeenCalledWith("+996700123456");
   });
 
-  it("calls onValueChange with empty string when cleared", () => {
+  it("allows deleting +996 to type another country code", () => {
     const onValueChange = vi.fn();
-    // Start with a value so the input is non-empty, then clear it
-    render(<PhoneInput value="+996700000000" onValueChange={onValueChange} />);
+    render(<PhoneInput value="+996700123456" onValueChange={onValueChange} />);
     onValueChange.mockClear();
-    fireEvent.change(screen.getByPlaceholderText("XXX XX XX XX"), {
-      target: { value: "" },
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: "+7700123456" },
     });
-    expect(onValueChange).toHaveBeenCalledWith("");
+    expect(onValueChange).toHaveBeenCalledWith("+7700123456");
   });
 
-  it("formats local part with spaces (XXX XX XX XX)", () => {
-    render(<PhoneInput value="+996700000000" />);
-    const input = screen.getByPlaceholderText("XXX XX XX XX") as HTMLInputElement;
-    expect(input.value).toBe("700 00 00 00");
+  it("formats the value grouped in threes for display", () => {
+    render(<PhoneInput value="+996700123456" />);
+    const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement;
+    expect(input.value).toBe("+996 700 123 456");
   });
 
   it("syncs with external value changes via useEffect", () => {
     const { rerender } = render(<PhoneInput value="+996700000000" />);
-    const input = screen.getByPlaceholderText("XXX XX XX XX") as HTMLInputElement;
-    expect(input.value).toBe("700 00 00 00");
+    const input = screen.getByPlaceholderText(PLACEHOLDER) as HTMLInputElement;
+    expect(input.value).toBe("+996 700 000 000");
     rerender(<PhoneInput value="+996555111222" />);
-    expect(input.value).toBe("555 11 12 22");
+    expect(input.value).toBe("+996 555 111 222");
   });
 
   it("renders hint text when provided", () => {
@@ -74,7 +81,7 @@ describe("PhoneInput", () => {
     render(<PhoneInput hint="Неверный номер" invalid />);
     const hint = screen.getByText("Неверный номер");
     expect(hint).toHaveClass("text-danger-500");
-    expect(screen.getByPlaceholderText("XXX XX XX XX")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByPlaceholderText(PLACEHOLDER)).toHaveAttribute("aria-invalid", "true");
   });
 
   it("does not render hint when not provided", () => {

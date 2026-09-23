@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAdminAuth } from "@/store/admin-auth";
 import { AdminAuthBootstrap } from "@/components/admin-auth-bootstrap";
+import { AdminNotificationListener } from "@/components/admin/admin-notification-listener";
 import { cn } from "@/lib/utils/cn";
 import {
   LayoutDashboard,
@@ -97,6 +98,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="fixed inset-0 z-[100] flex bg-ink-100">
       <AdminAuthBootstrap />
+      <AdminNotificationListener />
 
       {/* ── Sidebar ── */}
       <aside

@@ -45,7 +45,7 @@ export function Footer() {
     {
       title: t("support"),
       items: [
-        { href: "https://t.me/tappjet_support", label: t("telegram_support"), external: true },
+        { href: "https://t.me/terme_support", label: t("telegram_support"), external: true },
         { href: "/complaint", label: t("complaint") },
       ],
     },
@@ -72,7 +72,7 @@ export function Footer() {
               {t("tagline")}
             </p>
             <a
-              href="https://t.me/tappjet_support"
+              href="https://t.me/terme_support"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3.5 py-2 text-[13px] font-800 text-brand-700 transition-colors hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300 dark:hover:bg-brand-500/25"

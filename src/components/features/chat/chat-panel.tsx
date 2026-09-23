@@ -33,6 +33,7 @@ export function ChatPanel({ bookingId }: Props) {
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [limitRemaining, setLimitRemaining] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const originalTitleRef = useRef<string>("");
   const isInitialLoad = useRef(true);
@@ -139,6 +140,8 @@ export function ChatPanel({ bookingId }: Props) {
     }
   }, [t]);
 
+  const onLimitWarning = useCallback((remaining: number) => setLimitRemaining(remaining), []);
+
   const chat = useChatSocket({
     bookingId,
     onHistory,
@@ -147,6 +150,7 @@ export function ChatPanel({ bookingId }: Props) {
     onTyping,
     onRead,
     onError: onChatError,
+    onLimitWarning,
   });
 
   useEffect(() => {
@@ -277,6 +281,15 @@ export function ChatPanel({ bookingId }: Props) {
             </p>
             <p className="mt-0.5 text-[14px] font-semibold text-accent-700">
               {t("pre_book_hint")}
+            </p>
+          </div>
+        )}
+
+        {/* Pre-booking message-cap warning */}
+        {limitRemaining !== null && (
+          <div className="mx-5 mt-3 shrink-0 rounded-2xl border border-accent-100 bg-accent-50 px-3 py-2.5">
+            <p className="text-[14px] font-semibold text-accent-700">
+              {t("limit_warning", { n: limitRemaining })}
             </p>
           </div>
         )}
