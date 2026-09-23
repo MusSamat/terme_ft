@@ -44,7 +44,7 @@ export function RoutePickerStep() {
         type="button"
         onClick={() => {
           localStorage.setItem("terme_onboarding_done", "1");
-          router.replace("/trips");
+          router.replace("/");
         }}
         className="text-center text-[15px] font-700 text-ink-400 hover:text-brand-700"
       >
