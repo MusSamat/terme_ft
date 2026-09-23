@@ -236,6 +236,21 @@
     "login": "Кирүү",
     "cta_start": "Баштоо"
   },
+  "role_prompt": {
+    "gate_title": "Кандай жүрөсүз?",
+    "gate_sub": "Ролду тандаңыз — каалаган убакта которо аласыз",
+    "create_title": "Эмне жарыялайсыз?",
+    "create_sub": "Эмнени жайгаштырууну тандаңыз",
+    "passenger": "Жүргүнчү",
+    "driver": "Айдоочу",
+    "gate_passenger_desc": "Сапар издеп, орун ээлейм",
+    "gate_driver_desc": "Сапар сунуштап, жолдош алам",
+    "create_passenger": "Табыштама калтыруу",
+    "create_passenger_desc": "Багыт боюнча айдоочулар табат",
+    "create_driver": "Сапар жарыялоо",
+    "create_driver_desc": "Бош орундарды жолдошторго сунуштаңыз",
+    "close": "Жабуу"
+  },
   "brand": {
     "title": "Terme",
     "subtitle": "белги, маани, система",

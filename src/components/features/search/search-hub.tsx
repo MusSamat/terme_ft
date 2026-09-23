@@ -14,6 +14,7 @@ import { FeedEntryHints } from "./feed-entry-hints";
 import { BecomeDriverBanner } from "@/components/features/driver/become-driver-banner";
 import { addRecentRoute } from "@/lib/recent-routes";
 import { useAuth } from "@/store/auth";
+import { useRolePrompt, hasChosenRole } from "@/store/role-prompt";
 import { cn } from "@/lib/utils/cn";
 
 // Home `/` — the search HUB. Rails on top (destinations · popular · history)
@@ -37,6 +38,8 @@ export function SearchHub() {
   const router = useRouter();
   const driver = useAuth((s) => s.activeMode === "driver");
   const setActiveMode = useAuth((s) => s.setActiveMode);
+  const authed = useAuth((s) => s.status === "authenticated");
+  const openRolePrompt = useRolePrompt((s) => s.openPrompt);
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -52,6 +55,12 @@ export function SearchHub() {
     setFrom(r.from);
     setTo(r.to);
   }, []);
+
+  // First login / reopen on the hub with no saved choice → open the role gate
+  // once. Picking (or dismissing) sets terme_role_chosen so it never nags again.
+  useEffect(() => {
+    if (authed && !hasChosenRole()) openRolePrompt("gate");
+  }, [authed, openRolePrompt]);
 
   const today = new Date(Date.now() + 6 * 3_600_000).toISOString().slice(0, 10);
 

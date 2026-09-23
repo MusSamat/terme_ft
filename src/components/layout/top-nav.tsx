@@ -11,6 +11,7 @@ import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { toastError } from "@/components/layout/quick-toast";
 import { useAuth } from "@/store/auth";
+import { useRolePrompt } from "@/store/role-prompt";
 import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 import { useUnreadMessages } from "@/lib/hooks/use-unread-messages";
 import { useRoleTheme } from "@/lib/hooks/use-role-colors";
@@ -114,6 +115,7 @@ export function TopNav() {
   const user = useAuth((s) => s.user);
   const isAuthenticated = useAuth((s) => s.status === "authenticated");
   const activeMode = useAuth((s) => s.activeMode);
+  const openRolePrompt = useRolePrompt((s) => s.openPrompt);
   const { theme } = useRoleTheme();
   const { data: unreadNotif = 0 } = useUnreadCount();
   const { data: unreadMessages = 0 } = useUnreadMessages();
@@ -134,7 +136,6 @@ export function TopNav() {
   useEffect(() => { setDropOpen(false); }, [pathname]);
 
   const isDriver = activeMode === "driver";
-  const createHref = isDriver ? "/trips/create" : "/requests/create";
 
   const navLinks = isAuthenticated
     ? isDriver
@@ -194,13 +195,14 @@ export function TopNav() {
           <OnlineBadge className="mr-1" />
           {isAuthenticated ? (
             <>
-              <Link
-                href={createHref}
+              <button
+                type="button"
+                onClick={() => openRolePrompt("create")}
                 className="flex items-center gap-1.5 rounded-full bg-accent-500 px-4 py-1.5 text-[13px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 {t("create_btn")}
-              </Link>
+              </button>
 
               <Link href="/chat" aria-label={t("messages_aria")} className={ICON_BTN}>
                 <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" />

@@ -10,6 +10,7 @@ import { useUnreadMessages } from "@/lib/hooks/use-unread-messages";
 import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 import { useRoleTheme } from "@/lib/hooks/use-role-colors";
 import { useAuth } from "@/store/auth";
+import { useRolePrompt } from "@/store/role-prompt";
 import { cn } from "@/lib/utils/cn";
 
 // Floating pill bottom nav — design-spec §1.2.
@@ -74,6 +75,7 @@ export function BottomNav() {
   const activeMode = useAuth((s) => s.activeMode);
   const isDriver = activeMode === "driver";
   const { theme } = useRoleTheme();
+  const openRolePrompt = useRolePrompt((s) => s.openPrompt);
   const { data: unreadMessages = 0 } = useUnreadMessages();
   // Notifications live inside the chat hub now (no floating bell) — the tab
   // badge is the combined inbox count.
@@ -98,8 +100,6 @@ export function BottomNav() {
   // «Поиск» → the search HUB (main page), not the results list.
   const feedHref = "/";
   const feedActive = pathname === "/" || startsWith("/trips") || startsWith("/requests");
-  // One create route — the intent (drive / need a ride) is chosen inside the form.
-  const createHref = "/trips/create";
 
   // On-screen keyboard open → hide completely so it never covers the
   // focused input (chat, OTP) or rides on top of the keyboard.
@@ -142,9 +142,12 @@ export function BottomNav() {
               onNavigate={setPendingHref}
             />
 
-            {/* Center amber create FAB */}
-            <Link
-              href={createHref}
+            {/* Center amber create FAB — one button, two outcomes: opens the
+                role sheet so the user picks «поездку» (driver) or «заявку»
+                (passenger); the pick routes to the right form + sets the mode. */}
+            <button
+              type="button"
+              onClick={() => openRolePrompt("create")}
               aria-label={isDriver ? t("publish_trip_aria") : t("create_request_aria")}
               className="relative -mt-8 flex shrink-0 touch-manipulation flex-col items-center gap-1 transition-transform duration-100 active:scale-95"
             >
@@ -152,7 +155,7 @@ export function BottomNav() {
                 <Plus className="h-7 w-7" strokeWidth={2.6} aria-hidden="true" />
               </span>
               <span className="text-[12px] font-900 text-accent-600">{t("publish")}</span>
-            </Link>
+            </button>
 
             <NavTab
               href="/chat"

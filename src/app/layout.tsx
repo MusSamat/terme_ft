@@ -16,6 +16,7 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { MainRegion } from "@/components/layout/main-region";
 import { Footer } from "@/components/layout/footer";
 import { RoleSwitchOverlay } from "@/components/layout/role-switch-overlay";
+import { RoleSelectModal } from "@/components/features/role/role-select-modal";
 import { QuickActions } from "@/components/features/quick-actions/quick-actions";
 import { QuickToastContainer } from "@/components/layout/quick-toast";
 import { OfflineBanner } from "@/components/layout/offline-banner";
@@ -125,6 +126,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <QuickToastContainer />
               <OfflineBanner />
               <RoleSwitchOverlay />
+              <RoleSelectModal />
             </Providers>
           </ThemeProvider>
         </NextIntlClientProvider>
