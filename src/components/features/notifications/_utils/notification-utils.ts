@@ -156,6 +156,16 @@ export function buildBody(notif: AppNotification, t: Translator, locale: Locale)
     }
     case "request_response_declined":
       return t("body_request_response_declined");
+    case "request_cancelled_admin": {
+      const reason = str("reason") || str("body");
+      const from = str("originCity");
+      const to = str("destinationCity");
+      const route = from && to ? `${from} → ${to}` : "";
+      if (reason) return t("body_request_cancelled_admin", { reason });
+      return route
+        ? t("body_request_cancelled_admin_route", { route })
+        : t("body_request_cancelled_admin_fallback");
+    }
     case "new_message": {
       const preview = str("preview");
       return preview ? t("body_new_message", { preview }) : t("body_new_message_fallback");
@@ -237,6 +247,7 @@ export function buildDeepLink(notif: AppNotification): string | null {
     case "request_response_received":
     case "request_response_accepted":
     case "request_response_declined":
+    case "request_cancelled_admin":
       return "/my/requests";
     case "verification_approved":
     case "verification_rejected":

@@ -21,6 +21,10 @@ interface PendingMessage extends ChatMessage {
   pending?: boolean;
   failed?: boolean;
   clientMsgId?: string;
+  /** Set at optimistic-creation time on THIS client; survives ACK/echo
+   *  reconciliation and is the sole ownership marker (clientMsgId is only a
+   *  reconciliation key — the server echoes it to the recipient too). */
+  local?: boolean;
 }
 
 interface Props {
@@ -80,6 +84,9 @@ export function ChatPanel({ bookingId }: Props) {
             ? {
                 ...msg,
                 clientMsgId,
+                // Preserve the local ownership flag — `msg` is the server copy
+                // and would otherwise clear it, flipping our own bubble.
+                local: m.local,
                 pending: false,
                 ...(bufferedReadAt ? { isRead: true, readAt: bufferedReadAt } : {}),
               }
@@ -208,6 +215,7 @@ export function ChatPanel({ bookingId }: Props) {
       createdAt: new Date().toISOString(),
       pending: true,
       clientMsgId,
+      local: true,
     };
     setMessages((prev) => [...prev, optimistic]);
 
@@ -217,7 +225,11 @@ export function ChatPanel({ bookingId }: Props) {
       sendMessageRest(bookingId, text, clientMsgId)
         .then((sent) =>
           setMessages((prev) =>
-            prev.map((m) => (m.clientMsgId === clientMsgId ? { ...sent, clientMsgId } : m)),
+            prev.map((m) =>
+              m.clientMsgId === clientMsgId
+                ? { ...sent, clientMsgId, local: true, pending: false }
+                : m,
+            ),
           ),
         )
         .catch((e) => {

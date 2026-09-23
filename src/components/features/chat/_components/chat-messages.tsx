@@ -13,6 +13,10 @@ interface PendingMessage extends ChatMessage {
   pending?: boolean;
   failed?: boolean;
   clientMsgId?: string;
+  /** Set once at optimistic-creation time on THIS client. The only ownership
+   *  marker that survives ACK/echo reconciliation — clientMsgId is merely a
+   *  reconciliation key (the server echoes it to the recipient too). */
+  local?: boolean;
 }
 
 interface Props {
@@ -140,10 +144,14 @@ export function ChatMessages({
           ) : (
             <div className="flex flex-col gap-2">
               {messages.map((m, i) => {
-                // clientMsgId exists only on messages sent from THIS client, so
-                // they are ours even if the optimistic senderId was stamped
-                // before the auth store hydrated (myId briefly undefined).
-                const mine = Boolean(m.clientMsgId) || (Boolean(myId) && m.senderId === myId);
+                // Ownership is deterministic: a message is mine iff its
+                // senderId matches me, OR it was created locally on this client
+                // (the `local` flag survives reconciliation and covers the
+                // window where myId is briefly undefined during hydration).
+                // NEVER infer ownership from clientMsgId — it is a reconciliation
+                // key that the server echoes to the RECIPIENT too, so keying on
+                // it rendered both parties' bubbles on one side.
+                const mine = Boolean(m.local) || (Boolean(myId) && m.senderId === myId);
                 const newDay = i === 0 || dayOf(m.createdAt) !== dayOf(messages[i - 1]?.createdAt);
                 return (
                   <Fragment key={m.clientMsgId ?? m.id}>
