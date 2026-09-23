@@ -84,7 +84,8 @@ export interface ApiError {
 
 export interface Paginated<T> {
   data: T[];
-  next_cursor: string | null;
+  // Backend cursor envelopes are camelCase (sliceAndNext → nextCursor).
+  nextCursor: string | null;
 }
 
 /** Engagement fields returned on trip & passenger-request DTOs. */

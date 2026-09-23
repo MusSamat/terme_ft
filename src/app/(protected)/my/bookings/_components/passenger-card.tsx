@@ -5,17 +5,17 @@ import { useTranslations } from "next-intl";
 import { Star, X, MessageCircle } from "lucide-react";
 import { DriverAvatar } from "@/components/ui";
 import { ListCard, ListCardButton } from "@/components/ui/list-card";
-import type { Booking } from "@/lib/api/bookings";
+import { bookingTotal, type Booking } from "@/lib/api/bookings";
 import type { PendingRating } from "@/lib/api/ratings";
 
 type BookingExt = Booking & {
   tripId?: string;
-  totalPrice?: number;
   trip?: {
     id?: string;
     originCity?: string;
     destinationCity?: string;
     departureAt?: string;
+    pricePerSeat?: number;
     driver?: { name?: string; avatarUrl?: string | null };
   };
 };
@@ -71,7 +71,7 @@ export function PassengerCard({ booking, pendingRating, onRate, onCancel }: {
       destination={trip?.destinationCity ?? ""}
       avatar={<DriverAvatar name={driverName} src={trip?.driver?.avatarUrl} size="md" />}
       actorName={driverName}
-      actorSub={<span className="text-[11.5px] font-700 text-ink-500">{booking.seatsCount} · {booking.totalPrice ?? "—"} {t("som")}</span>}
+      actorSub={<span className="text-[11.5px] font-700 text-ink-500">{booking.seatsCount} · {bookingTotal(booking, trip?.pricePerSeat) ?? "—"} {t("som")}</span>}
       actions={actions.length ? actions : undefined}
     />
   );

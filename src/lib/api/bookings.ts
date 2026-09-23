@@ -14,7 +14,21 @@ export type BookingStatus =
   | "expired";
 
 type _BookingBase = components["schemas"]["Booking"];
-export type Booking = Omit<_BookingBase, "status"> & { status?: BookingStatus };
+export type Booking = Omit<_BookingBase, "status"> & {
+  status?: BookingStatus;
+  /** Price per seat frozen at booking time (schema.gen predates it). */
+  pricePerSeatSnapshot?: number | null;
+};
+
+/** Booking total: snapshot price × seats; legacy rows fall back to the trip's live price. */
+export function bookingTotal(
+  b: { pricePerSeatSnapshot?: number | null; seatsCount?: number },
+  tripPricePerSeat?: number | null,
+): number | null {
+  const per = b.pricePerSeatSnapshot ?? tripPricePerSeat ?? null;
+  if (per == null) return null;
+  return per * (b.seatsCount ?? 1);
+}
 
 export interface CreateBookingInput {
   tripId: string;

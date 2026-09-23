@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { MessageCircle, Star, X, Phone } from "lucide-react";
-import { listMyBookings, cancelBooking, type Booking } from "@/lib/api/bookings";
+import { listMyBookings, cancelBooking, bookingTotal, type Booking } from "@/lib/api/bookings";
 import { getPendingRatings } from "@/lib/api/ratings";
 import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
@@ -156,7 +156,7 @@ export function PassengerPanel({ trip, tripId }: { trip: TripDetail; tripId: str
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-ink-400">{t("sum_label")}</p>
             <p className="text-[17px] font-bold text-brand-700 dark:text-brand-300">
-              {(myBooking as BookingExt).totalPrice ?? "—"} {t("som")}
+              {bookingTotal(myBooking, trip.pricePerSeat as number | undefined) ?? "—"} {t("som")}
             </p>
           </div>
         </div>

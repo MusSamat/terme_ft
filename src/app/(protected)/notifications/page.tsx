@@ -103,7 +103,7 @@ export default function NotificationsPage() {
     queryFn: ({ pageParam }) =>
       getNotifications({ cursor: pageParam as string | undefined, limit: LIMIT }),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
