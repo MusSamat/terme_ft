@@ -246,9 +246,11 @@ export function ChatPanel({ bookingId }: Props) {
   const booking = bookingQuery.data;
   const rawBooking = booking as {
     passengerId?: string;
-    trip?: { driverId?: string; originCity?: string; destinationCity?: string; departureAt?: string; car?: string; driver?: { name?: string; avatarUrl?: string | null; phone?: string } };
+    tripId?: string;
+    trip?: { id?: string; driverId?: string; originCity?: string; destinationCity?: string; departureAt?: string; car?: string; driver?: { name?: string; avatarUrl?: string | null; phone?: string } };
     passenger?: { name?: string; avatarUrl?: string | null; phone?: string };
   } | undefined;
+  const tripId = rawBooking?.tripId ?? rawBooking?.trip?.id;
   const iAmDriver = rawBooking?.trip?.driverId === me?.id;
   const otherUserId = iAmDriver ? rawBooking?.passengerId : rawBooking?.trip?.driverId;
   const otherName = iAmDriver
@@ -281,6 +283,7 @@ export function ChatPanel({ bookingId }: Props) {
           otherPhone={otherPhone}
           bookingStatus={booking?.status}
           tripRoute={rawBooking?.trip ? `${rawBooking.trip.originCity} → ${rawBooking.trip.destinationCity}` : undefined}
+          tripId={tripId}
           connected={chat.connected}
           typingUserId={typingUserId}
         />

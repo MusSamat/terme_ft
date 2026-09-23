@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Phone, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CarFront, Phone, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DriverAvatar } from "@/components/ui";
 
@@ -12,6 +12,8 @@ interface Props {
   otherPhone?: string;
   bookingStatus?: string;
   tripRoute?: string;
+  /** When present, the header links to the trip the chat is about. */
+  tripId?: string;
   connected: boolean;
   typingUserId: string | null;
 }
@@ -23,6 +25,7 @@ export function ChatHeader({
   otherPhone,
   bookingStatus,
   tripRoute,
+  tripId,
   connected,
   typingUserId,
 }: Props) {
@@ -72,6 +75,18 @@ export function ChatHeader({
         </Link>
       ) : (
         <div className="flex min-w-0 flex-1 items-center gap-3">{nameBlock}</div>
+      )}
+
+      {/* Context link — open the trip/request this conversation is about. */}
+      {tripId && (
+        <Link
+          href={`/trips/${tripId}`}
+          aria-label={t("to_trip")}
+          title={t("to_trip")}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-600 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+        >
+          <CarFront className="h-4 w-4" aria-hidden="true" />
+        </Link>
       )}
 
       {isConfirmed && otherPhone && (
