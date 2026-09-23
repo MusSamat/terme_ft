@@ -2,8 +2,10 @@
 
 // Soft terms-acceptance gate: any authenticated user with termsAcceptedAt=null
 // (e.g. accounts created via Telegram silent login, which bypasses the
-// registration consent step) sees this modal once per session. Accepting
-// stamps termsAcceptedAt on the backend; "later" dismisses until next visit.
+// registration consent step) sees this modal. Accepting stamps termsAcceptedAt
+// on the backend (permanent, all devices). "Later" is remembered in
+// localStorage — per device, across tabs/logins — so the modal doesn't nag on
+// every new tab (it used to live in sessionStorage, which is per-tab).
 
 import { useState } from "react";
 import Link from "next/link";
@@ -22,7 +24,7 @@ export function TermsGate() {
   const updateUser = useAuth((s) => s.updateUser);
   const [dismissed, setDismissed] = useState(() => {
     try {
-      return typeof window !== "undefined" && sessionStorage.getItem(DISMISS_KEY) === "1";
+      return typeof window !== "undefined" && localStorage.getItem(DISMISS_KEY) === "1";
     } catch {
       return false;
     }
@@ -39,7 +41,7 @@ export function TermsGate() {
 
   const later = () => {
     try {
-      sessionStorage.setItem(DISMISS_KEY, "1");
+      localStorage.setItem(DISMISS_KEY, "1");
     } catch {
       /* private mode */
     }
