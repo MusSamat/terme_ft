@@ -344,6 +344,7 @@ export default function DriverVerifyPage() {
               key={pickedCarId ?? "new"}
               showYear
               requireYear
+              requireColor
               initial={(() => {
                 const c = garageCars.find((g) => g.id === pickedCarId);
                 return c

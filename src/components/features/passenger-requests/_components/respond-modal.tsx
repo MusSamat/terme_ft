@@ -51,7 +51,11 @@ export function RespondModal({ request, onClose }: Props) {
     onError: (e) => setError(fe(extractError(e))),
   });
 
-  const canSubmit = Boolean(price) && Number(price) > 0 && Boolean(date) && Boolean(time);
+  // Backend RespondBody: price int 1..100000, departureTime required.
+  const priceNum = Number(price);
+  const priceValid = Boolean(price) && Number.isFinite(priceNum) && priceNum >= 1 && priceNum <= 100_000;
+  const priceError = price && !priceValid ? t("price_range") : null;
+  const canSubmit = priceValid && Boolean(date) && Boolean(time);
 
   // Radix Modal owns focus-trap / Escape / scroll-lock / aria; closing via
   // onOpenChange covers overlay-click, the ✕ button and the Esc key uniformly.
@@ -77,6 +81,9 @@ export function RespondModal({ request, onClose }: Props) {
                 placeholder={t("price_placeholder")}
                 className="h-12 w-full rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 text-[17px] font-bold text-ink-900 outline-none focus:border-sky-400 focus:bg-white dark:border-ink-700 dark:bg-ink-800 dark:text-white"
               />
+              {priceError && (
+                <p className="mt-1.5 text-[13px] font-700 text-coral-600 dark:text-coral-400">{priceError}</p>
+              )}
             </div>
 
             {/* Date + time — stacked on mobile (each full-width, so the date

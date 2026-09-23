@@ -343,7 +343,7 @@
       "logging_in": "Кирүүдөбүз…",
       "change_number": "← Номерди өзгөртүү",
       "alternatives": "альтернативалар",
-      "login_sms": "Telegram коду менен кирүү",
+      "login_sms": "WhatsApp коду менен кирүү",
       "login_telegram": "Telegram аркылуу кирүү",
       "sending": "Жибербиз…",
       "checking": "Текшеребиз…",
@@ -351,16 +351,16 @@
       "forgot_title": "Купуя сөздү калыбына келтирүү",
       "forgot_hint": "Номериңизди киргизиңиз — WhatsApp аркылуу код жөнөтөбүз.",
       "get_code_btn": "Кодду алуу",
-      "no_password_hint": "Сизде азырынча купуя сөз жок. Аны Telegram аркылуу орнотуңуз.",
-      "set_password_btn": "Telegram аркылуу купуя сөз орнотуу",
+      "no_password_hint": "Сизде азырынча купуя сөз жок. Аны WhatsApp кодунун жардамы менен орнотуңуз.",
+      "set_password_btn": "WhatsApp коду менен купуя сөз орнотуу",
       "enter_phone_first": "Адегенде телефон номерин киргизиңиз.",
       "no_account": "Аккаунт жокпу?",
       "register_link": "Катталуу",
       "otp_sent": "WhatsApp аркылуу код жиберилди",
       "otp_reset_sent": "Купуя сөздү калыбына келтирүү коду WhatsApp аркылуу жиберилди",
-      "otp_telegram_hint": "Telegramdan @terme_kg_bot ачып, кодду киргизиңиз.",
+      "otp_telegram_hint": "WhatsApp'ка жиберилген кодду киргизиңиз.",
       "otp_dm_hint": "Код WhatsApp аркылуу номерге жөнөтүлдү",
-      "otp_open_bot": "Telegram'да ботту ачуу",
+      "otp_open_bot": "WhatsApp'ты ачуу",
       "otp_reset_hint": "Тастыктагандан кийин жаңы купуя сөз коё аласыз.",
       "otp_label": "Тастыктоо коду",
       "otp_digit": "{n} сан",
@@ -372,6 +372,7 @@
       "resend_btn": "Кодду кайра жиберүү",
       "reset_title": "Жаңы купуя сөз коюңуз",
       "reset_min_chars": "Минимум 8 белги, кеминде бир сан",
+      "reset_code_hint": "Биз WhatsApp'ка жаңы код жибердик — аны киргизиңиз",
       "new_password_label": "Жаңы купуя сөз",
       "new_password_placeholder": "Жаңы купуя сөздү киргизиңиз",
       "new_password_show": "Көрсөтүү",
@@ -410,7 +411,7 @@
       "step_label": "Кадам {step} / {total} · {title}",
       "error_title": "Ката",
       "step_phone": "Телефон",
-      "step_otp": "Telegram коду",
+      "step_otp": "WhatsApp коду",
       "step_profile": "Өзүм жөнүндө",
       "step_password": "Купуя сөз",
       "step_routes": "Маршрут",
@@ -763,7 +764,8 @@
       "save": "Сактоо"
     },
     "nearby_notice": "Так дал келгендер жок — ушул райондун жакынкы айылдарынан суроо-талаптар көрсөтүлдү",
-    "responded_edit": "Сиз жооп бердиңиз · Өзгөртүү"
+    "responded_edit": "Сиз жооп бердиңиз · Өзгөртүү",
+    "price_range": "Баасы 1ден 100 000 сомго чейин"
   },
   "bookings": {
     "title": "Менин сапарларым",
@@ -1199,13 +1201,14 @@
     "categories": {
       "safety": "Коопсуздук",
       "fraud": "Алдамчылык",
-      "behavior": "Жүрүм-туруму",
-      "payment": "Төлөм",
+      "rudeness": "Орой мамиле",
+      "no_show": "Келген жок",
       "other": "Башка"
     },
     "success_title": "Даттануу жиберилди",
     "success_hint": "Биз аны 48 саат ичинде кароп, зарылдыгы болсо сиз менен байланышабыз.",
-    "add_photo_aria": "Сүрөт кошуу"
+    "add_photo_aria": "Сүрөт кошуу",
+    "no_target": "Даттанууну белгилүү колдонуучуга же сапарга гана берсе болот."
   },
   "engagement": {
     "like": "Жактыруу",
@@ -1428,7 +1431,9 @@
     "gate_phone_cta": "Номер кошуу",
     "err_departure_soon": "Кеминде 30 мүнөттөн кийинки убакытты тандаңыз",
     "car_choose": "Унааны тандаңыз",
-    "more": "Кошумча"
+    "more": "Кошумча",
+    "err_same_city": "Чыгуу жана бара турган шаар бирдей боло албайт",
+    "err_price_range": "Бир орундун баасы — 50дөн 10 000 сомго чейин"
   },
   "my": {
     "title": "Меники",

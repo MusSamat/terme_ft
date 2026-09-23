@@ -8,7 +8,7 @@ import { ArrowLeft, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import {
   loginWithPassword,
   resetPassword,
-  sendTelegramOtp,
+  sendOtp,
   verifyOtp,
 } from "@/lib/api/auth";
 import { extractError, setAccessToken } from "@/lib/api/client";
@@ -45,6 +45,10 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [otp, setOtp] = useState("");
+  // Fresh WhatsApp OTP for the reset call itself. reset-password consumes a
+  // single-use code, and the login OTP above was already consumed by verifyOtp,
+  // so we send + collect a second code on the reset step.
+  const [resetOtp, setResetOtp] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(0);
 
@@ -54,7 +58,8 @@ export default function LoginPage() {
 
   const displayPhone = formatPhoneDisplay(phone);
   const canSubmitLogin = isValidPhone(phone) && password.length > 0;
-  const canReset = newPassword.length >= 8 && newPassword === confirmPassword;
+  const canReset =
+    newPassword.length >= 8 && newPassword === confirmPassword && resetOtp.length === 6;
 
   useEffect(() => {
     if (resendSeconds <= 0) return;
@@ -98,7 +103,7 @@ export default function LoginPage() {
 
   // ── Forgot password: send the OTP to the phone over WhatsApp ───
   const sendOtpMutation = useMutation({
-    mutationFn: () => sendTelegramOtp(phone),
+    mutationFn: () => sendOtp(phone),
     onSuccess: () => {
       setServerError(null);
       setResendSeconds(60);
@@ -134,6 +139,10 @@ export default function LoginPage() {
       // Authorize the reset call only — no session hint yet, so a reload mid-reset
       // lands as anonymous instead of auto-logging-in with the OLD password.
       setAccessToken(result.accessToken ?? null);
+      // reset-password requires a FRESH, unconsumed OTP proof. The login code was
+      // just consumed by verifyOtp, so send a new WhatsApp code for the reset step.
+      setResetOtp("");
+      sendOtpMutation.mutate();
       setStep("reset");
       setTimeout(() => newPasswordRef.current?.focus(), 100);
     },
@@ -146,7 +155,7 @@ export default function LoginPage() {
 
   // ── Reset password ─────────────────────────────────────────────────────
   const resetMutation = useMutation({
-    mutationFn: () => resetPassword(newPassword),
+    mutationFn: () => resetPassword(phone, resetOtp, newPassword),
     onSuccess: () => {
       // Password is set — NOW grant the full session and let the user in.
       if (pendingAuth.current) setSession(pendingAuth.current);
@@ -338,6 +347,8 @@ export default function LoginPage() {
             setNewPassword={setNewPassword}
             confirmPassword={confirmPassword}
             setConfirmPassword={setConfirmPassword}
+            resetOtp={resetOtp}
+            setResetOtp={setResetOtp}
             serverError={serverError}
             setServerError={setServerError}
             showNewPassword={showNewPassword}

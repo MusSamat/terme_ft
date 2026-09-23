@@ -343,7 +343,7 @@
       "logging_in": "Входим…",
       "change_number": "← Изменить номер",
       "alternatives": "альтернативы",
-      "login_sms": "Войти по коду из Telegram",
+      "login_sms": "Войти по коду из WhatsApp",
       "login_telegram": "Войти через Telegram",
       "sending": "Отправляем…",
       "checking": "Проверяем…",
@@ -351,16 +351,16 @@
       "forgot_title": "Восстановление пароля",
       "forgot_hint": "Введите номер — пришлём код в WhatsApp.",
       "get_code_btn": "Получить код",
-      "no_password_hint": "У вас ещё нет пароля. Установите его через Telegram.",
-      "set_password_btn": "Установить пароль через Telegram",
+      "no_password_hint": "У вас ещё нет пароля. Установите его по коду из WhatsApp.",
+      "set_password_btn": "Установить пароль по коду из WhatsApp",
       "enter_phone_first": "Сначала введите номер телефона.",
       "no_account": "Нет аккаунта?",
       "register_link": "Зарегистрироваться",
       "otp_sent": "Код отправлен в WhatsApp",
       "otp_reset_sent": "Код для сброса пароля отправлен в WhatsApp",
-      "otp_telegram_hint": "Откройте @terme_kg_bot в Telegram и введите код.",
+      "otp_telegram_hint": "Введите код, отправленный в WhatsApp.",
       "otp_dm_hint": "Код отправлен в WhatsApp на номер",
-      "otp_open_bot": "Открыть бот в Telegram",
+      "otp_open_bot": "Открыть WhatsApp",
       "otp_reset_hint": "После подтверждения вы сможете установить новый пароль.",
       "otp_label": "Код подтверждения",
       "otp_digit": "Цифра {n}",
@@ -372,6 +372,7 @@
       "resend_btn": "Отправить код снова",
       "reset_title": "Установите новый пароль",
       "reset_min_chars": "Минимум 8 символов, минимум одна цифра",
+      "reset_code_hint": "Мы отправили новый код в WhatsApp — введите его",
       "new_password_label": "Новый пароль",
       "new_password_placeholder": "Введите новый пароль",
       "new_password_show": "Показать",
@@ -410,7 +411,7 @@
       "step_label": "Шаг {step} из {total} · {title}",
       "error_title": "Ошибка",
       "step_phone": "Телефон",
-      "step_otp": "Код из Telegram",
+      "step_otp": "Код из WhatsApp",
       "step_profile": "О себе",
       "step_password": "Пароль",
       "step_routes": "Маршрут",
@@ -763,7 +764,8 @@
       "save": "Сохранить"
     },
     "nearby_notice": "Точных совпадений нет — показаны запросы из соседних сёл этого района",
-    "responded_edit": "Вы откликнулись · Изменить"
+    "responded_edit": "Вы откликнулись · Изменить",
+    "price_range": "Цена от 1 до 100 000 сом"
   },
   "bookings": {
     "title": "Мои поездки",
@@ -1199,13 +1201,14 @@
     "categories": {
       "safety": "Безопасность",
       "fraud": "Мошенничество",
-      "behavior": "Поведение",
-      "payment": "Оплата",
+      "rudeness": "Грубость",
+      "no_show": "Не приехал",
       "other": "Другое"
     },
     "success_title": "Жалоба отправлена",
     "success_hint": "Мы рассмотрим её в течение 48 часов и свяжемся с вами при необходимости.",
-    "add_photo_aria": "Добавить фото"
+    "add_photo_aria": "Добавить фото",
+    "no_target": "Жалобу можно подать только на конкретного пользователя или поездку."
   },
   "engagement": {
     "like": "Нравится",
@@ -1428,7 +1431,9 @@
     "gate_phone_cta": "Добавить номер",
     "err_departure_soon": "Выберите время не раньше, чем через 30 минут",
     "car_choose": "Выберите авто",
-    "more": "Дополнительно"
+    "more": "Дополнительно",
+    "err_same_city": "Город отправления и назначения не могут совпадать",
+    "err_price_range": "Цена за место — от 50 до 10 000 сом"
   },
   "my": {
     "title": "Мои",

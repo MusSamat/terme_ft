@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { AddPhoneModal } from "@/components/features/auth/add-phone-modal";
 import { useAuth } from "@/store/auth";
-import { sendOtp, sendPhoneOtpTelegram, confirmPhoneAdd } from "@/lib/api/auth";
+import { sendOtp, confirmPhoneAdd } from "@/lib/api/auth";
 import ru from "@/messages/ru.json";
 
 const t = ru.auth.add_phone;
@@ -24,11 +24,9 @@ vi.mock("@/store/auth", () => ({
 }));
 
 vi.mock("@/lib/api/auth", () => ({
-  initTelegramLink: vi.fn(),
-  getTelegramLinkStatus: vi.fn(),
   sendOtp: vi.fn(),
-  sendPhoneOtpTelegram: vi.fn(),
   confirmPhoneAdd: vi.fn(),
+  confirmPhoneFromTelegram: vi.fn(),
 }));
 
 vi.mock("@/lib/api/client", () => ({
@@ -47,8 +45,8 @@ function mockAuth(telegramLinked = false) {
 }
 
 async function fillPhoneAndRequestCode() {
-  fireEvent.change(screen.getByPlaceholderText("XXX XX XX XX"), {
-    target: { value: "700000000" },
+  fireEvent.change(screen.getByPlaceholderText("+996 700 123 456"), {
+    target: { value: "996700000000" },
   });
   fireEvent.click(screen.getByText(t.get_code));
   await waitFor(() => screen.getByText(t.title_otp));
@@ -58,7 +56,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockAuth(false);
   vi.mocked(sendOtp).mockResolvedValue({ expiresInSec: 120 } as any);
-  vi.mocked(sendPhoneOtpTelegram).mockResolvedValue({ expiresInSec: 120 } as any);
   vi.mocked(confirmPhoneAdd).mockResolvedValue({
     accessToken: "tok",
     user: { id: "user-1" },
@@ -71,30 +68,15 @@ describe("AddPhoneModal", () => {
     expect(screen.getByText(t.title_phone)).toBeInTheDocument();
   });
 
-  it("shows the default Telegram hint for a non-linked user", () => {
+  it("shows the manual WhatsApp hint on web", () => {
     render(<AddPhoneModal open onClose={vi.fn()} />);
-    expect(screen.getByText(t.hint_default)).toBeInTheDocument();
+    expect(screen.getByText(t.manual_hint)).toBeInTheDocument();
   });
 
-  it("shows the linked-bot hint for a Telegram-linked user", () => {
-    mockAuth(true);
-    render(<AddPhoneModal open onClose={vi.fn()} />);
-    expect(screen.getByText(t.hint_linked)).toBeInTheDocument();
-  });
-
-  it("sends OTP via SMS path and advances to the code step (non-linked user)", async () => {
+  it("sends the OTP over WhatsApp and advances to the code step", async () => {
     render(<AddPhoneModal open onClose={vi.fn()} />);
     await fillPhoneAndRequestCode();
     expect(vi.mocked(sendOtp)).toHaveBeenCalledWith("+996700000000");
-    expect(vi.mocked(sendPhoneOtpTelegram)).not.toHaveBeenCalled();
-  });
-
-  it("prefers the Telegram DM path for a linked user", async () => {
-    mockAuth(true);
-    render(<AddPhoneModal open onClose={vi.fn()} />);
-    await fillPhoneAndRequestCode();
-    expect(vi.mocked(sendPhoneOtpTelegram)).toHaveBeenCalledWith("+996700000000");
-    expect(vi.mocked(sendOtp)).not.toHaveBeenCalled();
   });
 
   it("keeps Подтвердить disabled below 6 digits and enables it at 6", async () => {
@@ -127,8 +109,8 @@ describe("AddPhoneModal", () => {
   it("shows a friendly error when sending the code fails", async () => {
     vi.mocked(sendOtp).mockRejectedValueOnce({ message: "Слишком много запросов" });
     render(<AddPhoneModal open onClose={vi.fn()} />);
-    fireEvent.change(screen.getByPlaceholderText("XXX XX XX XX"), {
-      target: { value: "700000000" },
+    fireEvent.change(screen.getByPlaceholderText("+996 700 123 456"), {
+      target: { value: "996700000000" },
     });
     fireEvent.click(screen.getByText(t.get_code));
     await waitFor(() => {

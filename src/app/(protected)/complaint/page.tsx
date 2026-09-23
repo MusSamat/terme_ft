@@ -17,7 +17,9 @@ import { cn } from "@/lib/utils/cn";
 const MAX_IMAGES = 5;
 const ACCEPT = "image/jpeg,image/png,image/webp,image/heic";
 
-const CATEGORY_KEYS = ["safety", "fraud", "behavior", "payment", "other"] as const;
+// Keys mirror the backend ComplaintCategory enum (safety | fraud | rudeness |
+// no_show | other) — using any other value gets rejected server-side.
+const CATEGORY_KEYS = ["safety", "fraud", "rudeness", "no_show", "other"] as const;
 
 type FormData = {
   category: ComplaintCategory;
@@ -41,16 +43,20 @@ export default function ComplaintPage({ searchParams }: PageProps) {
   }));
 
   const schema = z.object({
-    category: z.enum(["safety", "fraud", "behavior", "payment", "other"]),
+    category: z.enum(["safety", "fraud", "rudeness", "no_show", "other"]),
     description: z.string().min(20, t("description_min")).max(1000, t("description_max")),
   });
+
+  // Backend requires targetUserId OR targetTripId — a complaint with neither is
+  // rejected. Guard the client so the button never fires an unsatisfiable request.
+  const hasTarget = Boolean(params.user || params.trip);
 
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { category: "behavior" },
+    defaultValues: { category: "rudeness" },
   });
 
   const description = watch("description") ?? "";
@@ -220,11 +226,15 @@ export default function ComplaintPage({ searchParams }: PageProps) {
           </div>
         </div>
 
+        {!hasTarget && (
+          <p className="rounded-xl bg-danger-50 px-3 py-2 text-[14px] font-700 text-danger-600 dark:bg-danger-500/10 dark:text-danger-400">{t("no_target")}</p>
+        )}
+
         {errorMessage && (
           <p className="rounded-xl bg-danger-50 px-3 py-2 text-[14px] font-700 text-danger-600 dark:bg-danger-500/10 dark:text-danger-400">{errorMessage}</p>
         )}
 
-        <Button type="submit" variant="cta" size="lg" disabled={isPending} className="w-full">
+        <Button type="submit" variant="cta" size="lg" disabled={isPending || !hasTarget} className="w-full">
           {isPending ? <Spinner size={18} /> : t("submit_btn")}
         </Button>
       </form>

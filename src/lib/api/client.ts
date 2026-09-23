@@ -96,6 +96,26 @@ export async function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
+// Force a full logout: drop the in-memory access token + session hint and bounce
+// to the login screen. Used on refresh failure and on token-reuse detection.
+function forceLogout() {
+  setAccessToken(null);
+  clearSessionHint();
+  if (typeof window !== "undefined") window.location.assign("/auth/login");
+}
+
+// Backend flags a replayed refresh token (TZ §5 Token Reuse Detection): all of
+// the user's tokens are revoked server-side, so we must hard-logout — never
+// retry (that would loop) and never keep a stale session.
+function isTokenReuse(error: AxiosError<ApiError>): boolean {
+  const details = error.response?.data?.error?.details as
+    | { reason?: string; code?: string }
+    | undefined;
+  return (
+    details?.reason === "token_reuse_detected" || details?.code === "TOKEN_REUSE_DETECTED"
+  );
+}
+
 api.interceptors.response.use(
   (r) => r,
   async (error: AxiosError<ApiError>) => {
@@ -103,6 +123,12 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const code = error.response?.data?.error?.code;
     const isRefreshCall = original?.url?.includes("/auth/refresh");
+
+    // Token reuse on refresh → forced logout, no retry.
+    if (status === 401 && isRefreshCall && isTokenReuse(error)) {
+      forceLogout();
+      return Promise.reject(error);
+    }
 
     if (
       status === 401 &&
@@ -116,10 +142,12 @@ api.interceptors.response.use(
         const token = await refreshAccessToken();
         original.headers = { ...original.headers, Authorization: `Bearer ${token}` };
         return api(original);
-      } catch {
-        setAccessToken(null);
-        clearSessionHint();
-        if (typeof window !== "undefined") window.location.assign("/auth/login");
+      } catch (refreshErr) {
+        // A reuse-flagged refresh already logged out above; any other refresh
+        // failure also clears the session and returns the user to login.
+        if (!(axios.isAxiosError<ApiError>(refreshErr) && isTokenReuse(refreshErr))) {
+          forceLogout();
+        }
       }
     }
     return Promise.reject(error);

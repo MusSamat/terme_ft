@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle, Eye, EyeOff } from "lucide-react";
+import { CheckCircle, Eye, EyeOff, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { useTranslations } from "next-intl";
 
@@ -9,6 +9,8 @@ interface Props {
   setNewPassword: (p: string) => void;
   confirmPassword: string;
   setConfirmPassword: (p: string) => void;
+  resetOtp: string;
+  setResetOtp: (c: string) => void;
   serverError: string | null;
   setServerError: (e: string | null) => void;
   showNewPassword: boolean;
@@ -20,6 +22,7 @@ interface Props {
 
 export function ResetStep({
   tl, newPassword, setNewPassword, confirmPassword, setConfirmPassword,
+  resetOtp, setResetOtp,
   serverError: _serverError, setServerError, showNewPassword, setShowNewPassword,
   newPasswordRef, canReset, resetMutation,
 }: Props) {
@@ -31,6 +34,23 @@ export function ResetStep({
         </div>
         <p className="text-[17px] font-800 text-ink-900 dark:text-white">{tl("reset_title")}</p>
         <p className="mt-1 text-[14px] font-600 text-ink-500">{tl("reset_min_chars")}</p>
+      </div>
+
+      {/* Fresh WhatsApp code — reset-password consumes a single-use OTP. */}
+      <div className="mb-3 flex flex-col gap-1.5">
+        <p className="flex items-center justify-center gap-1.5 text-center text-[13px] font-700 text-[#128C7E]">
+          <MessageCircle className="h-4 w-4" />
+          {tl("reset_code_hint")}
+        </p>
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          value={resetOtp}
+          onChange={(e) => { setResetOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setServerError(null); }}
+          placeholder="— — — — — —"
+          className="h-12 w-full rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 text-center text-[20px] font-900 tracking-[0.3em] text-ink-900 outline-none focus:border-brand-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+        />
       </div>
 
       <div className="mb-3 flex flex-col gap-1.5">

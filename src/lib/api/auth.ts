@@ -16,31 +16,6 @@ export async function sendOtp(
   return data;
 }
 
-export async function sendTelegramOtp(phone: string): Promise<{ expiresInSec: number }> {
-  const { data } = await api.post<{ expiresInSec: number }>("/auth/telegram/otp/send", { phone });
-  return data;
-}
-
-export async function initTelegramLink(
-  phone: string,
-): Promise<{ token: string; deepLink: string; expiresInSec: number }> {
-  const { data } = await api.post<{ token: string; deepLink: string; expiresInSec: number }>(
-    "/auth/telegram/link/init",
-    { phone },
-  );
-  return data;
-}
-
-export async function getTelegramLinkStatus(
-  token: string,
-): Promise<{ status: "waiting" | "sent" | "expired" }> {
-  const { data } = await api.get<{ status: "waiting" | "sent" | "expired" }>(
-    "/auth/telegram/link/status",
-    { params: { token } },
-  );
-  return data;
-}
-
 export async function verifyOtp(phone: string, code: string): Promise<AuthResult> {
   const { data } = await api.post<AuthResult>("/auth/phone/verify", {
     phone,
@@ -59,7 +34,7 @@ export async function loginWithPassword(phone: string, password: string): Promis
   return data;
 }
 
-// Classical registration — verifies the Telegram OTP and creates the account
+// Classical registration — verifies the WhatsApp OTP and creates the account
 // with name/surname/password in one call. Returns a full session.
 export async function register(input: {
   phone: string;
@@ -177,19 +152,19 @@ export async function setPassword(newPassword: string, currentPassword?: string)
   });
 }
 
-export async function resetPassword(newPassword: string): Promise<void> {
-  await api.post("/auth/phone/reset-password", { newPassword, channel: "web" });
+// Reset the password after proving phone ownership with a fresh WhatsApp OTP.
+// The backend requires {phone, code, newPassword} — the code is consumed single-use.
+export async function resetPassword(
+  phone: string,
+  code: string,
+  newPassword: string,
+): Promise<void> {
+  await api.post("/auth/phone/reset-password", { phone, code, newPassword, channel: "web" });
 }
 
-// Adds a phone to the signed-in account by DMing the OTP straight to the
-// user's linked Telegram chat (no deep-link / no "Start"). Throws CONFLICT with
-// details.reason = "telegram_dm_unavailable" | "no_telegram_linked" when the bot
-// cannot deliver — the caller falls back to the deep-link flow.
-export async function sendPhoneOtpTelegram(phone: string): Promise<{ expiresInSec: number }> {
-  const { data } = await api.post<{ expiresInSec: number }>("/users/me/phone/send-otp", { phone });
-  return data;
-}
-
+// Confirms a phone add inside the Telegram Mini App: the user shares their
+// verified contact (signed payload) — no code round-trip. This is the secure
+// TMA path and stays as-is; the manual web path uses sendOtp (WhatsApp).
 export async function confirmPhoneFromTelegram(response: string): Promise<AuthResult> {
   const { data } = await api.post<AuthResult>("/users/me/phone/from-telegram", { response });
   return data;

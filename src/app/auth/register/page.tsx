@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Eye, EyeOff, AlertTriangle, MessageCircle } from "lucide-react";
-import { checkPhone, register, sendTelegramOtp } from "@/lib/api/auth";
+import { checkPhone, register, sendOtp } from "@/lib/api/auth";
 import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { consumeDeferredAction, routeForIntent } from "@/lib/auth/deferred-action";
@@ -76,12 +76,12 @@ export default function RegisterPage() {
     router.replace(intent ? routeForIntent(intent) : "/");
   };
 
-  // ── Step 1: check the number is free, then send the Telegram OTP ────────
+  // ── Step 1: check the number is free, then send the WhatsApp OTP ────────
   const startMutation = useMutation({
     mutationFn: async () => {
       const info = await checkPhone(phone);
       if (info.exists) return { taken: true as const };
-      await sendTelegramOtp(phone);
+      await sendOtp(phone);
       return { taken: false as const };
     },
     onSuccess: (r) => {
@@ -101,7 +101,7 @@ export default function RegisterPage() {
 
   // Resend on the OTP step (no re-check needed — we already know it's free).
   const resendMutation = useMutation({
-    mutationFn: () => sendTelegramOtp(phone),
+    mutationFn: () => sendOtp(phone),
     onSuccess: () => { setServerError(null); setResendSeconds(60); },
     onError: (e) => setServerError(fe(extractError(e))),
   });

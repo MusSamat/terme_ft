@@ -25,12 +25,13 @@ export interface CarValues {
 }
 
 const MIN_YEAR = 2000;
-const CURRENT_YEAR = new Date().getFullYear();
+// Backend accepts up to currentYear + 1 (next model-year cars), so mirror that.
+const MAX_YEAR = new Date().getFullYear() + 1;
 // Year options, newest first (a plain year selector — no month/day).
-const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - MIN_YEAR + 1 }, (_, i) => String(CURRENT_YEAR - i));
+const YEAR_OPTIONS = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => String(MAX_YEAR - i));
 function yearValid(year: string): boolean {
   const y = Number(year);
-  return /^\d{4}$/.test(year.trim()) && y >= MIN_YEAR && y <= CURRENT_YEAR;
+  return /^\d{4}$/.test(year.trim()) && y >= MIN_YEAR && y <= MAX_YEAR;
 }
 
 const FIELD =
@@ -45,13 +46,15 @@ interface Props {
   showYear?: boolean;
   /** Make the year mandatory for validity (verification requires it; elsewhere it's optional). */
   requireYear?: boolean;
+  /** Make the colour mandatory (driver verification requires carColor; the garage doesn't). */
+  requireColor?: boolean;
   /** Prefill (e.g. selecting an existing car in verification). Pair with a
       React `key` on the component to re-seed the fields per selection. */
   initial?: Partial<Omit<CarValues, "valid">>;
   className?: string;
 }
 
-export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, requireYear, initial, className }: Props) {
+export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, requireYear, requireColor, initial, className }: Props) {
   const t = useTranslations("cars");
   const tReg = useTranslations("driver_reg");
   const locale = useLocale();
@@ -79,7 +82,9 @@ export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, re
   const plateOk = isPlateValid(plate);
   // Year is optional almost everywhere; verification passes requireYear.
   const yearOk = requireYear ? yearValid(year) : !year.trim() || yearValid(year);
-  const valid = Boolean(make.trim() && model.trim() && plateOk && yearOk);
+  // Colour is optional in the garage but required by driver verification.
+  const colorOk = requireColor ? Boolean(color.trim()) : true;
+  const valid = Boolean(make.trim() && model.trim() && plateOk && yearOk && colorOk);
 
   // Colour: selected catalog entry (for the swatch preview) + manual fallback
   // when the user opts out or a prefilled car uses an off-catalog colour.

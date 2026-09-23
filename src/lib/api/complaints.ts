@@ -1,6 +1,8 @@
 import { api } from "./client";
 
-export type ComplaintCategory = "safety" | "fraud" | "behavior" | "payment" | "other";
+// Must mirror the backend enum (complaints.schemas.ts): safety | fraud |
+// rudeness | no_show | other. Sending anything else is rejected server-side.
+export type ComplaintCategory = "safety" | "fraud" | "rudeness" | "no_show" | "other";
 
 export interface SubmitComplaintInput {
   category: ComplaintCategory;

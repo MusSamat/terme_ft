@@ -282,12 +282,17 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
   const departureTooSoon =
     !draft.flexible && Boolean(draft.date) && new Date(departureAt()).getTime() < Date.now() + 30 * 60_000;
 
+  // Driver price must land in the backend range (pricePerSeat int 50..10000).
+  // Show it inline rather than let the request 400 on the server.
+  const priceOutOfRange = isDriver && (draft.price < 50 || draft.price > 10_000);
+  const sameCity = Boolean(draft.originCity) && draft.originCity === draft.destinationCity;
+
   const canSubmit =
     Boolean(draft.originCity && draft.destinationCity && draft.originCity !== draft.destinationCity) &&
     (draft.flexible || Boolean(draft.date)) &&
     !departureTooSoon &&
     draft.seats >= 1 &&
-    (!isDriver || draft.price >= 50) &&
+    (!isDriver || !priceOutOfRange) &&
     // Driver intent needs a car (Phase 1 gate — inline form adds one below).
     (!isDriver || Boolean(selectedCar));
 
@@ -359,6 +364,9 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
         onDestination={(v) => patch({ destinationCity: v })}
         iconAccent={theme.iconAccent}
       />
+      {sameCity && (
+        <p className="-mt-1 text-[13px] font-700 text-coral-600">{t("err_same_city")}</p>
+      )}
       {/* Driver intent: the trip rides on a car. First car is added inline; once
           the garage has cars, it's a compact row → selection sheet (mirrors the
           Flutter car sheet: many-option selectors are focused sheets). */}
@@ -462,11 +470,16 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
       {/* Price is a driver essential (passenger sees it before booking); the
           passenger's optional budget lives in the collapsible below. */}
       {isDriver && (
-        <PriceCard
-          value={draft.price}
-          label={t("price_label_driver")}
-          onChange={(v) => patch({ price: v })}
-        />
+        <>
+          <PriceCard
+            value={draft.price}
+            label={t("price_label_driver")}
+            onChange={(v) => patch({ price: v })}
+          />
+          {priceOutOfRange && (
+            <p className="-mt-1 text-[13px] font-700 text-coral-600">{t("err_price_range")}</p>
+          )}
+        </>
       )}
     </div>
   );
