@@ -71,7 +71,8 @@ export function ChatRow({ s, isActive }: { s: ChatSummary; isActive: boolean }) 
           "truncate text-[14px] font-semibold",
           isClosed ? "text-ink-400" : "text-ink-500",
         )}>
-          {s.route}
+          {/* Message preview once the conversation started; route until then. */}
+          {s.lastMessage || s.route}
         </p>
       </div>
     </Link>

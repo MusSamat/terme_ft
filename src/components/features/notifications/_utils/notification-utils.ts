@@ -218,8 +218,12 @@ export function buildDeepLink(notif: AppNotification): string | null {
     case "booking_cancelled_by_passenger":
     case "booking_cancelled_by_driver":
       return "/my/bookings";
-    case "trip_cancelled":
-      return "/trips";
+    case "trip_cancelled": {
+      // Payload key style varies by emitter (DTO events camelCase, raw/cron
+      // events snake_case) — accept both, fall back to the list.
+      const tripId = (p["tripId"] ?? p["trip_id"]) as string | undefined;
+      return tripId ? `/trips/${tripId}` : "/trips";
+    }
     case "trip_reminder":
       return "/my/bookings";
     case "trip_completed_rate":

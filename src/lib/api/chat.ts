@@ -46,6 +46,8 @@ export interface ChatSummary {
   otherAvatarUrl: string | null;
   route: string;
   lastMessageAt: string | null;
+  /** Preview line — text of the most recent message (null until first message). */
+  lastMessage: string | null;
   unreadCount: number;
 }
 
