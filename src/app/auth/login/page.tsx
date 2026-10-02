@@ -9,21 +9,18 @@ import {
   loginWithPassword,
   resetPassword,
   sendOtp,
-  verifyOtp,
 } from "@/lib/api/auth";
-import { extractError, setAccessToken } from "@/lib/api/client";
-import type { AuthResult } from "@/lib/api/types";
+import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { consumeDeferredAction, routeForIntent } from "@/lib/auth/deferred-action";
 import { useAuth } from "@/store/auth";
 import { useTranslations } from "next-intl";
-import { LogoMark, Wordmark, PhoneInput, Spinner, type OtpInputHandle } from "@/components/ui";
-import { OtpStep } from "./_steps/otp-step";
+import { LogoMark, Wordmark, PhoneInput, Spinner } from "@/components/ui";
 import { ResetStep } from "./_steps/reset-step";
 import { cn } from "@/lib/utils/cn";
-import { isValidPhone, formatPhoneDisplay } from "@/lib/phone";
+import { isValidPhone } from "@/lib/phone";
 
-type Step = "login" | "forgot" | "otp" | "reset";
+type Step = "login" | "forgot" | "reset";
 
 /** Terme brand mark from the prototype (paper-plane + amber dot). */
 function AuthLogo() {
@@ -44,19 +41,17 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [otp, setOtp] = useState("");
-  // Fresh WhatsApp OTP for the reset call itself. reset-password consumes a
-  // single-use code, and the login OTP above was already consumed by verifyOtp,
-  // so we send + collect a second code on the reset step.
+  // Single WhatsApp OTP for the whole forgot-password flow. We send ONE code and
+  // feed it straight to /auth/phone/reset-password (which proves phone ownership
+  // and sets the new password in one call) — no separate verify step, so we never
+  // trip the 1-send-per-minute cap.
   const [resetOtp, setResetOtp] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(0);
 
   const passwordRef = useRef<HTMLInputElement>(null);
   const newPasswordRef = useRef<HTMLInputElement>(null);
-  const otpRef = useRef<OtpInputHandle>(null);
 
-  const displayPhone = formatPhoneDisplay(phone);
   const canSubmitLogin = isValidPhone(phone) && password.length > 0;
   const canReset =
     newPassword.length >= 8 && newPassword === confirmPassword && resetOtp.length === 6;
@@ -101,15 +96,16 @@ export default function LoginPage() {
     onError: (e) => setServerError(fe(extractError(e))),
   });
 
-  // ── Forgot password: send the OTP to the phone over WhatsApp ───
+  // ── Forgot password: send the ONE OTP over WhatsApp, go straight to reset ──
+  // The reset screen collects that same code + the new password and submits them
+  // to /auth/phone/reset-password. One send per flow → never hits the 1/min cap.
   const sendOtpMutation = useMutation({
     mutationFn: () => sendOtp(phone),
     onSuccess: () => {
       setServerError(null);
       setResendSeconds(60);
-      setOtp("");
-      setStep("otp");
-      setTimeout(() => otpRef.current?.focus(), 100);
+      setResetOtp("");
+      setStep("reset");
     },
     onError: (e) => setServerError(fe(extractError(e))),
   });
@@ -125,40 +121,17 @@ export default function LoginPage() {
     sendOtpMutation.mutate();
   };
 
-  // Holds the OTP-verified session until the new password is actually set. We do
-  // NOT flip the auth store to "authenticated" here — that would let the user
-  // reach protected pages mid-reset. We only set the API access token (so the
-  // reset call is authorized) and commit the full session after reset succeeds.
-  const pendingAuth = useRef<AuthResult | null>(null);
-
-  // ── Verify OTP ─────────────────────────────────────────────────────────
-  const verifyMutation = useMutation({
-    mutationFn: () => verifyOtp(phone, otp),
-    onSuccess: (result) => {
-      pendingAuth.current = result;
-      // Authorize the reset call only — no session hint yet, so a reload mid-reset
-      // lands as anonymous instead of auto-logging-in with the OLD password.
-      setAccessToken(result.accessToken ?? null);
-      // reset-password requires a FRESH, unconsumed OTP proof. The login code was
-      // just consumed by verifyOtp, so send a new WhatsApp code for the reset step.
-      setResetOtp("");
-      sendOtpMutation.mutate();
-      setStep("reset");
-      setTimeout(() => newPasswordRef.current?.focus(), 100);
-    },
-    onError: (e) => {
-      setServerError(fe(extractError(e)));
-      setOtp("");
-      otpRef.current?.clear();
-    },
-  });
-
-  // ── Reset password ─────────────────────────────────────────────────────
+  // ── Reset password, then log in with it ─────────────────────────────────
+  // reset-password returns 204 (no session) and revokes all existing sessions,
+  // so we immediately log in with the just-set password to grant a fresh one.
+  // Both steps live in the mutationFn so a failure in either surfaces via onError.
   const resetMutation = useMutation({
-    mutationFn: () => resetPassword(phone, resetOtp, newPassword),
-    onSuccess: () => {
-      // Password is set — NOW grant the full session and let the user in.
-      if (pendingAuth.current) setSession(pendingAuth.current);
+    mutationFn: async () => {
+      await resetPassword(phone, resetOtp, newPassword);
+      return loginWithPassword(phone, newPassword);
+    },
+    onSuccess: (result) => {
+      setSession(result);
       const intent = consumeDeferredAction();
       router.replace(intent ? routeForIntent(intent) : "/");
     },
@@ -174,8 +147,7 @@ export default function LoginPage() {
           onClick={() => {
             setServerError(null);
             if (step === "forgot") setStep("login");
-            else if (step === "otp") setStep("forgot");
-            else if (step === "reset") setStep("login");
+            else if (step === "reset") setStep("forgot");
             else router.back();
           }}
           aria-label={tl("back_btn")}
@@ -313,30 +285,6 @@ export default function LoginPage() {
               {tl("back_btn")}
             </button>
           </>
-        )}
-
-        {/* ── Step: OTP input ── */}
-        {step === "otp" && (
-          <OtpStep
-            tl={tl}
-            displayPhone={displayPhone}
-            otp={otp}
-            otpRef={otpRef}
-            serverError={serverError}
-            verifyMutation={verifyMutation}
-            sendMutation={sendOtpMutation}
-            resendSeconds={resendSeconds}
-            onChange={(code) => { setOtp(code); setServerError(null); }}
-            onComplete={() => verifyMutation.mutate()}
-            onBack={() => { setStep("forgot"); setOtp(""); otpRef.current?.clear(); setServerError(null); }}
-            onResend={() => {
-              if (resendSeconds > 0) return;
-              setOtp("");
-              otpRef.current?.clear();
-              setServerError(null);
-              sendOtpMutation.mutate();
-            }}
-          />
         )}
 
         {/* ── Step: new password ── */}

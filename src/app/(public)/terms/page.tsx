@@ -8,8 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: absoluteUrl("/terms"), languages: hreflangAlternates("/terms") },
 };
 
-// ЗАПОЛНИТЬ ПРИ РЕГИСТРАЦИИ ЮРЛИЦА: название ОсОО, ИНН, адрес.
-const COMPANY = "ОсОО «Terme» (реквизиты будут указаны после регистрации)";
+const COMPANY = "ИП Абдисаматов Мусурманбек Абдисаматович";
 const CONTACT = "support@terme.kg";
 
 const RU: LegalDoc = {

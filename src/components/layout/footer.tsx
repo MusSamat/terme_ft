@@ -131,12 +131,6 @@ export function Footer() {
             <ThemeToggle />
           </div>
         </div>
-        {/* Legal entity line — required for business verification; small & muted but genuinely visible (no cloaking). */}
-        <div className="container pb-5 text-center md:text-left">
-          <p className="text-[11px] font-500 leading-relaxed text-ink-400 opacity-70 dark:text-ink-500">
-            © {year} terme.kg — {t("legal_entity")}
-          </p>
-        </div>
       </div>
     </footer>
   );
