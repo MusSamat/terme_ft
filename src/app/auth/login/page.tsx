@@ -46,6 +46,8 @@ export default function LoginPage() {
   // and sets the new password in one call) — no separate verify step, so we never
   // trip the 1-send-per-minute cap.
   const [resetOtp, setResetOtp] = useState("");
+  // Sub-step of the "reset" screen: enter the code, then the new password.
+  const [resetPhase, setResetPhase] = useState<"code" | "password">("code");
   const [serverError, setServerError] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(0);
 
@@ -105,6 +107,7 @@ export default function LoginPage() {
       setServerError(null);
       setResendSeconds(60);
       setResetOtp("");
+      setResetPhase("code");
       setStep("reset");
     },
     onError: (e) => setServerError(fe(extractError(e))),
@@ -147,7 +150,11 @@ export default function LoginPage() {
           onClick={() => {
             setServerError(null);
             if (step === "forgot") setStep("login");
-            else if (step === "reset") setStep("forgot");
+            else if (step === "reset") {
+              // Within reset: password → back to code; code → back to forgot.
+              if (resetPhase === "password") setResetPhase("code");
+              else setStep("forgot");
+            }
             else router.back();
           }}
           aria-label={tl("back_btn")}
@@ -304,6 +311,13 @@ export default function LoginPage() {
             newPasswordRef={newPasswordRef}
             canReset={canReset}
             resetMutation={resetMutation}
+            phase={resetPhase}
+            canContinue={resetOtp.length === 6}
+            onContinue={() => {
+              setServerError(null);
+              setResetPhase("password");
+              setTimeout(() => newPasswordRef.current?.focus(), 100);
+            }}
           />
         )}
       </div>

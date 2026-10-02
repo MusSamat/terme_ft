@@ -22,6 +22,7 @@ export interface AuthResult {
     language: Language;
     phoneVerified: boolean;
     providers: AuthProvider[];
+    termsAcceptedAt: string | null;
   };
 }
 

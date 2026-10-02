@@ -1,11 +1,13 @@
 "use client";
 
-// Soft terms-acceptance gate: any authenticated user with termsAcceptedAt=null
-// (e.g. accounts created via Telegram silent login, which bypasses the
-// registration consent step) sees this modal. Accepting stamps termsAcceptedAt
-// on the backend (permanent, all devices). "Later" is remembered in
-// localStorage — per device, across tabs/logins — so the modal doesn't nag on
-// every new tab (it used to live in sessionStorage, which is per-tab).
+// Soft terms-acceptance gate. Shows for any authenticated user who has not
+// accepted the CURRENT policy revision — either never accepted (e.g. accounts
+// created via Telegram silent login, which bypasses the registration consent
+// step) or accepted before POLICY_LAST_UPDATED (Terms/Privacy changed since).
+// Accepting stamps termsAcceptedAt=now on the backend (permanent, all devices),
+// which clears the gate. "Later" is remembered in localStorage per device —
+// keyed by the policy date, so a new revision is never suppressed by a dismissal
+// of the previous one.
 
 import { useState } from "react";
 import Link from "next/link";
@@ -14,8 +16,9 @@ import { useTranslations } from "next-intl";
 import { updateProfile } from "@/lib/api/auth";
 import { useAuth } from "@/store/auth";
 import { Button } from "@/components/ui";
+import { POLICY_LAST_UPDATED, needsTermsConsent } from "@/lib/policy";
 
-const DISMISS_KEY = "terme_terms_later";
+const DISMISS_KEY = `terme_terms_later:${POLICY_LAST_UPDATED.toISOString().slice(0, 10)}`;
 
 export function TermsGate() {
   const t = useTranslations("terms_gate");
@@ -36,7 +39,7 @@ export function TermsGate() {
   });
 
   const needsAcceptance =
-    status === "authenticated" && user !== null && user.termsAcceptedAt == null;
+    status === "authenticated" && user !== null && needsTermsConsent(user.termsAcceptedAt);
   if (!needsAcceptance || dismissed) return null;
 
   const later = () => {
