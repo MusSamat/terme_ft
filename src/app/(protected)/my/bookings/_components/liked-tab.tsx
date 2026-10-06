@@ -63,7 +63,6 @@ function FilterChips({ value, onChange }: { value: FilterKey; onChange: (v: Filt
 // Phase 1: one favourites feed for everyone — liked trips AND liked requests
 // together, each with its status badge; tap opens the item's page.
 export function LikedTab() {
-  const tMy = useTranslations("my");
   const tB = useTranslations("bookings");
   const tSeats = useTranslations("booking_card");
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -116,15 +115,21 @@ export function LikedTab() {
   if (count === 0) return <EmptyLiked />;
 
   const now = Date.now();
-  const expiredLabel = tMy("expired");
+  // Hide expired favourites (parity with Flutter): only live-and-upcoming shown.
+  const liveTrips = sortedTrips.filter(
+    (tr: TripListItem) => tr.status === "active" && new Date(tr.departureAt ?? 0).getTime() >= now,
+  );
+  const liveRequests = sortedRequests.filter(
+    (r: PassengerRequest) => r.status === "open" && new Date(r.departureDate ?? 0).getTime() >= now,
+  );
+  if (liveTrips.length + liveRequests.length === 0) return <EmptyLiked />;
 
   return (
     <div className="flex flex-col">
       <FilterChips value={filter} onChange={setFilter} />
       <div className="flex flex-col gap-3.5">
         {[
-          ...sortedTrips.map((tr: TripListItem) => {
-            const expired = tr.status !== "active" || new Date(tr.departureAt ?? 0).getTime() < now;
+          ...liveTrips.map((tr: TripListItem) => {
             return {
               key: `t-${tr.id}`,
               d: new Date(tr.departureAt ?? 0).getTime(),
@@ -140,14 +145,11 @@ export function LikedTab() {
                   actorName={tr.driver?.name}
                   trailing={<span className="num text-[15px] font-900 text-sky-600">{tr.pricePerSeat} {tB("som")}</span>}
                   href={`/trips/${tr.id}`}
-                  dimmed={expired}
-                  ribbon={expired ? expiredLabel : undefined}
                 />
               ),
             };
           }),
-          ...sortedRequests.map((r: PassengerRequest) => {
-            const expired = r.status !== "open" || new Date(r.departureDate ?? 0).getTime() < now;
+          ...liveRequests.map((r: PassengerRequest) => {
             return {
               key: `r-${r.id}`,
               d: new Date(r.departureDate ?? 0).getTime(),
@@ -165,8 +167,6 @@ export function LikedTab() {
                   actorName={r.passenger?.name}
                   trailing={<span className="text-[12px] font-700 text-ink-500">{r.seatsNeeded} {tSeats("seats_word")}</span>}
                   href={`/requests/${r.id}`}
-                  dimmed={expired}
-                  ribbon={expired ? expiredLabel : undefined}
                 />
               ),
             };

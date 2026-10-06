@@ -8,7 +8,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -16,19 +15,12 @@ const STORAGE_KEY = "terme_theme";
 
 interface ThemeContextValue {
   theme: Theme;
-  /** The theme actually applied ("light" | "dark") after resolving "system". */
+  /** The theme actually applied. Light-only now, so always "light". */
   resolvedTheme: "light" | "dark";
   setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-function systemPrefersDark(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
-}
 
 function readStoredTheme(): Theme {
   if (typeof window === "undefined") return "system";
@@ -36,26 +28,15 @@ function readStoredTheme(): Theme {
   return raw === "light" || raw === "dark" ? raw : "system";
 }
 
+// Light-only — the dark theme is retired (parity with the Flutter app). The
+// provider keeps the `theme` state + `setTheme` for API compatibility, but it
+// never applies the `.dark` class, so every `dark:` utility stays inert.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(readStoredTheme);
-  const [systemDark, setSystemDark] = useState(systemPrefersDark);
-  const pathname = usePathname();
-
-  const resolvedTheme: "light" | "dark" =
-    theme === "system" ? (systemDark ? "dark" : "light") : theme;
-
-  // Admin is light-only by design — never apply .dark under /admin.
-  const dark = resolvedTheme === "dark" && !pathname.startsWith("/admin");
+  const resolvedTheme: "light" | "dark" = "light";
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => setSystemDark(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+    document.documentElement.classList.remove("dark");
   }, []);
 
   const setTheme = useCallback((next: Theme) => {
@@ -64,7 +45,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       if (next === "system") window.localStorage.removeItem(STORAGE_KEY);
       else window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      // storage unavailable (private mode) — theme still applies for the session
+      // storage unavailable (private mode)
     }
   }, []);
 
@@ -83,7 +64,7 @@ export function useTheme(): ThemeContextValue {
 }
 
 /**
- * Inline no-flash script — runs before hydration, mirrors ThemeProvider logic.
- * Injected in the root layout <head>.
+ * Inline no-flash script — injected in the root layout <head>. Light-only, so it
+ * just guarantees the `.dark` class is never present before hydration.
  */
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${STORAGE_KEY}");var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);if(d&&location.pathname.indexOf("/admin")!==0)document.documentElement.classList.add("dark")}catch(e){}})()`;
+export const THEME_INIT_SCRIPT = `(function(){try{document.documentElement.classList.remove("dark")}catch(e){}})()`;

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Send, MapPin } from "lucide-react";
 import { LogoMark, Wordmark, LocaleSwitcher } from "@/components/ui";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils/cn";
 
 export function Footer() {
@@ -128,7 +127,6 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-2">
             <LocaleSwitcher />
-            <ThemeToggle />
           </div>
         </div>
       </div>

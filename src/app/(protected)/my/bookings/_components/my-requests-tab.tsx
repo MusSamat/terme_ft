@@ -376,7 +376,6 @@ export function MyRequestsTab() {
   const tToasts = useTranslations("toasts");
   const fe = useFriendlyError();
 
-  const tSeatsHist = useTranslations("booking_card");
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["passenger-requests", "my"],
     queryFn: listMyPassengerRequests,
@@ -392,8 +391,8 @@ export function MyRequestsTab() {
   });
 
   const requests = data?.data ?? [];
+  // «Мои» shows only active requests; past ones live in Profile → История.
   const open = requests.filter((r) => r.status === "open");
-  const past = requests.filter((r) => r.status !== "open");
 
   if (isLoading) {
     return <CardSkeletonList variant="request" count={4} />;
@@ -403,7 +402,7 @@ export function MyRequestsTab() {
     return <QueryError error={error} onRetry={() => void refetch()} />;
   }
 
-  if (requests.length === 0) {
+  if (open.length === 0) {
     return (
       <div className="flex flex-col items-center rounded-2xl border border-dashed border-sky-300 bg-sky-50 py-16 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100">
@@ -438,28 +437,6 @@ export function MyRequestsTab() {
                 request={req}
                 onCancel={() => cancelMut.mutate(req.id)}
                 cancelLoading={cancelMut.isPending && cancelMut.variables === req.id}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {past.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-[14px] font-bold uppercase tracking-widest text-ink-400">
-            {t("history_count", { n: past.length })}
-          </h2>
-          <div className="flex flex-col gap-3">
-            {past.map((req) => (
-              <ListCard
-                key={req.id}
-                grape
-                when={fmtD(req.departureDate)}
-                status={req.status}
-                origin={req.originCity}
-                destination={req.destinationCity}
-                actorName={`${req.seatsNeeded} ${tSeatsHist("seats_word")}`}
-                href={`/requests/${req.id}`}
               />
             ))}
           </div>

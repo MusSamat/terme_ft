@@ -12,14 +12,13 @@ import {
   Gift,
   History,
   Quote,
-  Settings,
   Smartphone,
   Star,
   User as UserIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logout, logoutAll } from "@/lib/api/auth";
-import { exportData, getDriverStatus } from "@/lib/api/profile";
+import { exportData } from "@/lib/api/profile";
 import { getLoyaltyStatus } from "@/lib/api/loyalty";
 import { getUserRatings } from "@/lib/api/users";
 import { extractError } from "@/lib/api/client";
@@ -59,9 +58,14 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>("about");
   const [showAddPhone, setShowAddPhone] = useState(false);
 
-  // On mobile, История / Настройки open as full sub-pages (back → about) so the
-  // pill row carries only the 3 content sections and never overflows.
-  const isSubPage = tab === "history" || tab === "settings";
+  // Mobile is a flat list (inDrive-style, parity with the Flutter app): the root
+  // shows the menu; tapping a row opens that section as a full sub-page. Desktop
+  // keeps the 2-column layout and uses `tab` directly.
+  const [atRoot, setAtRoot] = useState(true);
+  const openSub = (tk: Tab) => {
+    setTab(tk);
+    setAtRoot(false);
+  };
   const isDriver = !!user?.roles?.includes("driver");
   const joinYear = user?.createdAt ? new Date(user.createdAt).getFullYear() : null;
   const fabClass = FAB_TINT[role] ?? FAB_TINT.passenger;
@@ -80,14 +84,6 @@ export default function ProfilePage() {
     enabled: !!user,
     staleTime: 60_000,
   });
-  const { data: driverStatus } = useQuery({
-    queryKey: ["driver-status"],
-    queryFn: getDriverStatus,
-    enabled: isDriver,
-    staleTime: 60_000,
-  });
-  const driverVerified = driverStatus?.status === "verified";
-
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
@@ -217,64 +213,15 @@ export default function ProfilePage() {
     settings: settingsContent,
   };
 
-  const statStrip = (
-    <div className="mt-3 flex items-stretch rounded-2xl bg-ink-50 py-2.5 dark:bg-ink-800/60">
-      <div className="flex flex-1 flex-col items-center">
-        <span className="text-[17px] font-900 leading-none text-ink-900 dark:text-white">{user?.ratingCount ?? 0}</span>
-        <span className="mt-1 text-[13px] font-600 text-ink-400">{t("stat_reviews")}</span>
-      </div>
-      <span className="w-px bg-ink-200 dark:bg-ink-700" />
-      <div className="flex flex-1 flex-col items-center">
-        <span className="text-[17px] font-900 leading-none text-accent-600">
-          {user?.rating != null ? user.rating.toFixed(1) : "—"}
-        </span>
-        <span className="mt-1 text-[13px] font-600 text-ink-400">{t("stat_rating")}</span>
-      </div>
-      <span className="w-px bg-ink-200 dark:bg-ink-700" />
-      <div className="flex flex-1 flex-col items-center">
-        <span className="text-[17px] font-900 leading-none text-coral-500">{points}</span>
-        <span className="mt-1 text-[13px] font-600 text-ink-400">{t("stat_points")}</span>
-      </div>
-    </div>
-  );
-
-  const trustChips = (
-    <div className="mt-3 flex flex-wrap gap-1.5">
-      {user?.phoneVerified && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[12px] font-800 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
-          <Smartphone className="h-3 w-3" aria-hidden="true" />
-          {t("chip_phone")}
-        </span>
-      )}
-      {driverVerified && (
-        <>
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[12px] font-800 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
-            <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-            {t("chip_docs")}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[12px] font-800 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
-            <CarFront className="h-3 w-3" aria-hidden="true" />
-            {t("chip_car")}
-          </span>
-        </>
-      )}
-      {user?.telegramLinked && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-[12px] font-800 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
-          {t("chip_telegram")}
-        </span>
-      )}
-    </div>
-  );
-
   return (
     <div className="flex min-h-[calc(100vh-64px)] flex-col bg-ink-50 dark:bg-ink-950">
       <div className="mx-auto w-full max-w-[760px] space-y-3.5 p-3.5 pt-11 md:p-6 lg:hidden">
-        {isSubPage ? (
+        {!atRoot ? (
           <>
-            {/* Sub-page (История / Настройки) — back arrow returns to profile */}
+            {/* Sub-page — back arrow returns to the profile list */}
             <button
               type="button"
-              onClick={() => setTab("about")}
+              onClick={() => setAtRoot(true)}
               className="flex items-center gap-2 text-[20px] font-900 text-ink-900 dark:text-white"
             >
               <ArrowLeft className="h-6 w-6" aria-hidden="true" />
@@ -301,73 +248,81 @@ export default function ProfilePage() {
               </button>
             )}
 
-            {/* Hero card */}
-            <div className="rounded-4xl bg-white p-4 shadow-card dark:bg-ink-900">
-              <div className="flex items-start gap-3">
-                <AvatarUploader
-                  sizeClass="h-16 w-16"
-                  shapeClass="rounded-2xl"
-                  tintClass={theme.avatarTint}
-                  fabClass={fabClass}
-                  fontClass="text-[21px]"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1">
-                    <h1 className="truncate text-[18px] font-900 text-ink-900 dark:text-white">{user?.name}</h1>
+            {/* Header — avatar + name + phone; tap → settings (edit / password / etc.) */}
+            <div className="flex items-center gap-3 rounded-4xl bg-white p-4 shadow-card dark:bg-ink-900">
+              <AvatarUploader
+                sizeClass="h-14 w-14"
+                shapeClass="rounded-2xl"
+                tintClass={theme.avatarTint}
+                fabClass={fabClass}
+                fontClass="text-[19px]"
+              />
+              <button
+                type="button"
+                onClick={() => openSub("settings")}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1">
+                    <span className="truncate text-[18px] font-900 text-ink-900 dark:text-white">{user?.name}</span>
                     {isDriver && <BadgeCheck className="h-[18px] w-[18px] shrink-0 text-brand-600" aria-hidden="true" />}
-                  </div>
-                  <p className="mt-0.5 text-[14px] font-600 text-ink-400">
-                    <span className="text-accent-600">
-                      ★ {user?.rating != null ? user.rating.toFixed(1) : "—"}
-                    </span>
-                    {" · "}
-                    {t("rating_count", { n: user?.ratingCount ?? 0 })}
-                    {joinYear ? ` · ${t("badge_since", { year: joinYear })}` : ""}
-                  </p>
-                </div>
-              </div>
-              {trustChips}
-              {statStrip}
-            </div>
-
-            {/* Content pills — 3 equal sections that fit (about · cars · reviews) */}
-            <div className="flex gap-1.5">
-              {(["about", "cars", "reviews"] as Tab[]).map((tk) => (
-                <button
-                  key={tk}
-                  type="button"
-                  onClick={() => setTab(tk)}
-                  aria-pressed={tab === tk}
-                  className={cn(
-                    "min-h-[40px] flex-1 touch-manipulation whitespace-nowrap rounded-full px-3 text-[14px] transition duration-100 active:scale-[0.97]",
-                    tab === tk
-                      ? "bg-brand-600 font-900 text-white shadow-sm"
-                      : "bg-white font-700 text-ink-600 ring-1 ring-ink-200 dark:bg-ink-900 dark:text-ink-300 dark:ring-ink-700",
-                  )}
-                >
-                  {tabLabel[tk]}
-                </button>
-              ))}
-            </div>
-
-            {content[tab]}
-
-            {/* Quick settings + menu list — История / Настройки open as sub-pages */}
-            <SettingsCard />
-            <div className="divide-y divide-ink-100 overflow-hidden rounded-3xl bg-white shadow-card dark:divide-ink-800 dark:bg-ink-900">
-              <button type="button" onClick={() => setTab("history")} className="flex w-full items-center gap-3 px-4 py-3.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800">
-                  <History className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  {user?.phone && <span className="block text-[14px] font-700 text-ink-500">{user.phone}</span>}
                 </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-ink-300" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Menu */}
+            <div className="divide-y divide-ink-100 overflow-hidden rounded-3xl bg-white shadow-card dark:divide-ink-800 dark:bg-ink-900">
+              <button type="button" onClick={() => openSub("history")} className="flex w-full items-center gap-3 px-4 py-3.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800"><History className="h-4 w-4" aria-hidden="true" /></span>
                 <span className="flex-1 text-left text-[15px] font-700 text-ink-800 dark:text-ink-100">{t("tab_history")}</span>
                 <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden="true" />
               </button>
-              <button type="button" onClick={() => setTab("settings")} className="flex w-full items-center gap-3 px-4 py-3.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800">
-                  <Settings className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <span className="flex-1 text-left text-[15px] font-700 text-ink-800 dark:text-ink-100">{t("tab_settings")}</span>
+              {isDriver && (
+                <button type="button" onClick={() => openSub("cars")} className="flex w-full items-center gap-3 px-4 py-3.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800"><CarFront className="h-4 w-4" aria-hidden="true" /></span>
+                  <span className="flex-1 text-left text-[15px] font-700 text-ink-800 dark:text-ink-100">{t("tab_cars")}</span>
+                  <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden="true" />
+                </button>
+              )}
+              <button type="button" onClick={() => openSub("reviews")} className="flex w-full items-center gap-3 px-4 py-3.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800"><Star className="h-4 w-4" aria-hidden="true" /></span>
+                <span className="flex-1 text-left text-[15px] font-700 text-ink-800 dark:text-ink-100">{t("tab_reviews")}</span>
                 <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden="true" />
+              </button>
+              <Link href="/loyalty" className="flex items-center gap-3 px-4 py-3.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-100 text-ink-500 dark:bg-ink-800"><Gift className="h-4 w-4" aria-hidden="true" /></span>
+                <span className="flex-1 text-[15px] font-700 text-ink-800 dark:text-ink-100">{t("quick_bonuses")}</span>
+                <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[12px] font-900 text-accent-700 dark:bg-accent-500/15">{points}</span>
+                <ChevronRight className="h-4 w-4 text-ink-300" aria-hidden="true" />
+              </Link>
+            </div>
+
+            {/* Language */}
+            <SettingsCard />
+
+            {/* Become a driver */}
+            {!isDriver && (
+              <Link
+                href="/profile/driver"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3.5 text-[15px] font-900 text-white shadow-brandcta"
+              >
+                <CarFront className="h-5 w-5" aria-hidden="true" />
+                {t("become_driver_title")}
+              </Link>
+            )}
+
+            {/* Logout — red; advanced actions (logout-all / export / delete) live in Settings */}
+            <div className="overflow-hidden rounded-3xl bg-white shadow-card dark:bg-ink-900">
+              <button
+                type="button"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="w-full px-4 py-3.5 text-left text-[15px] font-800 text-coral-600"
+              >
+                {t("logout_btn")}
               </button>
             </div>
           </>

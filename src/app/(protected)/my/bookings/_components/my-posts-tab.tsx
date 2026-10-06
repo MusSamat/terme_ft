@@ -95,9 +95,12 @@ export function MyPostsTab({ show = "both" }: { show?: "trips" | "requests" | "b
   if (isLoading) return <CardSkeletonList variant="trip" count={3} />;
 
   // Role-scoped view: driver hub shows only trips, passenger hub only requests.
-  const visible = (posts ?? []).filter((p) =>
-    show === "both" ? true : show === "trips" ? p.kind === "trip" : p.kind === "request",
-  );
+  const visible = (posts ?? []).filter((p) => {
+    const matchesShow = show === "both" ? true : show === "trips" ? p.kind === "trip" : p.kind === "request";
+    if (!matchesShow) return false;
+    // «Мои» lists only active items — finished/cancelled live in Profile → История.
+    return p.kind === "trip" ? p.trip.status === "active" : p.request.status === "open";
+  });
 
   if (visible.length === 0) {
     return (

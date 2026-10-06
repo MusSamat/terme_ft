@@ -264,6 +264,11 @@ export function ChatPanel({ bookingId }: Props) {
     : rawBooking?.trip?.driver?.phone;
   const isPreBooking = booking?.status === "pending";
   const isReadOnly = !!booking && !["pending", "viewed", "accepted"].includes(booking.status ?? "");
+  // Departure date + time for the pinned trip bar (parity with the Flutter app).
+  const depAt = rawBooking?.trip?.departureAt ? new Date(rawBooking.trip.departureAt) : null;
+  const whenText = depAt
+    ? `${depAt.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" })} · ${depAt.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
+    : "";
 
   return (
     <div className="chat-screen flex justify-center bg-white dark:bg-ink-950">
@@ -314,6 +319,7 @@ export function ChatPanel({ bookingId }: Props) {
           <div className="flex shrink-0 items-center justify-between border-b border-brand-100 bg-brand-50 px-5 py-2">
             <div className="flex items-center gap-1.5 text-[14px] font-semibold text-brand-700">
               {rawBooking.trip.car && <><Car className="h-3.5 w-3.5" aria-hidden="true" /> {rawBooking.trip.car}</>}
+              {whenText && <span>{rawBooking.trip.car ? " · " : ""}{whenText}</span>}
             </div>
             <span className="text-[13px] font-bold text-brand-700">
               {isReadOnly ? t("archived") : isPreBooking ? t("pending") : t("booked")}

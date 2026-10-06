@@ -59,8 +59,17 @@ export function FeedEntryHints({ onPick, onDestination, tab = "trips" }: { onPic
     enabled: authed,
     staleTime: 30_000,
   });
-  const activeTrips = (myTrips?.data ?? []).filter((x) => (x as { status?: string }).status === "active");
-  const activeReqs = (myReqs?.data ?? []).filter((x) => (x as { status?: string }).status === "open");
+  // Active = live status AND departure still ahead (parity with Flutter): a
+  // past-time item must not count as active even if its status lags behind.
+  const nowTs = Date.now();
+  const activeTrips = (myTrips?.data ?? []).filter((x) => {
+    const tr = x as { status?: string; departureAt?: string };
+    return tr.status === "active" && new Date(tr.departureAt ?? 0).getTime() >= nowTs;
+  });
+  const activeReqs = (myReqs?.data ?? []).filter((x) => {
+    const rq = x as { status?: string; departureDate?: string };
+    return rq.status === "open" && new Date(rq.departureDate ?? 0).getTime() >= nowTs;
+  });
   const mineIsTrip = activeTrips.length > 0;
   const mineCount = mineIsTrip ? activeTrips.length : activeReqs.length;
   const showMine = authed && mineCount > 0;

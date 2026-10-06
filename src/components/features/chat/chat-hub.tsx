@@ -25,8 +25,9 @@ export function ChatHub() {
     staleTime: 15_000,
   });
 
+  // Only active conversations are listed (Uber/Yandex style): a chat lives with
+  // its trip; once the trip is over it leaves the list instead of an archive.
   const active = summaries.filter((s) => ACTIVE_CHAT_STATUSES.has(s.bookingStatus));
-  const closed = summaries.filter((s) => !ACTIVE_CHAT_STATUSES.has(s.bookingStatus));
 
   const list = (
     <div className="flex flex-col">
@@ -36,7 +37,7 @@ export function ChatHub() {
         </div>
       ) : isError ? (
         <QueryError error={error} onRetry={() => void refetch()} className="m-4" />
-      ) : summaries.length === 0 ? (
+      ) : active.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 px-8 py-16 text-center">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-ink-100 text-ink-400 dark:bg-ink-800">
             <MessageCircle className="h-8 w-8" aria-hidden="true" />
@@ -49,20 +50,6 @@ export function ChatHub() {
           {active.map((s) => (
             <ChatRow key={s.bookingId} s={s} isActive={false} />
           ))}
-          {closed.length > 0 && (
-            <>
-              <div className="mx-4 my-2 flex items-center gap-2">
-                <div className="h-px flex-1 bg-ink-100 dark:bg-ink-800" />
-                <span className="text-[11px] font-900 uppercase tracking-widest text-ink-400">
-                  {t("archive")}
-                </span>
-                <div className="h-px flex-1 bg-ink-100 dark:bg-ink-800" />
-              </div>
-              {closed.map((s) => (
-                <ChatRow key={s.bookingId} s={s} isActive={false} />
-              ))}
-            </>
-          )}
         </>
       )}
     </div>

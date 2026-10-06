@@ -29,7 +29,9 @@ const accent = {
   ink: "#4A2C00",
 };
 const ink = {
-  50: "#FAFAF9",
+  // Warm single light background (inDrive/wb style), parity with the Flutter
+  // app — the one page background everywhere. Was #FAFAF9 (near-white).
+  50: "#F1F0EC",
   100: "#F5F5F4",
   200: "#E7E5E4",
   300: "#D6D3D1",

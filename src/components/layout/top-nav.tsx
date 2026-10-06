@@ -16,7 +16,6 @@ import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 import { useUnreadMessages } from "@/lib/hooks/use-unread-messages";
 import { useRoleTheme } from "@/lib/hooks/use-role-colors";
 import { normalizeMediaUrl } from "@/lib/utils/media-url";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LogoMark, Wordmark } from "@/components/ui/logo-mark";
 import { OnlineBadge } from "@/components/ui/online-badge";
 import { cn } from "@/lib/utils/cn";
@@ -214,8 +213,6 @@ export function TopNav() {
                 <UnreadBadge count={unreadNotif} />
               </Link>
 
-              <ThemeToggle />
-
               {/* User avatar + dropdown */}
               <div className="relative" ref={dropRef}>
                 <button
@@ -245,7 +242,6 @@ export function TopNav() {
             </>
           ) : (
             <>
-              <ThemeToggle />
               <Link
                 href="/auth/login"
                 className="rounded-full bg-accent-500 px-4 py-1.5 text-[13px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400"
