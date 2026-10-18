@@ -16,7 +16,8 @@ export function Footer() {
   const hidden =
     pathname.includes("/chat") ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/auth");
+    pathname.startsWith("/auth") ||
+    pathname === "/map";
   if (hidden) return null;
 
   // Mobile has a floating bottom-nav as its chrome → the marketing footer is

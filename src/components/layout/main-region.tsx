@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils/cn";
  */
 export function MainRegion({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const selfManaged = pathname.includes("/chat");
+  // Chat and the full-screen map manage their own height.
+  const selfManaged = pathname.includes("/chat") || pathname === "/map";
   return <main className={cn(!selfManaged && "main-mobile-pad")}>{children}</main>;
 }
