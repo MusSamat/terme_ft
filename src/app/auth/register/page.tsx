@@ -58,6 +58,12 @@ export default function RegisterPage() {
     otp.length === 6 &&
     terms;
 
+  // Prefill from the login screen's «no account yet» hint (?phone=+996…).
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("phone");
+    if (p && isValidPhone(p)) setPhone(p);
+  }, []);
+
   useEffect(() => {
     if (resendSeconds <= 0) return;
     const id = setInterval(() => setResendSeconds((s) => s - 1), 1000);
@@ -182,7 +188,7 @@ export default function RegisterPage() {
                 <p className="text-[16px] font-900 text-ink-900 dark:text-white">{t("already_registered_title")}</p>
                 <p className="mt-1 text-[14px] font-600 text-ink-500">{t("already_registered_desc")}</p>
                 <Link
-                  href={`/auth/login?phone=${encodeURIComponent(phone)}&reset=1`}
+                  href={`/auth/login?phone=${encodeURIComponent(phone)}&step=forgot`}
                   className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-accent-500 text-[15px] font-900 text-accent-ink shadow-cta hover:bg-accent-400"
                 >
                   {t("restore_password")}

@@ -5,8 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { setPassword } from "@/lib/api/auth";
+import Link from "next/link";
+import { changePassword } from "@/lib/api/auth";
 import { extractError } from "@/lib/api/client";
+import { useAuth } from "@/store/auth";
 import { Button, Label, PasswordInput, Spinner } from "@/components/ui";
 
 type FormData = {
@@ -17,6 +19,10 @@ type FormData = {
 
 export function PasswordForm() {
   const t = useTranslations("password_form");
+  const phone = useAuth((s) => s.user?.phone ?? "");
+  // Accounts created in the mobile app / Telegram bot have no password yet:
+  // the first one is set with a WhatsApp code (forgot-password flow).
+  const hasPassword = useAuth((s) => s.user?.hasPassword ?? true);
 
   const schema = z
     .object({
@@ -40,18 +46,27 @@ export function PasswordForm() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const { mutate, isPending, isSuccess, error } = useMutation({
-    mutationFn: (d: FormData) => setPassword(d.newPassword, d.currentPassword),
+    mutationFn: (d: FormData) => changePassword(d.currentPassword, d.newPassword),
     onSuccess: () => reset(),
   });
 
-  // Distinguish the two backend reasons instead of always saying "wrong current".
   const reason = error ? extractError(error).details?.reason : undefined;
-  const serverError =
-    reason === "current_password_required"
-      ? t("current_required")
-      : error
-        ? t("wrong_current")
-        : null;
+  const serverError = error ? t("wrong_current") : null;
+  const setViaWhatsapp = `/auth/login?step=forgot&phone=${encodeURIComponent(phone)}`;
+
+  if (!hasPassword || reason === "password_not_set") {
+    return (
+      <div className="space-y-3">
+        <p className="text-[14px] font-600 text-ink-500">{t("no_password_desc")}</p>
+        <Link
+          href={setViaWhatsapp}
+          className="inline-flex h-11 items-center justify-center rounded-2xl bg-accent-500 px-5 text-[15px] font-900 text-accent-ink shadow-cta hover:bg-accent-400"
+        >
+          {t("set_via_whatsapp")}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit((d) => mutate(d))} className="space-y-4">
@@ -78,6 +93,9 @@ export function PasswordForm() {
       </div>
 
       {serverError && <p className="text-caption text-coral-500">{serverError}</p>}
+      <Link href={setViaWhatsapp} className="block text-[13px] font-800 text-brand-700 dark:text-brand-300">
+        {t("forgot_current")}
+      </Link>
       {isSuccess && <p className="text-caption text-brand-700">{t("success")}</p>}
 
       <Button type="submit" variant="primary" size="md" disabled={isPending}>

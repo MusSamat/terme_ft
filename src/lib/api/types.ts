@@ -2,11 +2,11 @@ import type { components } from "./schema.gen";
 
 export type Role = "passenger" | "driver" | "admin" | "superadmin";
 export type Language = "ru" | "kg";
-export type AuthProvider = "telegram" | "google" | "apple" | "phone";
 
 export type TokenPair = components["schemas"]["TokenPair"];
 export type SelfUser = components["schemas"]["SelfUser"];
-export type PublicUser = components["schemas"]["PublicUser"];
+// The spec omits loyaltyTier on PublicUser; the API returns it.
+export type PublicUser = components["schemas"]["PublicUser"] & { loyaltyTier?: string };
 
 export interface AuthResult {
   accessToken: string;
@@ -18,37 +18,18 @@ export interface AuthResult {
     id: string;
     phone: string;
     name: string;
+    avatarUrl: string | null;
     roles: Role[];
     language: Language;
     phoneVerified: boolean;
-    providers: AuthProvider[];
+    telegramLinked: boolean;
     termsAcceptedAt: string | null;
   };
-}
-
-export interface ProvisionalAuthResult {
-  kind: "provisional";
-  provisionalToken: string;
-  provisionalTokenExpiresIn: number;
-  requiresPhoneVerification: true;
-  hintPhone: string | null;
-  hintName: string | null;
-  user: {
-    id: string;
-    provider: AuthProvider;
-  };
-}
-
-export type AnyAuthResult = AuthResult | ProvisionalAuthResult;
-
-export function isFullAuthResult(r: AnyAuthResult): r is AuthResult {
-  return r.kind === "full";
 }
 
 export interface CheckPhoneResult {
   exists: boolean;
   hasPassword: boolean;
-  hasTelegram: boolean;
 }
 
 export type ErrorCode =

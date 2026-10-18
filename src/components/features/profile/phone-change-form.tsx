@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { changePhone, confirmPhoneChange } from "@/lib/api/profile";
 import { useAuth } from "@/store/auth";
 import { toastSuccess } from "@/components/layout/quick-toast";
-import { Button, Label, OtpInput, PasswordInput, PhoneInput, Spinner } from "@/components/ui";
+import { Button, Label, OtpInput, PhoneInput, Spinner } from "@/components/ui";
 import type { OtpInputHandle } from "@/components/ui/otp-input";
 import { useCountdown } from "@/lib/hooks/use-countdown";
 
@@ -18,15 +18,13 @@ export function PhoneChangeForm() {
   const updateUser = useAuth((s) => s.updateUser);
   const [step, setStep] = useState<Step>("idle");
   const [newPhone, setNewPhone] = useState("");
-  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const otpRef = useRef<OtpInputHandle>(null);
   const { remaining, reset: startCountdown } = useCountdown(0);
   const counting = remaining > 0;
 
   const sendMutation = useMutation({
-    mutationFn: () =>
-      changePhone(newPhone, { provider: "phone", password }),
+    mutationFn: () => changePhone(newPhone),
     onSuccess: () => {
       setStep("otp");
       startCountdown(60);
@@ -40,7 +38,6 @@ export function PhoneChangeForm() {
       toastSuccess(tToasts("phone_updated"));
       setStep("idle");
       setNewPhone("");
-      setPassword("");
       setOtp("");
     },
     onError: () => {
@@ -106,26 +103,17 @@ export function PhoneChangeForm() {
         <Label>{t("new_phone_label")}</Label>
         <PhoneInput value={newPhone} onValueChange={setNewPhone} className="mt-1" />
       </div>
-      <div>
-        <Label htmlFor="phone-change-password">{t("current_password_label")}</Label>
-        <PasswordInput
-          id="phone-change-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mt-1"
-          autoComplete="current-password"
-        />
-      </div>
+      <p className="text-[13px] font-600 text-ink-500">{t("whatsapp_note")}</p>
       {sendMutation.error && (
         <p className="text-caption text-coral-500">{t("send_error")}</p>
       )}
       <Button
         variant="primary"
         size="md"
-        disabled={newPhone.length < 10 || !password || sendMutation.isPending}
+        disabled={newPhone.length < 10 || sendMutation.isPending}
         onClick={() => sendMutation.mutate()}
       >
-        {sendMutation.isPending ? <Spinner size={16} /> : t("get_sms")}
+        {sendMutation.isPending ? <Spinner size={16} /> : t("get_code")}
       </Button>
     </div>
   );

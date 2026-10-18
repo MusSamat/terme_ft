@@ -12,7 +12,9 @@ export interface DriverCarPublic {
   totalTrips: number;
 }
 
+// The spec omits loyaltyTier / driverCar on PublicUser; the API returns them.
 export type PublicUser = components["schemas"]["PublicUser"] & {
+  loyaltyTier?: string;
   driverCar?: DriverCarPublic | null;
 };
 

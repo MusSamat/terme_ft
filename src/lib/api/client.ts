@@ -4,7 +4,6 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 import type { ApiError, TokenPair } from "./types";
-import { detectRuntime } from "@/lib/detect-runtime";
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -61,9 +60,8 @@ export const setTokens = (pair: Pick<TokenPair, "accessToken" | "refreshToken">)
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
-  // Platform attribution for presence/analytics: Telegram Mini App → "mini",
-  // plain browser → "web". Native mobile (Flutter) sends its own value.
-  config.headers["X-Client-Platform"] = detectRuntime() === "telegram" ? "mini" : "web";
+  // Platform attribution for presence/analytics (mobile sends "mobile").
+  config.headers["X-Client-Platform"] = "web";
   // The instance defaults to application/json. For FormData (avatar, car photo,
   // driver docs, complaint photos) that default must be dropped so axios/the
   // browser generate `multipart/form-data; boundary=…` — otherwise multer sees

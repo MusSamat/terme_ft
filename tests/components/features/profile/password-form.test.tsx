@@ -15,7 +15,7 @@ vi.mock("next-intl", async () => {
 
 // Spy the API call so we can assert it is (not) invoked.
 const setPassword = vi.fn().mockResolvedValue(undefined);
-vi.mock("@/lib/api/auth", () => ({ setPassword: (...a: unknown[]) => setPassword(...a) }));
+vi.mock("@/lib/api/auth", () => ({ changePassword: (...a: unknown[]) => setPassword(...a) }));
 
 import { PasswordForm } from "@/components/features/profile/password-form";
 
@@ -61,7 +61,7 @@ describe("PasswordForm — change password", () => {
     fireEvent.change(container.querySelector("#confirmPassword")!, { target: { value: "newpass34" } });
     fireEvent.submit(container.querySelector("form")!);
 
-    await waitFor(() => expect(setPassword).toHaveBeenCalledWith("newpass34", "oldpass12"));
+    await waitFor(() => expect(setPassword).toHaveBeenCalledWith("oldpass12", "newpass34"));
   });
 
   it("blocks a mismatched confirmation", async () => {

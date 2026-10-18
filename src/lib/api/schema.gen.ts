@@ -45,330 +45,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/telegram": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login via Telegram Mini App initData (may return provisional)
-         * @description Returns AuthResult when the user already has a verified phone. Returns ProvisionalAuthResult on first login — client must then call /auth/phone/send-otp + /auth/phone/verify (Bearer: provisional) to complete.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        initData: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AnyAuthResult"];
-                    };
-                };
-                /** @description Validation */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Internal */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/google": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login via Google id_token (may return provisional)
-         * @description Server verifies id_token against Google JWKS + GOOGLE_CLIENT_IDS audience allowlist. First-time Google users receive ProvisionalAuthResult until they complete SMS phone verification (§8.3 v2.1).
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        idToken: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AnyAuthResult"];
-                    };
-                };
-                /** @description Validation */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Internal */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/apple": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login via Apple identity_token (may return provisional)
-         * @description Same semantics as /auth/google — server verifies via Apple JWKS.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        identityToken: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AnyAuthResult"];
-                    };
-                };
-                /** @description Validation */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Internal */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/phone/login": {
         parameters: {
             query?: never;
@@ -379,8 +55,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Repeat login: phone + password (no OTP)
-         * @description For users who already verified phone and set a password. v2.1 §8.4 — no SMS on repeat login.
+         * Web sign-in: phone + password (no WhatsApp code)
+         * @description Accounts created on mobile / in the Telegram bot have no password until they set one via /auth/phone/reset-password.
          */
         post: {
             parameters: {
@@ -488,7 +164,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Send OTP to +996XXXXXXXXX */
+        /** Send a WhatsApp code (registration, mobile login, password reset) */
         post: {
             parameters: {
                 query?: never;
@@ -597,8 +273,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Verify OTP — binds phone to provisional user if Bearer is set
-         * @description Two modes: (a) no Bearer → find-or-create user by phone. (b) Bearer: provisional-token → bind this phone to the user that OAuth created, preserving one-account rule.
+         * Mobile sign-in: phone + WhatsApp code
+         * @description Existing accounts only — an unknown phone is 404, register it via /auth/register.
          */
         post: {
             parameters: {
@@ -627,6 +303,335 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["AuthResult"];
                     };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/check-phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Which sign-in step comes next for a phone */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description exists=false → register; hasPassword=false → set a password via WhatsApp (web) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            exists?: boolean;
+                            hasPassword?: boolean;
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register a new number: WhatsApp code + name (+ password on web) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        code: string;
+                        name: string;
+                        surname: string;
+                        /** @description web only; must contain a digit */
+                        password?: string;
+                        /** @enum {string} */
+                        channel?: "mobile" | "web";
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResult"];
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forgot password / first password — WhatsApp code to the account number
+         * @description Revokes every session of the account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone: string;
+                        code: string;
+                        /** @description must contain a digit */
+                        newPassword: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Password set */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Validation */
                 400: {
@@ -1301,8 +1306,12 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
+                        surname?: string;
+                        bio?: string;
                         /** @enum {string} */
                         language?: "ru" | "kg";
+                        /** @enum {string} */
+                        preferredMode?: "passenger" | "driver";
                         /** @enum {boolean} */
                         termsAccepted?: true;
                     };
@@ -1498,8 +1507,8 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Set password (first time) or change it (current required)
-         * @description Without an existing password — pass only newPassword. With an existing password — currentPassword is required. New password must be ≥8 chars and contain a digit.
+         * Change the password (current one required)
+         * @description No password yet → 409 password_not_set: use /auth/phone/reset-password. New password must be ≥8 chars and contain a digit.
          */
         patch: {
             parameters: {
@@ -1511,7 +1520,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        currentPassword?: string;
+                        currentPassword: string;
                         /** @description must contain at least one digit */
                         newPassword: string;
                     };
@@ -1606,8 +1615,8 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Start phone-change flow — OTP to NEW number
-         * @description v2.1 §8.7 — requires current-provider re-auth. Returns { expiresInSec: 600 }. Finish with PATCH /users/me/phone/confirm.
+         * Start phone change — WhatsApp code to the NEW number
+         * @description The session authenticates the caller. Returns { expiresInSec: 600 }. Finish with PATCH /users/me/phone/confirm.
          */
         patch: {
             parameters: {
@@ -1621,23 +1630,6 @@ export interface paths {
                     "application/json": {
                         /** @example +996700111333 */
                         newPhone: string;
-                        reAuthProof: {
-                            /** @enum {string} */
-                            provider: "telegram";
-                            initData: string;
-                        } | {
-                            /** @enum {string} */
-                            provider: "google";
-                            idToken: string;
-                        } | {
-                            /** @enum {string} */
-                            provider: "apple";
-                            identityToken: string;
-                        } | {
-                            /** @enum {string} */
-                            provider: "phone";
-                            password: string;
-                        };
                     };
                 };
             };
@@ -1825,223 +1817,6 @@ export interface paths {
                 };
             };
         };
-        trace?: never;
-    };
-    "/users/me/providers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Link an additional OAuth provider to this account */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        provider: "telegram";
-                        initData: string;
-                    } | {
-                        /** @enum {string} */
-                        provider: "google";
-                        idToken: string;
-                    } | {
-                        /** @enum {string} */
-                        provider: "apple";
-                        identityToken: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Linked */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @enum {string} */
-                            provider?: "telegram" | "google" | "apple";
-                        };
-                    };
-                };
-                /** @description Validation */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Internal */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/me/providers/{provider}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Unlink a provider (rejects removing the last one) */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    provider: "telegram" | "google" | "apple" | "phone";
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Unlinked */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Validation */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Internal */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/users/avatar": {
@@ -2358,7 +2133,48 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Active KG cities */
+        /** Settlements autocomplete (RU / KG / Latin / wrong layout); no q → top places */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Place"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cities/airports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Airports with the city each one serves (airport transfers) */
         get: {
             parameters: {
                 query?: never;
@@ -2375,8 +2191,293 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            data?: components["schemas"]["City"][];
+                            data?: (components["schemas"]["Place"] & {
+                                serves?: components["schemas"]["Place"] | null;
+                            })[];
                         };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cities/nearest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The settlement a GPS point is in (prefills «Откуда») */
+        get: {
+            parameters: {
+                query: {
+                    lat: number;
+                    lng: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Place"] | null;
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cities/{id}/spots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pin picker inside Бишкек / Ош: departure spots, then жилмассивы (draggable) */
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK (empty for other places) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                /** @enum {string} */
+                                kind?: "spot" | "area";
+                                nameRu?: string;
+                                nameKg?: string;
+                                lat?: number;
+                                lng?: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trips / requests in a viewport, grid-clustered by zoom
+         * @description Each listing sits at its exact pin (driver boarding spot / where the passenger waits) or, without one, its settlement (exact=false). Cells holding one listing come back as items, denser cells as clusters. No clustering from zoom 14.
+         */
+        get: {
+            parameters: {
+                query: {
+                    kind: "trips" | "requests";
+                    /** @description west,south,east,north */
+                    bbox: string;
+                    zoom: number;
+                    to_id?: number;
+                    ride?: "intercity" | "airport";
+                    date?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: {
+                                /** Format: uuid */
+                                id?: string;
+                                lat?: number;
+                                lng?: number;
+                                exact?: boolean;
+                                originCity?: string;
+                                destinationCity?: string;
+                                destinationCityId?: number;
+                                /** Format: date-time */
+                                departureAt?: string;
+                                seats?: number;
+                                price?: number | null;
+                            }[];
+                            clusters?: {
+                                lat?: number;
+                                lng?: number;
+                                count?: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
                     };
                 };
             };
@@ -2817,16 +2918,29 @@ export interface paths {
         /** Search trips */
         get: {
             parameters: {
-                query: {
-                    from_city: string;
-                    to_city: string;
+                query?: {
+                    from_id?: number;
+                    to_id?: number;
+                    /** @description Name fallback (SEO / bot) when no from_id */
+                    from_city?: string;
+                    /** @description Name fallback when no to_id */
+                    to_city?: string;
+                    /** @description Viewer point for sort=nearest */
+                    near_lat?: number;
+                    near_lng?: number;
                     date?: string;
                     seats?: number;
                     min_price?: number;
                     max_price?: number;
                     only_verified?: "true" | "false";
                     luggage?: "yes" | "small" | "no";
-                    sort?: "time" | "price_asc" | "rating_desc";
+                    /** @description airport = transfers */
+                    kind?: "intercity" | "airport";
+                    women_only?: "true" | "false";
+                    no_smoking?: "true" | "false";
+                    pets?: "true" | "false";
+                    sort?: "time" | "price_asc" | "rating_desc" | "nearest";
+                    /** @description Opaque */
                     cursor?: string;
                     limit?: number;
                 };
@@ -2843,7 +2957,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            data?: components["schemas"]["TripListItem"][];
+                            data?: components["schemas"]["TripCardItem"][];
                             /** Format: uuid */
                             nextCursor?: string | null;
                         };
@@ -2928,14 +3042,18 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        originCity: string;
-                        destinationCity: string;
-                        originAddress: string;
-                        originLat?: number;
-                        originLng?: number;
-                        waypoints?: unknown[];
+                        originCityId: number;
+                        destinationCityId: number;
+                        originPoint?: components["schemas"]["MeetingPoint"];
+                        destinationPoint?: components["schemas"]["MeetingPoint"];
+                        pickupCityIds?: number[];
+                        dropoffCityIds?: number[];
+                        /** Format: uuid */
+                        carId?: string;
                         /** Format: date-time */
                         departureAt: string;
+                        /** Format: date-time */
+                        departureWindowEnd?: string;
                         departureFlexible?: boolean;
                         seatsTotal: number;
                         pricePerSeat: number;
@@ -3337,7 +3455,10 @@ export interface paths {
                         comment?: string | null;
                         /** @enum {string} */
                         luggage?: "yes" | "small" | "no";
+                        /** @description Merged into the stored preferences */
                         preferences?: Record<string, never>;
+                        originPoint?: components["schemas"]["MeetingPoint"] | null;
+                        destinationPoint?: components["schemas"]["MeetingPoint"] | null;
                     };
                 };
             };
@@ -3347,7 +3468,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["TripDetail"];
+                    };
                 };
                 /** @description Validation */
                 400: {
@@ -3416,6 +3539,196 @@ export interface paths {
         };
         trace?: never;
     };
+    "/trips/{id}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Like a trip */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Liked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            liked?: boolean;
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Remove a trip like */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Unliked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            liked?: boolean;
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/routes/price-suggestion": {
         parameters: {
             query?: never;
@@ -3427,8 +3740,8 @@ export interface paths {
         get: {
             parameters: {
                 query: {
-                    from: string;
-                    to: string;
+                    from_id: number;
+                    to_id: number;
                 };
                 header?: never;
                 path?: never;
@@ -6171,10 +6484,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Cities (admin view) */
+        /** Search the SOATE directory (approx=true → points to fix by hand) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    q?: string;
+                    type?: string;
+                    approx?: "true" | "false";
+                    cursor?: string;
+                    limit?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -6254,99 +6573,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Add city (superadmin) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        nameRu: string;
-                        nameKg: string;
-                        region?: string;
-                        lat?: number;
-                        lng?: number;
-                        isActive?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Validation */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Rate limited */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Internal */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6366,7 +6593,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update city (superadmin) */
+        /** Correct a place: names, aliases, map point, visibility (superadmin) */
         patch: {
             parameters: {
                 query?: never;
@@ -6376,7 +6603,18 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nameRu?: string;
+                        nameKg?: string;
+                        aliases?: string[];
+                        lat?: number;
+                        lng?: number;
+                        isActive?: boolean;
+                    };
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -7396,35 +7634,11 @@ export interface components {
                 /** @enum {string} */
                 language?: "ru" | "kg";
                 phoneVerified?: boolean;
-                providers?: ("telegram" | "google" | "apple" | "phone")[];
-            };
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "AuthResult";
-        };
-        ProvisionalAuthResult: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            kind: "ProvisionalAuthResult";
-            provisionalToken?: string;
-            provisionalTokenExpiresIn?: number;
-            /** @enum {boolean} */
-            requiresPhoneVerification?: true;
-            hintPhone?: string | null;
-            hintName?: string | null;
-            user?: {
-                /** Format: uuid */
-                id?: string;
-                /** @enum {string} */
-                provider?: "telegram" | "google" | "apple" | "phone";
+                telegramLinked?: boolean;
+                /** Format: date-time */
+                termsAcceptedAt?: string | null;
             };
         };
-        AnyAuthResult: components["schemas"]["AuthResult"] | components["schemas"]["ProvisionalAuthResult"];
         PublicUser: {
             /** Format: uuid */
             id?: string;
@@ -7433,30 +7647,53 @@ export interface components {
             roles?: string[];
             rating?: number | null;
             ratingCount?: number;
-            loyaltyTier?: string;
             /** Format: date-time */
             createdAt?: string;
         };
         SelfUser: components["schemas"]["PublicUser"] & {
+            surname?: string | null;
+            /** @enum {string} */
+            preferredMode?: "passenger" | "driver";
+            /** @description Web sign-in password is set */
+            hasPassword?: boolean;
             phone?: string;
             phoneVerified?: boolean;
             telegramLinked?: boolean;
             /** @enum {string} */
             language?: "ru" | "kg";
+            bio?: string | null;
+            loyaltyPoints?: number;
             /** Format: date-time */
             termsAcceptedAt?: string | null;
             /** Format: date-time */
             lastSeenAt?: string | null;
-            loyaltyPoints?: number;
-            notificationsEnabled?: boolean;
         };
-        City: {
-            id?: number;
-            nameRu?: string;
-            nameKg?: string;
-            region?: string | null;
+        Place: {
+            id: number;
+            /** @enum {string} */
+            type: "capital" | "city" | "town" | "village" | "airport";
+            nameRu: string;
+            nameKg: string;
             lat?: number | null;
             lng?: number | null;
+            raion?: {
+                nameRu?: string;
+                nameKg?: string;
+            } | null;
+            oblast?: {
+                nameRu?: string;
+                nameKg?: string;
+            } | null;
+        };
+        MeetingPoint: {
+            lat: number;
+            lng: number;
+            address?: string | null;
+            /** @description Жилмассив of the pin (Бишкек / Ош), derived by the server */
+            readonly area?: {
+                nameRu?: string;
+                nameKg?: string;
+            } | null;
         };
         DriverStatus: {
             /** @enum {string} */
@@ -7475,6 +7712,49 @@ export interface components {
                 plate?: string;
                 seats?: number;
             } | null;
+        };
+        TripCardItem: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            driverId?: string;
+            driver?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string;
+                avatarUrl?: string | null;
+                rating?: number | null;
+                ratingCount?: number;
+                verified?: boolean;
+                car?: {
+                    make?: string;
+                    model?: string;
+                } | null;
+            };
+            /** @enum {string} */
+            kind?: "intercity" | "airport";
+            originCityId?: number;
+            destinationCityId?: number;
+            /** @description name_ru snapshot */
+            originCity?: string;
+            /** @description name_ru snapshot */
+            destinationCity?: string;
+            origin?: components["schemas"]["Place"];
+            destination?: components["schemas"]["Place"];
+            originPoint?: components["schemas"]["MeetingPoint"] | null;
+            pickupCities?: string[];
+            /** Format: date-time */
+            departureAt?: string;
+            /** Format: date-time */
+            departureWindowEnd?: string | null;
+            seatsAvailable?: number;
+            pricePerSeat?: number;
+            /** @enum {string} */
+            status?: "active" | "direct" | "completed" | "cancelled";
+            /** @description Whether the requesting viewer liked this listing */
+            liked?: boolean;
+            /** @description Only with sort=nearest */
+            distanceKm?: number;
         };
         TripListItem: {
             /** Format: uuid */
@@ -7496,11 +7776,29 @@ export interface components {
                     plate?: string;
                 } | null;
             };
+            /** @enum {string} */
+            kind?: "intercity" | "airport";
+            originCityId?: number;
+            destinationCityId?: number;
+            /** @description name_ru snapshot */
             originCity?: string;
+            /** @description name_ru snapshot */
             destinationCity?: string;
-            originAddress?: string;
+            origin?: components["schemas"]["Place"];
+            destination?: components["schemas"]["Place"];
+            originPoint?: components["schemas"]["MeetingPoint"] | null;
+            destinationPoint?: components["schemas"]["MeetingPoint"] | null;
+            pickupCities?: string[];
+            dropoffCities?: string[];
+            stops?: {
+                /** @enum {string} */
+                kind?: "pickup" | "dropoff";
+                place?: components["schemas"]["Place"];
+            }[];
             /** Format: date-time */
             departureAt?: string;
+            /** Format: date-time */
+            departureWindowEnd?: string | null;
             departureFlexible?: boolean;
             estimatedDurationMin?: number;
             seatsTotal?: number;
@@ -7510,16 +7808,31 @@ export interface components {
             /** @enum {string} */
             luggage?: "yes" | "small" | "no";
             /** @enum {string} */
-            status?: "active" | "completed" | "cancelled";
+            status?: "active" | "direct" | "completed" | "cancelled";
             /** Format: date-time */
             createdAt?: string;
+            /** @description Whether the requesting viewer liked this listing */
+            liked?: boolean;
+            /** @description The viewing driver’s own response to this request, if any */
+            myResponse?: {
+                id?: string;
+                status?: string;
+            } | null;
+            /** @description Engagement stats — present only when the viewer is the creator */
+            metrics?: {
+                views?: number;
+                likes?: number;
+            } | null;
         };
         TripDetail: components["schemas"]["TripListItem"] & {
             comment?: string | null;
+            myBooking?: {
+                id?: string;
+                status?: string;
+            } | null;
             preferences?: {
                 [key: string]: boolean;
             };
-            waypoints?: Record<string, never>[];
             recentRatings?: Record<string, never>[];
         };
         Booking: {

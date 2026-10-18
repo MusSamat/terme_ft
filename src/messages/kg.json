@@ -204,8 +204,7 @@
     "safety_desc": "Ар бир айдоочунун укугун, техпаспортун жана селфисин кол менен текшеребиз.",
     "trust_verified": "Верификацияланган айдоочулар",
     "trust_ratings": "Эки тараптуу баалоолор",
-    "trust_chat": "Платформа ичиндеги чат",
-    "trust_tma": "Telegram Mini App"
+    "trust_chat": "Платформа ичиндеги чат"
   },
   "onboarding": {
     "skip": "Өткөрүп жиберүү",
@@ -292,39 +291,6 @@
     "step3_desc": "Жолугушканда накталай төлөм. Сапардан кийин эки тарап баалоо калтырат."
   },
   "auth": {
-    "add_phone": {
-      "title_phone": "Телефон номерин кошуңуз",
-      "title_tg_waiting": "Telegram'ды ачыңыз",
-      "title_otp": "Ырастоо кодун киргизиңиз",
-      "hint_linked": "Ырастоо коду Telegram-бот аркылуу келет",
-      "hint_default": "Ырастоо коду Telegram аркылуу келет",
-      "manual_hint": "Номерди киргизиңиз — код WhatsApp аркылуу келет",
-      "get_code": "Код алуу",
-      "waiting": "Telegram'да ырастоону күтүүдөбүз…",
-      "open_telegram": "Telegram'ды ачуу",
-      "change_number": "← Номерди өзгөртүү",
-      "otp_sent_to": "Код жиберилди:",
-      "confirm": "Ырастоо",
-      "err_timeout": "Убакыт бүттү. Кайра аракет кылыңыз.",
-      "err_connection": "Байланыш катасы. Кайра аракет кылыңыз.",
-      "share_tg_btn": "Telegram'дан номерди бөлүшүү",
-      "share_tg_or": "же номерди кол менен киргизиңиз",
-      "share_declined": "Номер бөлүшүлгөн жок — аны төмөндө кол менен киргизиңиз",
-      "share_tg_body": "Баскычты басыңыз — Telegram номериңизди автоматтык түрдө ырастайт. Эч нерсе киргизүүнүн кереги жок.",
-      "update_telegram": "Номер бөлүшүү үчүн Telegram колдонмосун жаңыртыңыз."
-    },
-    "social": {
-      "error_title": "Кирүү катасы",
-      "err_phone_verification": "Аккаунт телефонду ырастоону талап кылат. Телефон аркылуу кириңиз.",
-      "err_not_linked": "Telegram аккаунтка байланган эмес. Телефон номери менен кириңиз же катталыңыз.",
-      "err_timeout": "Убакыт бүттү. Кайра аракет кылыңыз.",
-      "err_login": "Кирүү катасы. Кайра аракет кылыңыз.",
-      "waiting": "Ботту ачып, «Старт» же «Номер бөлүшүү» баскычын басыңыз…",
-      "open_again": "Telegram'ды кайра ачуу",
-      "login_telegram": "Telegram аркылуу улантуу",
-      "return_hint": "Telegram'де ырастап, ушул браузерге кайтыңыз — кирүү автоматтык аякталат.",
-      "open_via_browser": "Ачылган жокпу? t.me аркылуу ачуу"
-    },
     "login": {
       "or_phone": "же телефон аркылуу",
       "phone_label": "Телефон номери",
@@ -343,7 +309,6 @@
       "change_number": "← Номерди өзгөртүү",
       "alternatives": "альтернативалар",
       "login_sms": "WhatsApp коду менен кирүү",
-      "login_telegram": "Telegram аркылуу кирүү",
       "sending": "Жибербиз…",
       "checking": "Текшеребиз…",
       "forgot_password": "Купуя сөздү унуттуңузбу?",
@@ -351,15 +316,13 @@
       "forgot_hint": "Номериңизди киргизиңиз — WhatsApp аркылуу код жөнөтөбүз.",
       "get_code_btn": "Кодду алуу",
       "no_password_hint": "Сизде азырынча купуя сөз жок. Аны WhatsApp кодунун жардамы менен орнотуңуз.",
-      "set_password_btn": "WhatsApp коду менен купуя сөз орнотуу",
+      "set_password_btn": "WhatsApp аркылуу сырсөз коюу",
       "enter_phone_first": "Адегенде телефон номерин киргизиңиз.",
       "no_account": "Аккаунт жокпу?",
       "register_link": "Катталуу",
       "otp_sent": "WhatsApp аркылуу код жиберилди",
       "otp_reset_sent": "Купуя сөздү калыбына келтирүү коду WhatsApp аркылуу жиберилди",
-      "otp_telegram_hint": "WhatsApp'ка жиберилген кодду киргизиңиз.",
       "otp_dm_hint": "Код WhatsApp аркылуу номерге жөнөтүлдү",
-      "otp_open_bot": "WhatsApp'ты ачуу",
       "otp_reset_hint": "Тастыктагандан кийин жаңы купуя сөз коё аласыз.",
       "otp_label": "Тастыктоо коду",
       "otp_digit": "{n} сан",
@@ -384,7 +347,10 @@
       "skip_btn": "Өткөрүп жиберүү →",
       "app_title": "Termeке кирүү",
       "app_subtitle": "Кыргызстандын шаарлар аралык попутчиктери",
-      "telegram_only_hint": "Жаңы же бар аккаунт — Telegram аркылуу улантыңыз."
+      "hint_no_account_title": "Бул номер катталган эмес",
+      "hint_no_account_desc": "Катталыңыз — код WhatsApp аркылуу келет.",
+      "hint_no_password_title": "Аккаунтта азырынча сырсөз жок",
+      "hint_no_password_desc": "Сиз тиркеме же Telegram аркылуу киргенсиз. Сырсөз коюңуз — код WhatsApp аркылуу келет."
     },
     "register": {
       "title": "Катталуу",
@@ -446,19 +412,9 @@
       "err_otp_attempts": "Аракет өтө көп болду. 15 мүнөт күтүңүз.",
       "err_rate_limited": "Өтө тез. Кийинчерээк аракет кылыңыз.",
       "err_conflict": "Бул номер катталган. Аккаунтка кириңиз.",
-      "step_telegram": "Telegram",
-      "telegram_title": "Код Telegram'га жөнөтүлдү",
-      "telegram_hint": "Билдирүүдөгү кодду киргизиңиз:",
-      "telegram_open_btn": "Telegram'да ботту ачуу",
-      "telegram_start_title": "Telegram'да ботту ачыңыз",
-      "telegram_start_hint": "Бот менен чатта «Старт» баскычын басыңыз — кодду жиберет",
-      "telegram_waiting": "Telegram'дан ырастоону күтүүдөбүз…",
-      "telegram_otp_prompt": "Telegram'дан жөнөтүлгөн кодду киргизиңиз",
-      "err_telegram_expired": "Шилтеме эскирди. Кайра баштаңыз.",
       "confirm_password_label": "Купуя сөздү кайталаңыз",
       "confirm_password_placeholder": "Купуя сөздү кайталаңыз",
-      "passwords_mismatch": "Купуя сөздөр дал келбейт",
-      "telegram_only_hint": "Telegram аркылуу катталуу — номер автоматтык түрдө ырасталат."
+      "passwords_mismatch": "Купуя сөздөр дал келбейт"
     }
   },
   "trips": {
@@ -854,7 +810,6 @@
     "rating_count": "({n} баалоо)",
     "badge_phone": "📱 Телефон ырасталды",
     "badge_driver": "🚗 Айдоочу",
-    "badge_telegram": "✈️ Telegram",
     "badge_since": "Terme'те {year} жылдан бери",
     "mode_label": "Режим",
     "tab_about": "Өзүм жөнүндө",
@@ -913,7 +868,6 @@
     "chip_phone": "Телефон",
     "chip_docs": "Документтер",
     "chip_car": "Авто",
-    "chip_telegram": "Telegram",
     "chip_verified": "Ырасталган",
     "nav_history": "Сапарлар тарыхы",
     "nav_settings": "Жөндөөлөр",
@@ -1130,7 +1084,10 @@
     "wrong_current": "Учурдагы купуя сөз туура эмес.",
     "success": "Купуя сөз өзгөртүлдү.",
     "title": "Купуя сөздү өзгөртүү",
-    "current_required": "Учурдагы сырсөздү киргизиңиз"
+    "no_password_desc": "Сырсөз сайтка кирүү үчүн керек. Аны коюңуз — код WhatsApp аркылуу келет.",
+    "set_via_whatsapp": "WhatsApp аркылуу сырсөз коюу",
+    "forgot_current": "Учурдагы сырсөздү унуттум",
+    "current_required": "Учурдагы сырсөздү жазыңыз"
   },
   "loyalty": {
     "title": "Берилгендик программасы",
@@ -1530,7 +1487,6 @@
     "password_not_set": "Сырсөз коюлган эмес. Кирүүнүн башка ыкмасын колдонуңуз.",
     "password_mismatch": "Сырсөз туура эмес.",
     "too_soon": "Кийинки аракеттен мурун бир аз күтүңүз.",
-    "no_telegram_linked": "Сырсөзсүз кирүү үчүн профиль жөндөөлөрүнөн Telegram'ды байлаңыз.",
     "pre_booking_limit_reached": "Бронду ырастоого чейинки билдирүү чеги толду. Өтүнмө кабыл алынгандан кийин чек алынат.",
     "chat_write_window_expired": "Аяктаган сапар боюнча жазышуу убактысы бүттү.",
     "chat_not_available": "Бул бронь үчүн чат жеткиликсиз.",
@@ -1625,7 +1581,7 @@
     "name_label": "Аты",
     "save_error": "Сактоо мүмкүн болбоду. Кайра аракет кылыңыз.",
     "save": "Сактоо",
-    "otp_sent_to": "Номерге келген SMS кодун киргизиңиз",
+    "otp_sent_to": "Код WhatsApp аркылуу жөнөтүлдү:",
     "otp_label": "SMS коду",
     "otp_invalid": "Код туура эмес. Кайра аракет кылыңыз.",
     "confirm": "Ырастоо",
@@ -1633,9 +1589,7 @@
     "resend": "Кайра жөнөтүү",
     "change_number": "Номерди өзгөртүү",
     "new_phone_label": "Жаңы телефон номери",
-    "current_password_label": "Учурдагы сырсөз (ырастоо үчүн)",
     "send_error": "Сырсөз туура эмес же номер бош эмес.",
-    "get_sms": "SMS алуу",
     "car_photo_upload": "Автомобилдин сүрөтүн жүктөө",
     "car_photo_alt": "Автомобилдин сүрөтү",
     "photo_updated": "Сүрөт жаңыртылды",
@@ -1652,7 +1606,9 @@
     "avatar_alt": "Аватар",
     "upload_error": "Жүктөө катасы",
     "bio_label": "Өзүм жөнүндө",
-    "bio_placeholder": "Өзүңүз жөнүндө бир-эки сөз — жол шериктер профилден көрөт"
+    "bio_placeholder": "Өзүңүз жөнүндө бир-эки сөз — жол шериктер профилден көрөт",
+    "whatsapp_note": "Ырастоо коду жаңы номерге WhatsApp аркылуу келет.",
+    "get_code": "Код алуу"
   },
   "badge": {
     "verified": "Ырасталган",

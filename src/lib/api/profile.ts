@@ -1,19 +1,11 @@
 import { api, setTokens } from "./client";
 import type { AuthResult, SelfUser } from "./types";
 
-type ReAuthProof =
-  | { provider: "phone"; password: string }
-  | { provider: "telegram"; initData: string }
-  | { provider: "google"; idToken: string }
-  | { provider: "apple"; identityToken: string };
-
-export async function changePhone(
-  newPhone: string,
-  reAuthProof: ReAuthProof,
-): Promise<{ expiresInSec: number }> {
-  const { data } = await api.patch<{ expiresInSec: number }>("/users/me/phone", {
+// Phone change: the session authenticates, a WhatsApp code to the NEW number
+// proves possession (confirmPhoneChange). Other sessions are revoked.
+export async function changePhone(newPhone: string): Promise<{ expiresInSec: number; debug_code?: string }> {
+  const { data } = await api.patch<{ expiresInSec: number; debug_code?: string }>("/users/me/phone", {
     newPhone,
-    reAuthProof,
   });
   return data;
 }
@@ -22,7 +14,11 @@ export async function confirmPhoneChange(
   newPhone: string,
   code: string,
 ): Promise<SelfUser> {
-  const { data } = await api.patch<AuthResult>("/users/me/phone/confirm", { newPhone, code });
+  const { data } = await api.patch<AuthResult>("/users/me/phone/confirm", {
+    newPhone,
+    code,
+    channel: "web",
+  });
   setTokens(data);
   return data.user as SelfUser;
 }

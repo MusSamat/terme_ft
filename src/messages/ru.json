@@ -204,8 +204,7 @@
     "safety_desc": "Проверяем права, техпаспорт и селфи каждого водителя вручную.",
     "trust_verified": "Верифицированные водители",
     "trust_ratings": "Двусторонние рейтинги",
-    "trust_chat": "Чат внутри платформы",
-    "trust_tma": "Telegram Mini App"
+    "trust_chat": "Чат внутри платформы"
   },
   "onboarding": {
     "skip": "Пропустить",
@@ -292,39 +291,6 @@
     "step3_desc": "Оплата наличными при встрече. После поездки обе стороны оставляют оценки."
   },
   "auth": {
-    "add_phone": {
-      "title_phone": "Добавьте номер телефона",
-      "title_tg_waiting": "Откройте Telegram",
-      "title_otp": "Введите код подтверждения",
-      "hint_linked": "Код подтверждения придёт через Telegram-бот",
-      "hint_default": "Код подтверждения придёт через Telegram",
-      "manual_hint": "Введите номер — код придёт в WhatsApp",
-      "get_code": "Получить код",
-      "waiting": "Ожидаем подтверждения в Telegram…",
-      "open_telegram": "Открыть Telegram",
-      "change_number": "← Изменить номер",
-      "otp_sent_to": "Код отправлен на",
-      "confirm": "Подтвердить",
-      "err_timeout": "Время вышло. Попробуйте снова.",
-      "err_connection": "Ошибка соединения. Попробуйте снова.",
-      "share_tg_btn": "Поделиться номером из Telegram",
-      "share_tg_or": "или введите номер вручную",
-      "share_declined": "Вы не поделились номером — введите его вручную ниже",
-      "share_tg_body": "Нажмите кнопку — Telegram подтвердит ваш номер автоматически. Вводить ничего не нужно.",
-      "update_telegram": "Обновите приложение Telegram, чтобы поделиться номером."
-    },
-    "social": {
-      "error_title": "Ошибка входа",
-      "err_phone_verification": "Аккаунт требует верификации телефона. Войдите через телефон.",
-      "err_not_linked": "Telegram не привязан к аккаунту. Войдите по номеру телефона или зарегистрируйтесь.",
-      "err_timeout": "Время вышло. Попробуйте снова.",
-      "err_login": "Ошибка входа. Попробуйте снова.",
-      "waiting": "Откройте бота и нажмите «Старт» или «Поделиться номером»…",
-      "open_again": "Открыть Telegram снова",
-      "login_telegram": "Продолжить через Telegram",
-      "return_hint": "Подтвердите вход в Telegram и вернитесь в этот браузер — вход завершится автоматически.",
-      "open_via_browser": "Не открылось? Открыть через t.me"
-    },
     "login": {
       "or_phone": "или по телефону",
       "phone_label": "Номер телефона",
@@ -343,7 +309,6 @@
       "change_number": "← Изменить номер",
       "alternatives": "альтернативы",
       "login_sms": "Войти по коду из WhatsApp",
-      "login_telegram": "Войти через Telegram",
       "sending": "Отправляем…",
       "checking": "Проверяем…",
       "forgot_password": "Забыли пароль?",
@@ -351,15 +316,13 @@
       "forgot_hint": "Введите номер — пришлём код в WhatsApp.",
       "get_code_btn": "Получить код",
       "no_password_hint": "У вас ещё нет пароля. Установите его по коду из WhatsApp.",
-      "set_password_btn": "Установить пароль по коду из WhatsApp",
+      "set_password_btn": "Задать пароль через WhatsApp",
       "enter_phone_first": "Сначала введите номер телефона.",
       "no_account": "Нет аккаунта?",
       "register_link": "Зарегистрироваться",
       "otp_sent": "Код отправлен в WhatsApp",
       "otp_reset_sent": "Код для сброса пароля отправлен в WhatsApp",
-      "otp_telegram_hint": "Введите код, отправленный в WhatsApp.",
       "otp_dm_hint": "Код отправлен в WhatsApp на номер",
-      "otp_open_bot": "Открыть WhatsApp",
       "otp_reset_hint": "После подтверждения вы сможете установить новый пароль.",
       "otp_label": "Код подтверждения",
       "otp_digit": "Цифра {n}",
@@ -384,7 +347,10 @@
       "skip_btn": "Пропустить →",
       "app_title": "Вход в Terme",
       "app_subtitle": "Межгород попутки Кыргызстана",
-      "telegram_only_hint": "Новый или существующий аккаунт — просто продолжите через Telegram."
+      "hint_no_account_title": "Номер ещё не зарегистрирован",
+      "hint_no_account_desc": "Зарегистрируйтесь — код придёт в WhatsApp.",
+      "hint_no_password_title": "У аккаунта ещё нет пароля",
+      "hint_no_password_desc": "Вы входили через приложение или Telegram. Задайте пароль — код придёт в WhatsApp."
     },
     "register": {
       "title": "Регистрация",
@@ -446,19 +412,9 @@
       "err_otp_attempts": "Слишком много попыток. Подождите 15 минут.",
       "err_rate_limited": "Слишком часто. Попробуйте позже.",
       "err_conflict": "Этот номер уже зарегистрирован. Войдите в аккаунт.",
-      "step_telegram": "Telegram",
-      "telegram_title": "Код отправлен в Telegram",
-      "telegram_hint": "Введите код из сообщения от",
-      "telegram_open_btn": "Открыть бот в Telegram",
-      "telegram_start_title": "Откройте бот в Telegram",
-      "telegram_start_hint": "Нажмите «Старт» в чате с ботом — код пришлёт",
-      "telegram_waiting": "Ожидаем подтверждения в Telegram…",
-      "telegram_otp_prompt": "Введите код из Telegram, отправленный на номер",
-      "err_telegram_expired": "Ссылка устарела. Начните заново.",
       "confirm_password_label": "Повторите пароль",
       "confirm_password_placeholder": "Повторите пароль",
-      "passwords_mismatch": "Пароли не совпадают",
-      "telegram_only_hint": "Регистрация через Telegram — номер подтвердится автоматически."
+      "passwords_mismatch": "Пароли не совпадают"
     }
   },
   "trips": {
@@ -854,7 +810,6 @@
     "rating_count": "({n} оценок)",
     "badge_phone": "📱 Телефон подтверждён",
     "badge_driver": "🚗 Водитель",
-    "badge_telegram": "✈️ Telegram",
     "badge_since": "на Terme с {year}",
     "mode_label": "Режим",
     "tab_about": "О себе",
@@ -913,7 +868,6 @@
     "chip_phone": "Телефон",
     "chip_docs": "Документы",
     "chip_car": "Авто",
-    "chip_telegram": "Telegram",
     "chip_verified": "Подтверждён",
     "nav_history": "История поездок",
     "nav_settings": "Настройки",
@@ -1130,6 +1084,9 @@
     "wrong_current": "Неверный текущий пароль.",
     "success": "Пароль изменён.",
     "title": "Изменить пароль",
+    "no_password_desc": "Пароль нужен для входа на сайте. Задайте его — код придёт в WhatsApp.",
+    "set_via_whatsapp": "Задать пароль через WhatsApp",
+    "forgot_current": "Не помню текущий пароль",
     "current_required": "Введите текущий пароль"
   },
   "loyalty": {
@@ -1530,7 +1487,6 @@
     "password_not_set": "Пароль не установлен. Используйте другой способ входа.",
     "password_mismatch": "Неверный пароль.",
     "too_soon": "Подождите немного перед следующей попыткой.",
-    "no_telegram_linked": "Для входа без пароля привяжите Telegram в настройках профиля.",
     "pre_booking_limit_reached": "Достигнут лимит сообщений до подтверждения брони. После принятия запроса лимит снимется.",
     "chat_write_window_expired": "Время переписки по завершённой поездке истекло.",
     "chat_not_available": "Чат недоступен для этого бронирования.",
@@ -1625,7 +1581,7 @@
     "name_label": "Имя",
     "save_error": "Не удалось сохранить. Попробуйте снова.",
     "save": "Сохранить",
-    "otp_sent_to": "Введите код из SMS на номер",
+    "otp_sent_to": "Код отправлен в WhatsApp на",
     "otp_label": "Код из SMS",
     "otp_invalid": "Неверный код. Попробуйте ещё раз.",
     "confirm": "Подтвердить",
@@ -1633,9 +1589,7 @@
     "resend": "Отправить снова",
     "change_number": "Изменить номер",
     "new_phone_label": "Новый номер телефона",
-    "current_password_label": "Текущий пароль (для подтверждения)",
     "send_error": "Неверный пароль или номер уже занят.",
-    "get_sms": "Получить SMS",
     "car_photo_upload": "Загрузить фото автомобиля",
     "car_photo_alt": "Фото автомобиля",
     "photo_updated": "Фото обновлено",
@@ -1652,7 +1606,9 @@
     "avatar_alt": "Аватар",
     "upload_error": "Ошибка загрузки",
     "bio_label": "О себе",
-    "bio_placeholder": "Пара слов о себе — попутчики увидят это в профиле"
+    "bio_placeholder": "Пара слов о себе — попутчики увидят это в профиле",
+    "whatsapp_note": "Код подтверждения придёт в WhatsApp на новый номер.",
+    "get_code": "Получить код"
   },
   "badge": {
     "verified": "Верифицирован",

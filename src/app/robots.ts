@@ -13,8 +13,6 @@ const DISALLOW = [
   "/notifications",
   "/loyalty",
   "/complaint",
-  "/onboarding",
-  "/dev/*",
   // Transactional/action pages — no search value, keep them out of the index
   // so they don't surface as thin/duplicate results under the allowed /trips/*.
   "/trips/create",

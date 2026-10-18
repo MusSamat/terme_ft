@@ -12,7 +12,6 @@ import {
   CheckCircle,
   Image as ImageIcon,
   Lock,
-  Phone,
   Send,
 } from "lucide-react";
 import { api, extractError } from "@/lib/api/client";
@@ -21,9 +20,7 @@ import { listMyCars } from "@/lib/api/cars";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { compressImage, ImageValidationError } from "@/lib/utils/compress-image";
 import { CarForm } from "@/components/features/cars/car-form";
-import { useAuth } from "@/store/auth";
 import { Button, NotifCard, Spinner } from "@/components/ui";
-import { AddPhoneModal } from "@/components/features/auth/add-phone-modal";
 import { SubmittedScreen } from "./_components/submitted-screen";
 import { ReuploadDocs } from "./_components/reupload-docs";
 import { CameraCapture } from "@/components/features/driver/camera-capture";
@@ -47,9 +44,6 @@ export default function DriverVerifyPage() {
   const fe = useFriendlyError();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const authStatus = useAuth((s) => s.status);
-  const phoneVerified = useAuth((s) => s.user?.phoneVerified ?? false);
-  const [showAddPhone, setShowAddPhone] = useState(false);
 
   const { data: driverStatus, isLoading: statusLoading } = useQuery({
     queryKey: ["driver-status"],
@@ -206,26 +200,6 @@ export default function DriverVerifyPage() {
   }
 
   if (submitted) return <SubmittedScreen />;
-
-  // Phone gate — driver verification needs a confirmed number so passengers can
-  // reach the driver. Block the wizard up front instead of failing on submit.
-  if (authStatus === "authenticated" && !phoneVerified) {
-    return (
-      <>
-        <div className="mx-auto flex min-h-[60vh] max-w-[480px] flex-col items-center justify-center px-6 text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-50 dark:bg-brand-500/10">
-            <Phone className="h-7 w-7 text-brand-600" aria-hidden="true" />
-          </span>
-          <h1 className="mt-4 text-[20px] font-900 text-ink-900 dark:text-white">{t("gate_phone_title")}</h1>
-          <p className="mt-2 text-[15px] font-600 leading-relaxed text-ink-500">{t("gate_phone_text")}</p>
-          <Button variant="brand" size="lg" className="mt-5 w-full max-w-[320px]" onClick={() => setShowAddPhone(true)}>
-            {t("gate_phone_cta")}
-          </Button>
-        </div>
-        <AddPhoneModal open={showAddPhone} onClose={() => setShowAddPhone(false)} onDone={() => setShowAddPhone(false)} />
-      </>
-    );
-  }
 
   if (statusLoading) {
     return (

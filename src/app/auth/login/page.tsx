@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import {
+  checkPhone,
   loginWithPassword,
   resetPassword,
   sendOtp,
@@ -49,6 +50,9 @@ export default function LoginPage() {
   // Sub-step of the "reset" screen: enter the code, then the new password.
   const [resetPhase, setResetPhase] = useState<"code" | "password">("code");
   const [serverError, setServerError] = useState<string | null>(null);
+  // Set when a failed login turns out to be a number without an account /
+  // without a password yet (created in the app or the Telegram bot).
+  const [loginHint, setLoginHint] = useState<"no_account" | "no_password" | null>(null);
   const [resendSeconds, setResendSeconds] = useState(0);
 
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -76,9 +80,12 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     const p = params.get("phone");
     if (p && isValidPhone(p)) setPhone(p);
+    // ?step=forgot opens «set / restore the password» directly (profile link,
+    // register «already registered» card).
+    if (params.get("step") === "forgot") setStep("forgot");
   }, []);
 
-  // Already authenticated (e.g. Telegram Mini App silent login) → no OTP needed.
+  // Already authenticated → nothing to do here.
   // Only fires on the untouched login step, never mid password-reset flow.
   useEffect(() => {
     if (status === "authenticated" && step === "login") {
@@ -95,7 +102,25 @@ export default function LoginPage() {
       const intent = consumeDeferredAction();
       router.replace(intent ? routeForIntent(intent) : "/");
     },
-    onError: (e) => setServerError(fe(extractError(e))),
+    onError: async (e) => {
+      const err = extractError(e);
+      // Wrong credentials: tell the user WHY when the number has no account or
+      // no password yet — instead of a dead-end «wrong password».
+      if (err.code === "UNAUTHORIZED") {
+        const info = await checkPhone(phone).catch(() => null);
+        if (info && !info.exists) {
+          setLoginHint("no_account");
+          setServerError(null);
+          return;
+        }
+        if (info && !info.hasPassword) {
+          setLoginHint("no_password");
+          setServerError(null);
+          return;
+        }
+      }
+      setServerError(fe(err));
+    },
   });
 
   // ── Forgot password: send the ONE OTP over WhatsApp, go straight to reset ──
@@ -185,13 +210,39 @@ export default function LoginPage() {
         )}
 
         {/* ── Step: main login ── */}
+        {step === "login" && loginHint && (
+          <div className="mb-5 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4 text-center dark:border-brand-500/30 dark:bg-brand-500/10">
+            <p className="text-[15px] font-900 text-ink-900 dark:text-white">
+              {loginHint === "no_account" ? tl("hint_no_account_title") : tl("hint_no_password_title")}
+            </p>
+            <p className="mt-1 text-[14px] font-600 text-ink-500">
+              {loginHint === "no_account" ? tl("hint_no_account_desc") : tl("hint_no_password_desc")}
+            </p>
+            {loginHint === "no_account" ? (
+              <Link
+                href={`/auth/register?phone=${encodeURIComponent(phone)}`}
+                className="mt-3 flex h-11 w-full items-center justify-center rounded-2xl bg-accent-500 text-[15px] font-900 text-accent-ink shadow-cta hover:bg-accent-400"
+              >
+                {tl("register_link")}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setLoginHint(null); setStep("forgot"); }}
+                className="mt-3 flex h-11 w-full items-center justify-center rounded-2xl bg-accent-500 text-[15px] font-900 text-accent-ink shadow-cta hover:bg-accent-400"
+              >
+                {tl("set_password_btn")}
+              </button>
+            )}
+          </div>
+        )}
         {step === "login" && (
           <>
             {/* Phone */}
             <div className="mb-3">
               <PhoneInput
                 value={phone}
-                onValueChange={(v) => { setPhone(v); setServerError(null); }}
+                onValueChange={(v) => { setPhone(v); setServerError(null); setLoginHint(null); }}
                 invalid={false}
                 placeholder="000 000 000"
                 onKeyDown={(e) => {

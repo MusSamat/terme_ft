@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, User, PartyPopper, ShieldCheck, Phone, ChevronRight, ChevronDown, Check, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, CarFront, User, PartyPopper, ShieldCheck, ChevronRight, ChevronDown, Check, SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createTrip, type CreateTripInput } from "@/lib/api/trips-create";
 import { uuid } from "@/lib/utils/uuid";
@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { ActionModal } from "@/components/ui/action-modal";
 import type { ChipAccent } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
-import { AddPhoneModal } from "@/components/features/auth/add-phone-modal";
 import { CarForm } from "@/components/features/cars/car-form";
 import { VerificationCard } from "@/components/features/driver/verification-card";
 import { RouteCard } from "./route-card";
@@ -98,7 +97,6 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
   const tCars = useTranslations("cars");
   const fe = useFriendlyError();
   const status = useAuth((s) => s.status);
-  const user = useAuth((s) => s.user);
   // Phase 1: no account roles — the user picks the intent right here.
   const activeMode = useAuth((s) => s.activeMode);
   const setActiveMode = useAuth((s) => s.setActiveMode);
@@ -112,7 +110,6 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
   const chipAccent: ChipAccent = isDriver ? "brand" : "grape";
 
   const [draft, setDraft] = useState<Draft>(() => defaults(isDriver));
-  const [showAddPhone, setShowAddPhone] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [publishedId, setPublishedId] = useState<string | null>(null);
 
@@ -300,28 +297,6 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Spinner size={28} />
-      </div>
-    );
-  }
-
-  // Phone required — block the form entirely (mirrors backend requirePhone 403).
-  // Filling the form and only failing on submit was the bad UX; gate up front.
-  if (status === "authenticated" && !user?.phoneVerified) {
-    return (
-      <div className="mx-auto max-w-[560px] px-4 py-8">
-        <div className="flex flex-col items-center gap-4 rounded-3xl border border-ink-100 bg-white px-6 py-10 text-center dark:border-ink-800 dark:bg-ink-900">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
-            <Phone className="h-7 w-7" aria-hidden="true" />
-          </div>
-          <h1 className="text-[20px] font-900 text-ink-900 dark:text-white">{t("gate_phone_title")}</h1>
-          <p className="max-w-[380px] text-[15px] font-600 text-ink-500 dark:text-ink-400">
-            {isDriver ? t("gate_phone_text_driver") : t("gate_phone_text")}
-          </p>
-          <Button variant="brand" size="lg" className="mt-2 w-full max-w-[320px]" onClick={() => setShowAddPhone(true)}>
-            {t("gate_phone_cta")}
-          </Button>
-        </div>
-        <AddPhoneModal open={showAddPhone} onClose={() => setShowAddPhone(false)} onDone={() => setShowAddPhone(false)} />
       </div>
     );
   }

@@ -8,33 +8,21 @@ import { Providers } from "@/components/providers";
 import { AuthBootstrap } from "@/components/auth-bootstrap";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { TermsGate } from "@/components/layout/terms-gate";
-import { OnboardingGate } from "@/components/features/onboarding/onboarding-gate";
-import { TmaInit } from "@/components/tma-init";
-import { PhoneGate } from "@/components/features/auth/phone-gate";
 import { TopNav } from "@/components/layout/top-nav";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MainRegion } from "@/components/layout/main-region";
 import { Footer } from "@/components/layout/footer";
-import { RoleSwitchOverlay } from "@/components/layout/role-switch-overlay";
-import { RoleSelectModal } from "@/components/features/role/role-select-modal";
 import { QuickActions } from "@/components/features/quick-actions/quick-actions";
 import { QuickToastContainer } from "@/components/layout/quick-toast";
 import { OfflineBanner } from "@/components/layout/offline-banner";
 import { ThemeProvider, THEME_INIT_SCRIPT } from "@/components/theme-provider";
 import { WebVitals } from "@/components/web-vitals";
-import { LogoMark, Spinner } from "@/components/ui";
 import { buildServiceJsonLd } from "@/lib/seo/org-jsonld";
 import "./globals.css";
 
 // Single source for the site meta description — reused in <metadata> and the
 // Service JSON-LD so the two never drift apart.
 const SITE_DESCRIPTION = "Найди попутчика Бишкек — Ош, Каракол, Нарын, Иссык-Куль.";
-
-// Runs before first paint (after telegram-web-app.js). Inside a Telegram Mini
-// App, initData is a non-empty string synchronously — mark <html> so the CSS
-// boot splash (#tma-splash) covers the page from frame 0, preventing a flash of
-// app content before the silent login resolves. AuthBootstrap clears the class.
-const TMA_SPLASH_INIT_SCRIPT = `(function(){try{var w=window.Telegram&&window.Telegram.WebApp;if(w&&typeof w.initData==="string"&&w.initData.length>0)document.documentElement.classList.add("tma-boot")}catch(e){}})()`;
 
 // Single self-hosted variable font for the whole app. Manrope has a full
 // Cyrillic glyph set (ru/kg), tabular figures, and reads well from 200→800 —
@@ -87,13 +75,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
-        <Script
-          src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
-        />
-        <Script id="tma-splash-init" strategy="beforeInteractive">
-          {TMA_SPLASH_INIT_SCRIPT}
-        </Script>
         {/* Sitewide Service structured data — safe: static values, JSON.stringify escapes. */}
         <script
           type="application/ld+json"
@@ -102,21 +83,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-screen font-sans">
-        {/* Server-rendered boot splash — visibility is CSS-driven by the
-            .tma-boot class on <html> (see globals.css + TMA_SPLASH_INIT_SCRIPT). */}
-        <div id="tma-splash" aria-hidden="true">
-          <LogoMark className="h-16 w-16" />
-          <Spinner size={22} className="text-brand-600" />
-        </div>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
             <Providers>
               <WebVitals />
-              <TmaInit />
               <AuthBootstrap />
-              <PhoneGate />
               <PresenceHeartbeat />
-              <OnboardingGate />
               <TermsGate />
               <TopNav />
               <MainRegion>{children}</MainRegion>
@@ -125,8 +97,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <QuickActions />
               <QuickToastContainer />
               <OfflineBanner />
-              <RoleSwitchOverlay />
-              <RoleSelectModal />
             </Providers>
           </ThemeProvider>
         </NextIntlClientProvider>

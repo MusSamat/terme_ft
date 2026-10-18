@@ -227,33 +227,4 @@
   .tabs-scroll::-webkit-scrollbar {
     display: none;
   }
-
-  /* Telegram Mini App boot splash. The #tma-splash element is server-rendered
-     (always in the HTML) but hidden by default; the inline script in the layout
-     <head> adds .tma-boot to <html> synchronously — before first paint — only
-     when Telegram initData is present, so app content never flashes before the
-     silent login resolves. AuthBootstrap removes .tma-boot (via a brief
-     .tma-boot-hide fade) once auth reaches authenticated/anonymous. */
-  #tma-splash {
-    display: none;
-  }
-  html.tma-boot #tma-splash {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.25rem;
-    background: #fff;
-    opacity: 1;
-    transition: opacity 0.2s ease;
-  }
-  html.tma-boot.dark #tma-splash {
-    background: #0c0a09; /* ink-950 */
-  }
-  html.tma-boot.tma-boot-hide #tma-splash {
-    opacity: 0;
-  }
 }

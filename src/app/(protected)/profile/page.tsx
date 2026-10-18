@@ -30,7 +30,6 @@ import { SettingsCard } from "./_components/settings-card";
 import { useAuth } from "@/store/auth";
 import { useRoleTheme } from "@/lib/hooks/use-role-colors";
 import { AvatarUploader } from "@/components/features/profile/avatar-uploader";
-import { AddPhoneModal } from "@/components/features/auth/add-phone-modal";
 import { cn } from "@/lib/utils/cn";
 import { ReviewCard, ReviewCardSkeleton } from "./_components/review-card";
 import { ProfileCompletion } from "./_components/profile-completion";
@@ -56,7 +55,6 @@ export default function ProfilePage() {
   const clearSession = useAuth((s) => s.clearSession);
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("about");
-  const [showAddPhone, setShowAddPhone] = useState(false);
 
   // Mobile is a flat list (inDrive-style, parity with the Flutter app): the root
   // shows the menu; tapping a row opens that section as a full sub-page. Desktop
@@ -232,21 +230,6 @@ export default function ProfilePage() {
         ) : (
           <>
             <BackButton />
-            {!user?.phoneVerified && (
-              <button
-                type="button"
-                onClick={() => setShowAddPhone(true)}
-                className="flex w-full items-center justify-between rounded-2xl bg-accent-50 px-4 py-3 text-left ring-1 ring-accent-200 dark:bg-accent-500/10 dark:ring-accent-500/20"
-              >
-                <span>
-                  <span className="block text-[14px] font-900 text-accent-700">{t("add_phone_title")}</span>
-                  <span className="block text-[14px] font-600 text-accent-700/80">{t("add_phone_sub")}</span>
-                </span>
-                <span className="rounded-full bg-accent-500 px-3 py-1.5 text-[13px] font-900 text-accent-ink shadow-cta">
-                  {t("add_phone_cta")}
-                </span>
-              </button>
-            )}
 
             {/* Header — avatar + name + phone; tap → settings (edit / password / etc.) */}
             <div className="flex items-center gap-3 rounded-4xl bg-white p-4 shadow-card dark:bg-ink-900">
@@ -407,7 +390,6 @@ export default function ProfilePage() {
         </section>
       </div>
 
-      <AddPhoneModal open={showAddPhone} onClose={() => setShowAddPhone(false)} />
     </div>
   );
 }
