@@ -1,19 +1,19 @@
 import { api } from "./client";
 export interface MapListingsResult {
   items: Array<{
-        id: string;
-        lat: number;
-        lng: number;
-        /** false = no pin, the settlement centre. */
-        exact: boolean;
-        originCity: string;
-        destinationCity: string;
-        destinationCityId: number;
-        departureAt: string;
-        seats: number;
-        price: number | null;
-      }>;
-      clusters: Array<{ lat: number; lng: number; count: number }>;
+    id: string;
+    lat: number;
+    lng: number;
+    /** false = no pin, the settlement centre. */
+    exact: boolean;
+    originCity: string;
+    destinationCity: string;
+    destinationCityId: number;
+    departureAt: string;
+    seats: number;
+    price: number | null;
+  }>;
+  clusters: Array<{ lat: number; lng: number; count: number }>;
 }
 export type MapItem = MapListingsResult["items"][number];
 

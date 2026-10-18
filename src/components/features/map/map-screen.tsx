@@ -17,7 +17,8 @@ import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
 import type { Locale } from "@/i18n.config";
 
-const ymdKg = (offset = 0) => new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
+const ymdKg = (offset = 0) =>
+  new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
 
 // Rides on a map: every trip at its driver's boarding pin, every request where
 // the passenger waits (settlement centre when no pin). Server-side clustering;
@@ -151,13 +152,25 @@ export function MapScreen() {
             <Chip kind="filter" selected={!date} onClick={() => setParam({ date: null })}>
               {t("any_day")}
             </Chip>
-            <Chip kind="filter" selected={date === ymdKg(0)} onClick={() => setParam({ date: ymdKg(0) })}>
+            <Chip
+              kind="filter"
+              selected={date === ymdKg(0)}
+              onClick={() => setParam({ date: ymdKg(0) })}
+            >
               <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" /> {t("today")}
             </Chip>
-            <Chip kind="filter" selected={date === ymdKg(1)} onClick={() => setParam({ date: ymdKg(1) })}>
+            <Chip
+              kind="filter"
+              selected={date === ymdKg(1)}
+              onClick={() => setParam({ date: ymdKg(1) })}
+            >
               {t("tomorrow")}
             </Chip>
-            <Chip kind="filter" selected={airport} onClick={() => setParam({ ride: airport ? null : "airport" })}>
+            <Chip
+              kind="filter"
+              selected={airport}
+              onClick={() => setParam({ ride: airport ? null : "airport" })}
+            >
               <Plane className="h-3.5 w-3.5" aria-hidden="true" /> {t("airport")}
             </Chip>
           </div>
@@ -199,9 +212,15 @@ export function MapScreen() {
                   <Users className="h-3.5 w-3.5" aria-hidden="true" />
                   {selected.seats}
                 </span>
-                {selected.price != null && <span>{selected.price.toLocaleString("ru-RU")} {t("som")}</span>}
+                {selected.price != null && (
+                  <span>
+                    {selected.price.toLocaleString("ru-RU")} {t("som")}
+                  </span>
+                )}
               </p>
-              {!selected.exact && <p className="mt-0.5 text-[12px] font-600 text-ink-400">{t("city_point")}</p>}
+              {!selected.exact && (
+                <p className="mt-0.5 text-[12px] font-600 text-ink-400">{t("city_point")}</p>
+              )}
             </div>
             <Link
               href={grape ? `/requests/${selected.id}` : `/trips/${selected.id}`}

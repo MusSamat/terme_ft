@@ -18,7 +18,8 @@ import { placeName, setRouteParams, toRoutePlace, type RoutePlace } from "@/lib/
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
 
-const ymdKg = (offset = 0) => new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
+const ymdKg = (offset = 0) =>
+  new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
 
 // Airport transfers — a product of its own: city ↔ airport, several rides a
 // day, flight numbers on requests. Lists drivers and passengers for the pair;
@@ -28,7 +29,11 @@ export function AirportScreen() {
   const locale = useLocale();
   const mode = useAuth((s) => s.activeMode);
 
-  const { data: airports = [] } = useQuery({ queryKey: ["airports"], queryFn: getAirports, staleTime: 60 * 60_000 });
+  const { data: airports = [] } = useQuery({
+    queryKey: ["airports"],
+    queryFn: getAirports,
+    staleTime: 60 * 60_000,
+  });
   const [airportId, setAirportId] = useState<number | null>(null);
   const airport: Airport | null = airports.find((a) => a.id === airportId) ?? airports[0] ?? null;
   const [toAirport, setToAirport] = useState(true);
@@ -48,14 +53,27 @@ export function AirportScreen() {
 
   const trips = useQuery({
     queryKey: ["airport-trips", from?.id, to?.id, dateIso],
-    queryFn: () => searchTrips({ from_id: from!.id!, to_id: to!.id!, kind: "airport", date: dateIso, limit: 50 }),
+    queryFn: () =>
+      searchTrips({
+        from_id: from!.id!,
+        to_id: to!.id!,
+        kind: "airport",
+        date: dateIso,
+        limit: 50,
+      }),
     enabled: ready && tab === "trips",
     staleTime: 30_000,
   });
   const requests = useQuery({
     queryKey: ["airport-requests", from?.id, to?.id, dateIso],
     queryFn: () =>
-      listPassengerRequests({ from_id: from!.id!, to_id: to!.id!, kind: "airport", date: dateIso, limit: 50 }),
+      listPassengerRequests({
+        from_id: from!.id!,
+        to_id: to!.id!,
+        kind: "airport",
+        date: dateIso,
+        limit: 50,
+      }),
     enabled: ready && tab === "requests",
     staleTime: 30_000,
   });
@@ -99,7 +117,11 @@ export function AirportScreen() {
                 toAirport === dir ? "bg-sky-600 text-white" : "text-ink-500 dark:text-ink-400",
               )}
             >
-              {dir ? <PlaneTakeoff className="h-4 w-4" aria-hidden="true" /> : <PlaneLanding className="h-4 w-4" aria-hidden="true" />}
+              {dir ? (
+                <PlaneTakeoff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <PlaneLanding className="h-4 w-4" aria-hidden="true" />
+              )}
               {dir ? t("to_airport") : t("from_airport")}
             </button>
           ))}
@@ -107,7 +129,12 @@ export function AirportScreen() {
 
         <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
           {airports.map((a) => (
-            <Chip key={a.id} kind="filter" selected={airport?.id === a.id} onClick={() => setAirportId(a.id)}>
+            <Chip
+              key={a.id}
+              kind="filter"
+              selected={airport?.id === a.id}
+              onClick={() => setAirportId(a.id)}
+            >
               ✈️ {placeName(a, locale).replace(/^Аэропорт\s*/, "")}
             </Chip>
           ))}
@@ -135,9 +162,15 @@ export function AirportScreen() {
         </div>
 
         <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
-          <Chip kind="filter" selected={date === ymdKg(0)} onClick={() => setDate(ymdKg(0))}>{t("today")}</Chip>
-          <Chip kind="filter" selected={date === ymdKg(1)} onClick={() => setDate(ymdKg(1))}>{t("tomorrow")}</Chip>
-          <Chip kind="filter" selected={!date} onClick={() => setDate("")}>{t("any_day")}</Chip>
+          <Chip kind="filter" selected={date === ymdKg(0)} onClick={() => setDate(ymdKg(0))}>
+            {t("today")}
+          </Chip>
+          <Chip kind="filter" selected={date === ymdKg(1)} onClick={() => setDate(ymdKg(1))}>
+            {t("tomorrow")}
+          </Chip>
+          <Chip kind="filter" selected={!date} onClick={() => setDate("")}>
+            {t("any_day")}
+          </Chip>
         </div>
       </div>
 
@@ -158,10 +191,17 @@ export function AirportScreen() {
 
       <div className="mt-5 flex items-center justify-between gap-2">
         <div className="flex gap-1.5">
-          <Chip kind="filter" selected={tab === "trips"} onClick={() => setTab("trips")}>{t("tab_drivers")}</Chip>
-          <Chip kind="filter" selected={tab === "requests"} onClick={() => setTab("requests")}>{t("tab_passengers")}</Chip>
+          <Chip kind="filter" selected={tab === "trips"} onClick={() => setTab("trips")}>
+            {t("tab_drivers")}
+          </Chip>
+          <Chip kind="filter" selected={tab === "requests"} onClick={() => setTab("requests")}>
+            {t("tab_passengers")}
+          </Chip>
         </div>
-        <Link href={mapHref} className="flex items-center gap-1.5 text-[13.5px] font-800 text-brand-700 dark:text-brand-300">
+        <Link
+          href={mapHref}
+          className="flex items-center gap-1.5 text-[13.5px] font-800 text-brand-700 dark:text-brand-300"
+        >
           <MapIcon className="h-4 w-4" aria-hidden="true" /> {t("on_map")}
         </Link>
       </div>
@@ -178,9 +218,13 @@ export function AirportScreen() {
             className="bg-white shadow-card ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
           />
         ) : tab === "trips" ? (
-          trips.data!.data.map((trip) => <TripCard key={trip.id} trip={trip} href={`/trips/${trip.id}`} />)
+          trips.data!.data.map((trip) => (
+            <TripCard key={trip.id} trip={trip} href={`/trips/${trip.id}`} />
+          ))
         ) : (
-          requests.data!.data.map((r) => <RequestCard key={r.id} request={r} href={`/requests/${r.id}`} />)
+          requests.data!.data.map((r) => (
+            <RequestCard key={r.id} request={r} href={`/requests/${r.id}`} />
+          ))
         )}
       </div>
     </div>

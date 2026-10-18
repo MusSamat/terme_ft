@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, CarFront, Phone, ShieldCheck } from "lucide-react";
+import { ContactActions } from "@/components/ui/contact-actions";
+import { ArrowLeft, CarFront, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DriverAvatar } from "@/components/ui";
 
@@ -89,15 +90,7 @@ export function ChatHeader({
         </Link>
       )}
 
-      {isConfirmed && otherPhone && (
-        <a
-          href={`tel:${otherPhone}`}
-          aria-label={t("call")}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-300"
-        >
-          <Phone className="h-4 w-4" aria-hidden="true" />
-        </a>
-      )}
+      {isConfirmed && otherPhone && <ContactActions phone={otherPhone} compact />}
     </div>
   );
 }
