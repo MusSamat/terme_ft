@@ -176,7 +176,7 @@ export default function AdminUsersPage() {
                           </span>
                         </p>
                         <p className="text-[11px] text-ink-500">
-                          {u.phoneConfirmed ? u.phone : "⚠ без телефона (Telegram)"}
+                          {u.phoneConfirmed ? u.phone : "⚠ номер не подтверждён"}
                         </p>
                       </div>
                     </Link>

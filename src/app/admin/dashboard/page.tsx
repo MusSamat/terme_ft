@@ -145,8 +145,8 @@ export default function AdminDashboard() {
             <KpiCard label="Онлайн сейчас" value={k?.onlineNow ?? "—"} sub="активны за 60 сек" icon={Radio} accent="text-emerald-600" />
             <KpiCard
               label="Актив по платформам"
-              value={k ? `${k.activeByPlatform.web} / ${k.activeByPlatform.mini} / ${k.activeByPlatform.mobile}` : "—"}
-              sub="web / mini / моб · за 24ч"
+              value={k ? `${k.activeByPlatform.web} / ${k.activeByPlatform.mobile}` : "—"}
+              sub="web / моб · за 24ч"
               icon={MonitorSmartphone}
               accent="text-sky-600"
             />

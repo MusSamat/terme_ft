@@ -108,7 +108,7 @@ export interface KpiCards {
   cancellationRate7d: number | null;
   openRequests: number;
   onlineNow: number;
-  activeByPlatform: { web: number; mini: number; mobile: number; unknown: number };
+  activeByPlatform: { web: number; mobile: number; unknown: number };
 }
 
 // ── Verifications ─────────────────────────────────────────────────────────────
@@ -218,13 +218,24 @@ export interface ComplaintItem {
   slaBreach: boolean;
 }
 
+export type PlaceType =
+  | "oblast" | "capital" | "city_district" | "raion" | "city" | "town" | "aiyl_aimak" | "village" | "airport";
+
+// SOATE directory row as the admin search returns it.
 export interface CityItem {
   id: number;
+  soateCode: string;
+  type: PlaceType;
   nameRu: string;
   nameKg: string;
-  nameEn?: string | null;
-  regionNameRu?: string | null;
+  aliases: string[];
+  lat: number | null;
+  lng: number | null;
+  coordApprox: boolean;
   isActive: boolean;
+  isSearchable: boolean;
+  raion: { nameRu: string } | null;
+  oblast: { nameRu: string } | null;
 }
 
 export interface AdminMember {
@@ -402,24 +413,25 @@ export async function resolveComplaint(
 
 // ─── Cities ───────────────────────────────────────────────────────────────────
 
-export async function listAdminCities(): Promise<{ data: CityItem[] }> {
-  const { data } = await adminApi.get<{ data: CityItem[] }>("/admin/cities");
-  return data;
+export interface AdminCitiesQuery {
+  q?: string;
+  type?: PlaceType;
+  approx?: boolean;
+  cursor?: string;
+  limit?: number;
 }
 
-export async function createCity(input: {
-  nameRu: string;
-  nameKg: string;
-  region?: string;
-  isActive?: boolean;
-}): Promise<CityItem> {
-  const { data } = await adminApi.post<CityItem>("/admin/cities", input);
+export async function listAdminCities(
+  query: AdminCitiesQuery = {},
+): Promise<{ data: CityItem[]; nextCursor: string | null }> {
+  const params = { ...query, approx: query.approx === undefined ? undefined : String(query.approx) };
+  const { data } = await adminApi.get<{ data: CityItem[]; nextCursor: string | null }>("/admin/cities", { params });
   return data;
 }
 
 export async function updateCity(
   id: number,
-  input: Partial<{ nameRu: string; nameKg: string; region: string; isActive: boolean }>,
+  input: Partial<{ nameRu: string; nameKg: string; aliases: string[]; lat: number; lng: number; isActive: boolean }>,
 ): Promise<CityItem> {
   const { data } = await adminApi.patch<CityItem>(`/admin/cities/${id}`, input);
   return data;

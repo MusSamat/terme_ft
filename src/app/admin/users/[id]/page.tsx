@@ -220,7 +220,7 @@ export default function AdminUserDetailPage() {
           </div>
           {user.telegramId && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-400">Telegram ID</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-400">Telegram-бот (ID)</p>
               <p className="text-[13px] font-bold text-ink-900">{user.telegramId}</p>
             </div>
           )}
