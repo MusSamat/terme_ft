@@ -40,9 +40,11 @@ interface Props {
   className?: string;
   /** Feed-only caption that names the mode and what it shows. */
   showHint?: boolean;
+  /** Header size (desktop top bar). */
+  compact?: boolean;
 }
 
-export function IntentToggle({ value, onChange, className, showHint }: Props) {
+export function IntentToggle({ value, onChange, className, showHint, compact }: Props) {
   const t = useTranslations("feed");
   const driver = value === "driver";
   return (
@@ -63,7 +65,7 @@ export function IntentToggle({ value, onChange, className, showHint }: Props) {
           onClick={() => onChange("passenger")}
           aria-pressed={!driver}
           className={cn(
-            "relative z-10 flex h-10 items-center justify-center gap-1.5 rounded-xl text-[14px] font-900 transition-colors",
+            compact ? "relative z-10 flex h-8 items-center justify-center gap-1 rounded-xl text-[12.5px] font-900 transition-colors" : "relative z-10 flex h-10 items-center justify-center gap-1.5 rounded-xl text-[14px] font-900 transition-colors",
             !driver ? "text-white" : "text-ink-500 dark:text-ink-400",
           )}
         >
@@ -75,7 +77,7 @@ export function IntentToggle({ value, onChange, className, showHint }: Props) {
           onClick={() => onChange("driver")}
           aria-pressed={driver}
           className={cn(
-            "relative z-10 flex h-10 items-center justify-center gap-1.5 rounded-xl text-[14px] font-900 transition-colors",
+            compact ? "relative z-10 flex h-8 items-center justify-center gap-1 rounded-xl text-[12.5px] font-900 transition-colors" : "relative z-10 flex h-10 items-center justify-center gap-1.5 rounded-xl text-[14px] font-900 transition-colors",
             driver ? "text-white" : "text-ink-500 dark:text-ink-400",
           )}
         >

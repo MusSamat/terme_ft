@@ -6,16 +6,22 @@ type TripDetail = components["schemas"]["TripDetail"];
 
 export type LuggageOption = "yes" | "small" | "no";
 
+export interface PointInput {
+  lat: number;
+  lng: number;
+  address?: string;
+}
+
 export interface CreateTripInput {
-  originCity: string;
-  destinationCity: string;
+  originCityId: number;
+  destinationCityId: number;
+  /** Exact boarding / drop-off spots (map pins) — optional. */
+  originPoint?: PointInput;
+  destinationPoint?: PointInput;
   /** Which of the user's cars rides this trip; omitted → newest car. */
   carId?: string;
-  pickupCities?: string[];
-  dropoffCities?: string[];
-  originAddress: string;
-  originLat?: number;
-  originLng?: number;
+  pickupCityIds?: number[];
+  dropoffCityIds?: number[];
   departureAt: string;
   /** «Выезжаем 06:00–11:00» — optional window end, ISO datetime after departureAt. */
   departureWindowEnd?: string;

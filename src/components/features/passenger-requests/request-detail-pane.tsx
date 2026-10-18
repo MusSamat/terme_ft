@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Star, Shield, Users, Calendar, Zap, MessageCircle, CheckCircle, Pencil, X } from "lucide-react";
+import { Star, Shield, Users, Calendar, Zap, MessageCircle, CheckCircle, Pencil, X, Plane } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type PassengerRequest, cancelPassengerRequest } from "@/lib/api/passenger-requests";
 import { extractError } from "@/lib/api/client";
@@ -19,6 +19,8 @@ import { useAuth } from "@/store/auth";
 import { useRecordView } from "@/lib/hooks/use-record-view";
 import { RespondModal } from "./_components/respond-modal";
 import { ContactRevealButton } from "@/components/ui/contact-reveal-button";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
+import { RouteSection } from "@/components/features/trip/route-section";
 
 interface Props {
   request: PassengerRequest;
@@ -33,6 +35,7 @@ function fmtDate(iso: string) {
 }
 
 export function RequestDetailPane({ request }: Props) {
+  const rn = useRouteNames();
   const { passenger } = request;
   useRecordView("passenger_request", request.id);
   const t = useTranslations("requests");
@@ -40,6 +43,7 @@ export function RequestDetailPane({ request }: Props) {
   const tCard = useTranslations("card");
   const tToasts = useTranslations("toasts");
   const tFilters = useTranslations("request_filters");
+  const tDetail = useTranslations("detail");
   const authStatus = useAuth((s) => s.status);
   const myId = useAuth((s) => s.user?.id);
   const router = useRouter();
@@ -109,7 +113,7 @@ export function RequestDetailPane({ request }: Props) {
                   {passenger.rating!.toFixed(1)}
                 </span>
                 <span className="text-[13px] text-ink-500">
-                  · {passenger.ratingCount} оценок
+                  · {t("ratings_count", { n: passenger.ratingCount })}
                 </span>
               </div>
             ) : (
@@ -144,7 +148,7 @@ export function RequestDetailPane({ request }: Props) {
               <div className="flex flex-1 flex-col gap-4">
                 <div>
                   <p className="text-[17px] font-extrabold text-ink-900 dark:text-white">
-                    {request.originCity}
+                    {rn(request).from}
                   </p>
                   <p className="mt-0.5 text-[14px] font-semibold text-ink-500">
                     {t("origin_point")}
@@ -152,7 +156,7 @@ export function RequestDetailPane({ request }: Props) {
                 </div>
                 <div>
                   <p className="text-[17px] font-extrabold text-ink-900 dark:text-white">
-                    {request.destinationCity}
+                    {rn(request).to}
                   </p>
                   <p className="mt-0.5 text-[14px] font-semibold text-ink-500">
                     {t("dest_point")}
@@ -162,6 +166,23 @@ export function RequestDetailPane({ request }: Props) {
             </div>
           </div>
         </div>
+
+        <RouteSection
+          origin={request.origin}
+          destination={request.destination}
+          originPoint={request.originPoint}
+          destinationPoint={request.destinationPoint}
+          pickupLabel={tDetail("wait_point")}
+        />
+
+        {request.flightNumber && (
+          <div className="flex items-center gap-2.5 rounded-2xl bg-sky-50 px-4 py-3 dark:bg-sky-500/10">
+            <Plane className="h-5 w-5 shrink-0 text-sky-600" aria-hidden="true" />
+            <p className="text-[15px] font-800 text-sky-900 dark:text-sky-100">
+              {t("flight")}: {request.flightNumber}
+            </p>
+          </div>
+        )}
 
         {/* Details */}
         <div className="grid grid-cols-2 gap-3">

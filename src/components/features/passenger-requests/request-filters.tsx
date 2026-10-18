@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useCalendarCounts } from "@/lib/hooks/use-calendar-counts";
+import { routeFromParams, setRouteParams, toRoutePlace, type RoutePlace } from "@/lib/places";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -25,12 +26,18 @@ export function RequestFilters() {
   const params = useSearchParams();
   const t = useTranslations("request_filters");
 
-  const from = params.get("from") ?? "";
-  const to = params.get("to") ?? "";
+  const { from, to } = routeFromParams((k) => params.get(k));
   const date = params.get("date") ?? "";
   const seats = params.get("seats") ?? "";
   // Availability per day for the date calendar below.
-  const dayCounts = useCalendarCounts("requests", from, to);
+  const dayCounts = useCalendarCounts("requests", from?.id, to?.id);
+
+  const setRoute = (f: RoutePlace | null, tt: RoutePlace | null) => {
+    const next = new URLSearchParams(params);
+    setRouteParams(next, f, tt);
+    next.delete("cursor");
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
 
   const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params);
@@ -55,14 +62,14 @@ export function RequestFilters() {
           <CityAutocomplete
             compact
             value={from}
-            onChange={(v) => update({ from: v || null })}
+            onChange={(v) => setRoute(v ? toRoutePlace(v) : null, to)}
             placeholder={t("from_placeholder")}
           />
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-ink-100 dark:bg-ink-800" />
             <button
               type="button"
-              onClick={() => update({ from: to || null, to: from || null })}
+              onClick={() => setRoute(to, from)}
               disabled={!from && !to}
               aria-label={t("swap_aria")}
               className="flex h-6 w-6 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-400 hover:border-sky-300 hover:text-sky-600 disabled:opacity-30 transition-colors dark:bg-ink-800 dark:border-ink-700"
@@ -74,7 +81,7 @@ export function RequestFilters() {
           <CityAutocomplete
             compact
             value={to}
-            onChange={(v) => update({ to: v || null })}
+            onChange={(v) => setRoute(from, v ? toRoutePlace(v) : null)}
             placeholder={t("to_placeholder")}
           />
         </div>

@@ -11,7 +11,7 @@ import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { toastError } from "@/components/layout/quick-toast";
 import { useAuth } from "@/store/auth";
-import { useRolePrompt } from "@/store/role-prompt";
+import { IntentToggle } from "@/components/features/search/intent-toggle";
 import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 import { useUnreadMessages } from "@/lib/hooks/use-unread-messages";
 import { useRoleTheme } from "@/lib/hooks/use-role-colors";
@@ -114,7 +114,7 @@ export function TopNav() {
   const user = useAuth((s) => s.user);
   const isAuthenticated = useAuth((s) => s.status === "authenticated");
   const activeMode = useAuth((s) => s.activeMode);
-  const openRolePrompt = useRolePrompt((s) => s.openPrompt);
+  const setActiveMode = useAuth((s) => s.setActiveMode);
   const { theme } = useRoleTheme();
   const { data: unreadNotif = 0 } = useUnreadCount();
   const { data: unreadMessages = 0 } = useUnreadMessages();
@@ -136,22 +136,15 @@ export function TopNav() {
 
   const isDriver = activeMode === "driver";
 
-  const navLinks = isAuthenticated
-    ? isDriver
-      ? [
-          // Driver primary tool is browsing passenger requests to respond to;
-          // the passenger-only «Найти поездку» browse is hidden.
-          { href: "/requests",    label: t("passenger_requests") },
-          { href: "/my/bookings", label: t("my_trips") },
-        ]
-      : [
-          { href: "/trips",       label: t("find_trip") },
-          { href: "/my/bookings", label: t("my_trips") },
-        ]
-    : [
-        { href: "/trips",    label: t("trips") },
-        { href: "/requests", label: t("requests") },
-      ];
+  // Same sections for everyone — the mode only changes what home leads with
+  // and what «+» creates; browsing trips or requests is always one click away.
+  const navLinks = [
+    { href: "/trips", label: t("trips") },
+    { href: "/requests", label: t("requests") },
+    { href: "/map", label: t("map") },
+    { href: "/airport", label: t("airport") },
+    ...(isAuthenticated ? [{ href: "/my/bookings", label: t("my_trips") }] : []),
+  ];
 
   const initial = user?.name?.trim()?.[0]?.toUpperCase() ?? "?";
   const avatarSrc = normalizeMediaUrl(user?.avatarUrl);
@@ -192,16 +185,16 @@ export function TopNav() {
         {/* Right actions */}
         <div className="flex items-center gap-2">
           <OnlineBadge className="mr-1" />
+          <IntentToggle compact value={activeMode} onChange={setActiveMode} className="w-[220px]" />
           {isAuthenticated ? (
             <>
-              <button
-                type="button"
-                onClick={() => openRolePrompt("create")}
+              <Link
+                href={isDriver ? "/trips/create" : "/requests/create"}
                 className="flex items-center gap-1.5 rounded-full bg-accent-500 px-4 py-1.5 text-[13px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                {t("create_btn")}
-              </button>
+                {isDriver ? t("create_trip_btn") : t("create_request_btn")}
+              </Link>
 
               <Link href="/chat" aria-label={t("messages_aria")} className={ICON_BTN}>
                 <MessageCircle className="h-[18px] w-[18px]" aria-hidden="true" />

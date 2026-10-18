@@ -32,6 +32,7 @@ import { DriverAvatar } from "@/components/ui/driver-avatar";
 import { Spinner } from "@/components/ui";
 import { CardSkeletonList } from "@/components/ui/card-skeleton";
 import { QueryError } from "@/components/ui/query-error";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 // ── Response offer card ────────────────────────────────────────────────
 function OfferCard({
@@ -286,6 +287,7 @@ export function RequestWithOffers({
   onCancel?: () => void;
   cancelLoading?: boolean;
 }) {
+  const rn = useRouteNames();
   const router = useRouter();
   const t = useTranslations("requests.my");
   const tCard = useTranslations("card");
@@ -310,8 +312,8 @@ export function RequestWithOffers({
         grape
         when={fmtD(request.departureDate)}
         status={request.status}
-        origin={request.originCity}
-        destination={request.destinationCity}
+        origin={rn(request).from}
+        destination={rn(request).to}
         actorName={`${request.seatsNeeded} ${tSeats("seats_word")}`}
         actorSub={request.comment ? <span className="truncate text-[11.5px] font-700 text-ink-500">«{request.comment}»</span> : undefined}
         href={`/requests/${request.id}`}

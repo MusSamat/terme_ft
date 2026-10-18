@@ -1,12 +1,26 @@
 import { api } from "./client";
 import type { EngagementFields } from "./types";
+import type { MeetingPoint, Place } from "./cities";
 import { getAnonId } from "@/lib/utils/anon-id";
 
 export interface PassengerRequest extends EngagementFields {
   id: string;
   passengerId: string;
+  /** airport = transfer to / from an airport. */
+  kind: "intercity" | "airport";
+  flightNumber: string | null;
+  originCityId: number;
+  destinationCityId: number;
+  /** name_ru snapshots — prefer origin / destination for display. */
   originCity: string;
   destinationCity: string;
+  origin: Place;
+  destination: Place;
+  /** Where the passenger waits / gets off (map pins). */
+  originPoint: MeetingPoint | null;
+  destinationPoint?: MeetingPoint | null;
+  /** Only with sort=nearest. */
+  distanceKm?: number;
   seatsNeeded: number;
   departureDate: string;
   flexible: boolean;
@@ -32,8 +46,16 @@ export type PassengerRequestCardItem = Pick<
   PassengerRequest,
   | "id"
   | "passengerId"
+  | "kind"
+  | "flightNumber"
+  | "originCityId"
+  | "destinationCityId"
   | "originCity"
   | "destinationCity"
+  | "origin"
+  | "destination"
+  | "originPoint"
+  | "distanceKm"
   | "seatsNeeded"
   | "departureDate"
   | "flexible"
@@ -44,8 +66,15 @@ export type PassengerRequestCardItem = Pick<
 >;
 
 export interface ListPassengerRequestsParams {
+  from_id?: number;
+  to_id?: number;
+  /** Name fallback (SEO / old links) when no id is known. */
   from_city?: string;
   to_city?: string;
+  kind?: "intercity" | "airport";
+  sort?: "time" | "nearest";
+  near_lat?: number;
+  near_lng?: number;
   date?: string;
   seats?: number;
   cursor?: string;
@@ -67,8 +96,12 @@ export interface PassengerRequestsBrowseResult {
 }
 
 export interface CreatePassengerRequestInput {
-  originCity: string;
-  destinationCity: string;
+  originCityId: number;
+  destinationCityId: number;
+  originPoint?: { lat: number; lng: number; address?: string };
+  destinationPoint?: { lat: number; lng: number; address?: string };
+  /** Airport transfers: «SU 1882». */
+  flightNumber?: string;
   seatsNeeded: number;
   departureDate: string;
   flexible?: boolean;
@@ -83,10 +116,10 @@ export async function listPassengerRequests(
 }
 
 /** Per-day open-request counts for a route — calendar availability hints. */
-export async function getRequestsCalendar(from: string, to: string): Promise<Record<string, number>> {
+export async function getRequestsCalendar(fromId: number, toId: number): Promise<Record<string, number>> {
   const { data } = await api.get<{ data: { date: string; count: number }[] }>(
     "/passenger-requests/calendar",
-    { params: { from_city: from, to_city: to } },
+    { params: { from_id: fromId, to_id: toId } },
   );
   return Object.fromEntries(data.data.map((d) => [d.date, d.count]));
 }
@@ -113,6 +146,9 @@ export interface UpdatePassengerRequestInput {
   departureDate?: string;
   flexible?: boolean;
   comment?: string | null;
+  flightNumber?: string | null;
+  originPoint?: { lat: number; lng: number; address?: string } | null;
+  destinationPoint?: { lat: number; lng: number; address?: string } | null;
 }
 
 export async function updatePassengerRequest(

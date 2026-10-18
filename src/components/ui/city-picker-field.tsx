@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { MapPin, Search, ChevronRight } from "lucide-react";
-import { searchCities, getCities, type City } from "@/lib/api/cities";
+import { searchPlaces, getTopPlaces, type Place } from "@/lib/api/cities";
+import { placeName, placeSubtitle } from "@/lib/places";
 import { Modal, ModalContent, ModalTitle } from "@/components/ui/modal";
 import type { Locale } from "@/i18n.config";
 import { cn } from "@/lib/utils/cn";
@@ -12,17 +13,17 @@ import { cn } from "@/lib/utils/cn";
 // modal with its own search. Best practice on mobile — a step, not a floating
 // dropdown that fights the keyboard (1:1 with the Flutter city sheet).
 interface Props {
-  value: string;
+  value: { nameRu: string; nameKg: string } | null;
   placeholder: string;
-  onChange: (value: string) => void;
+  onChange: (value: Place) => void;
   className?: string;
 }
 
-let popularCache: City[] | null = null;
-async function loadPopular(): Promise<City[]> {
+let popularCache: Place[] | null = null;
+async function loadPopular(): Promise<Place[]> {
   if (popularCache) return popularCache;
   try {
-    popularCache = await getCities(7);
+    popularCache = await getTopPlaces(8);
     return popularCache;
   } catch {
     return [];
@@ -34,7 +35,7 @@ export function CityPickerField({ value, placeholder, onChange, className }: Pro
   const locale = useLocale() as Locale;
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<City[]>([]);
+  const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
   const [popularShown, setPopularShown] = useState(false);
   const seqRef = useRef(0);
@@ -64,7 +65,7 @@ export function CityPickerField({ value, placeholder, onChange, className }: Pro
     setPopularShown(false);
     const seq = ++seqRef.current;
     const tmo = setTimeout(() => {
-      searchCities(term, 12)
+      searchPlaces(term, 12)
         .then((rows) => {
           if (seq === seqRef.current) {
             setResults(rows);
@@ -81,11 +82,10 @@ export function CityPickerField({ value, placeholder, onChange, className }: Pro
     return () => clearTimeout(tmo);
   }, [q, open]);
 
-  const pick = (c: City) => {
-    onChange(c.nameRu);
+  const pick = (c: Place) => {
+    onChange(c);
     setOpen(false);
   };
-  const subtitle = (c: City) => (locale === "kg" ? c.regionNameKg : c.regionNameRu) ?? "";
 
   return (
     <>
@@ -95,7 +95,7 @@ export function CityPickerField({ value, placeholder, onChange, className }: Pro
         className={cn("flex w-full items-center gap-2 text-left", className)}
       >
         <span className={cn("flex-1 truncate text-[17px]", value ? "font-800 text-ink-900 dark:text-white" : "font-600 text-ink-400")}>
-          {value || placeholder}
+          {value ? placeName(value, locale) : placeholder}
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-ink-300" aria-hidden="true" />
       </button>
@@ -134,8 +134,10 @@ export function CityPickerField({ value, placeholder, onChange, className }: Pro
                 >
                   <MapPin className="h-4 w-4 shrink-0 text-ink-400" aria-hidden="true" />
                   <span className="min-w-0">
-                    <span className="block truncate text-[16px] font-800 text-ink-900 dark:text-white">{c.nameRu}</span>
-                    <span className="block truncate text-[13px] font-600 text-ink-500">{subtitle(c)}</span>
+                    <span className="block truncate text-[16px] font-800 text-ink-900 dark:text-white">{placeName(c, locale)}</span>
+                    {placeSubtitle(c, locale) && (
+                      <span className="block truncate text-[13px] font-600 text-ink-500">{placeSubtitle(c, locale)}</span>
+                    )}
                   </span>
                 </button>
               </li>

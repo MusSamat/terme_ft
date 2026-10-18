@@ -11,6 +11,8 @@ import { formatDepartureLabel } from "@/lib/utils/date";
 import { cn } from "@/lib/utils/cn";
 import { StatusBadge } from "./status-badge";
 import { DriverAvatar } from "./driver-avatar";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
+import { placeName } from "@/lib/places";
 
 // Ride card — ticket redesign (Terme Ticket Card.html). A filled sage tile
 // split by a dashed perforation with edge notches: top half = the trip (time ·
@@ -42,6 +44,7 @@ function TripCardInner({
   wholeCabin,
   booked,
 }: TripCardProps) {
+  const rn = useRouteNames();
   const t = useTranslations("card");
   const locale = useLocale() as Locale;
 
@@ -78,6 +81,9 @@ function TripCardInner({
   const seatsAvailable = trip.seatsAvailable ?? 0;
   const price = trip.pricePerSeat ?? 0;
   const stops = trip.pickupCities?.length ? trip.pickupCities.join(" · ") : null;
+  // Inside a big city the pin's жилмассив tells passengers where exactly.
+  const area = trip.originPoint?.area ? placeName(trip.originPoint.area, locale) : null;
+  const distance = typeof trip.distanceKm === "number" ? trip.distanceKm : null;
   const car = driver.car ?? null;
 
   // «Сегодня, 06:00» → time hero «06:00» only. The date lives in the filter
@@ -134,13 +140,19 @@ function TripCardInner({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-800 leading-tight text-ink-900 dark:text-ink-50">
-            {trip.originCity ?? ""}
+            {rn(trip).from}
+            {area && <span className="font-700 text-ink-500 dark:text-ink-400"> · {area}</span>}
           </p>
+          {distance !== null && (
+            <p className="mt-0.5 truncate text-[11px] font-800 text-brand-700 dark:text-brand-300">
+              {t("distance_from_you", { km: distance.toLocaleString(locale === "kg" ? "ky-KG" : "ru-RU") })}
+            </p>
+          )}
           {stops && (
             <p className="mt-0.5 truncate text-[11px] font-600 text-ink-500 dark:text-ink-400">{t("via", { stops })}</p>
           )}
           <p className="mt-1.5 truncate text-[15px] font-800 leading-tight text-ink-900 dark:text-ink-50">
-            {trip.destinationCity ?? ""}
+            {rn(trip).to}
           </p>
         </div>
         <div className="shrink-0 text-right">

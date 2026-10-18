@@ -5,11 +5,13 @@ import { memo } from "react";
 import { CalendarClock, ChevronRight, Star } from "lucide-react";
 import { ContactRevealButton } from "@/components/ui/contact-reveal-button";
 import { useAuth } from "@/store/auth";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { PassengerRequestCardItem } from "@/lib/api/passenger-requests";
 import { DriverAvatar } from "@/components/ui/driver-avatar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils/cn";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
+import { placeName } from "@/lib/places";
 
 // Passenger-request card — grape ticket variant of TripCard. A grape-tinted
 // tile split by a dashed perforation: top half = the request (date · route ·
@@ -39,6 +41,9 @@ function RequestCardInner({
   onCancel,
   cancelLoading,
 }: RequestCardProps) {
+  const rn = useRouteNames();
+  const locale = useLocale();
+  const tc = useTranslations("card");
   const t = useTranslations("card");
   const { passenger } = request;
   // Own-post check by user id (metrics is not a reliable ownership signal).
@@ -77,8 +82,17 @@ function RequestCardInner({
             )}
           </div>
           <div className="mt-1.5 truncate text-[14px] font-700 text-ink-500 dark:text-ink-400">
-            {request.originCity} → {request.destinationCity}
+            {rn(request).from}
+            {request.originPoint?.area && ` · ${placeName(request.originPoint.area, locale)}`} → {rn(request).to}
           </div>
+          {(typeof request.distanceKm === "number" || request.flightNumber) && (
+            <div className="mt-0.5 truncate text-[11.5px] font-800 text-grape-600 dark:text-grape-300">
+              {typeof request.distanceKm === "number" &&
+                tc("distance_from_you", { km: request.distanceKm.toLocaleString(locale === "kg" ? "ky-KG" : "ru-RU") })}
+              {typeof request.distanceKm === "number" && request.flightNumber ? " · " : ""}
+              {request.flightNumber && `✈️ ${request.flightNumber}`}
+            </div>
+          )}
         </div>
         <div className="shrink-0 text-right">
           <div className="num text-[19px] font-800 leading-none text-grape-600 dark:text-grape-300">

@@ -12,6 +12,7 @@ import { DriverAvatar } from "@/components/ui";
 import { ListCard } from "@/components/ui/list-card";
 import type { TripListItem } from "@/lib/api/trips";
 import type { PassengerRequest } from "@/lib/api/passenger-requests";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 function fmtDT(iso?: string): string {
   if (!iso) return "";
@@ -63,6 +64,7 @@ function FilterChips({ value, onChange }: { value: FilterKey; onChange: (v: Filt
 // Phase 1: one favourites feed for everyone — liked trips AND liked requests
 // together, each with its status badge; tap opens the item's page.
 export function LikedTab() {
+  const rn = useRouteNames();
   const tB = useTranslations("bookings");
   const tSeats = useTranslations("booking_card");
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -139,8 +141,8 @@ export function LikedTab() {
                   key={`t-${tr.id}`}
                   when={fmtDT(tr.departureAt)}
                   status={tr.status}
-                  origin={tr.originCity ?? ""}
-                  destination={tr.destinationCity ?? ""}
+                  origin={rn(tr).from}
+                  destination={rn(tr).to}
                   avatar={<DriverAvatar name={tr.driver?.name ?? ""} src={tr.driver?.avatarUrl} size="md" />}
                   actorName={tr.driver?.name}
                   trailing={<span className="num text-[15px] font-900 text-sky-600">{tr.pricePerSeat} {tB("som")}</span>}
@@ -161,8 +163,8 @@ export function LikedTab() {
                   grape
                   when={fmtD(r.departureDate)}
                   status={r.status}
-                  origin={r.originCity ?? ""}
-                  destination={r.destinationCity ?? ""}
+                  origin={rn(r).from}
+                  destination={rn(r).to}
                   avatar={<DriverAvatar name={r.passenger?.name ?? ""} src={r.passenger?.avatarUrl} shape="square" size="md" />}
                   actorName={r.passenger?.name}
                   trailing={<span className="text-[12px] font-700 text-ink-500">{r.seatsNeeded} {tSeats("seats_word")}</span>}

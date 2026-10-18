@@ -27,6 +27,7 @@ import { PopularRoutes } from "./popular-routes";
 import { FeedHeader } from "./feed-header";
 import { FeedEntryHints } from "./feed-entry-hints";
 import { addRecentRoute } from "@/lib/recent-routes";
+import { routeFromParams, setRouteParams, type RoutePlace } from "@/lib/places";
 import { BecomeDriverBanner } from "@/components/features/driver/become-driver-banner";
 
 interface Props {
@@ -38,13 +39,15 @@ interface Props {
 const EMPTY_RESULT: TripSearchResult = { data: [], nextCursor: null };
 
 /** Role-aware feed empty state (spec §2.2 recommends one; copy in feed.empty_*). */
-function FeedEmpty({ params }: { params: SearchTripsParams }) {
+function FeedEmpty() {
   const t = useTranslations("feed");
   const role = useUiRole();
-
-  const requestQs = `${params.from_city ? `?from=${encodeURIComponent(params.from_city)}` : ""}${
-    params.to_city ? `${params.from_city ? "&" : "?"}to=${encodeURIComponent(params.to_city)}` : ""
-  }`;
+  const searchParams = useSearchParams();
+  // «Создать заявку» on the same route — carry the places over.
+  const route = routeFromParams((k) => searchParams.get(k));
+  const qs = new URLSearchParams();
+  setRouteParams(qs, route.from, route.to);
+  const requestQs = qs.size > 0 ? `?${qs.toString()}` : "";
 
   const action =
     role === "guest"
@@ -110,7 +113,9 @@ export function SearchLayout({ initial }: Props) {
     [searchParams],
   );
   // Route-first: only fetch/show results once both cities are set.
-  const hasRoute = Boolean(params.from_city && params.to_city);
+  const hasRoute = Boolean(
+    (params.from_id || params.from_city) && (params.to_id || params.to_city),
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Arrive with ?filters=1 (from the hub's filter icon) → open the sheet.
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(() => searchParams.get("filters") === "1");
@@ -187,11 +192,10 @@ export function SearchLayout({ initial }: Props) {
   // navigation), so only the body swaps to results (header stays put).
   const router = useRouter();
   const pathname = usePathname();
-  const pickRoute = (f: string, tt: string) => {
+  const pickRoute = (f: RoutePlace, tt: RoutePlace) => {
     addRecentRoute(f, tt);
     const next = new URLSearchParams(searchParams);
-    next.set("from", f);
-    next.set("to", tt);
+    setRouteParams(next, f, tt);
     next.delete("cursor");
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
@@ -216,7 +220,7 @@ export function SearchLayout({ initial }: Props) {
             isError ? (
               <QueryError error={error} onRetry={() => void refetch()} />
             ) : (
-              <FeedEmpty params={params} />
+              <FeedEmpty />
             )
           ) : (
             <>

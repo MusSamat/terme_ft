@@ -9,6 +9,7 @@ import { ListCard } from "@/components/ui/list-card";
 import { listMyBookings, type Booking } from "@/lib/api/bookings";
 import { listMyTrips } from "@/lib/api/my-trips";
 import { cn } from "@/lib/utils/cn";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 // Bookings that represent an ACTUAL arranged ride — the only ones kept in trip
 // history (inDrive-style). Never-confirmed states (pending/viewed/rejected/
@@ -80,6 +81,7 @@ function Empty() {
 }
 
 function BookingsHistory() {
+  const rn = useRouteNames();
   const t = useTranslations("profile");
   const q = useQuery({
     queryKey: ["bookings", "my", "history"],
@@ -110,8 +112,8 @@ function BookingsHistory() {
           when={fmt(b.trip?.departureAt)}
           role={t("history_as_passenger")}
           status={RIDE_BOOKING.has((b.status ?? "") as string) ? ((b.status ?? "") as string) : "completed"}
-          origin={b.trip?.originCity ?? ""}
-          destination={b.trip?.destinationCity ?? ""}
+          origin={rn(b.trip).from}
+          destination={rn(b.trip).to}
         />
       ))}
     </div>
@@ -119,6 +121,7 @@ function BookingsHistory() {
 }
 
 function TripsHistory() {
+  const rn = useRouteNames();
   const t = useTranslations("profile");
   const past = useQuery({ queryKey: ["trips", "my", "past"], queryFn: () => listMyTrips("past") });
   const cancelled = useQuery({ queryKey: ["trips", "my", "cancelled"], queryFn: () => listMyTrips("cancelled") });
@@ -140,8 +143,8 @@ function TripsHistory() {
           when={fmt(tr.departureAt)}
           role={t("history_as_driver")}
           status={(tr.status ?? "completed") as string}
-          origin={tr.originCity ?? ""}
-          destination={tr.destinationCity ?? ""}
+          origin={rn(tr).from}
+          destination={rn(tr).to}
         />
       ))}
     </div>

@@ -12,6 +12,7 @@ import { DriverAvatar } from "@/components/ui";
 import { ListCard } from "@/components/ui/list-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardSkeletonList } from "@/components/ui/card-skeleton";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 function fmtDT(iso?: string): string {
   if (!iso) return "";
@@ -63,6 +64,7 @@ async function fetchMyPosts(): Promise<Post[]> {
 }
 
 export function MyPostsTab({ show = "both" }: { show?: "trips" | "requests" | "both" }) {
+  const rn = useRouteNames();
   const t = useTranslations("my");
   const tB = useTranslations("bookings");
   const tSeats = useTranslations("booking_card");
@@ -150,8 +152,8 @@ export function MyPostsTab({ show = "both" }: { show?: "trips" | "requests" | "b
             when={fmtDT(p.trip.departureAt)}
             role={t("role_driver")}
             status={p.trip.status}
-            origin={p.trip.originCity ?? ""}
-            destination={p.trip.destinationCity ?? ""}
+            origin={rn(p.trip).from}
+            destination={rn(p.trip).to}
             avatar={<DriverAvatar name={p.trip.driver?.car?.make ?? p.trip.driver?.name ?? ""} src={p.trip.driver?.avatarUrl} size="md" />}
             actorName={p.trip.driver?.car ? `${p.trip.driver.car.make ?? ""} ${p.trip.driver.car.model ?? ""}`.trim() : p.trip.driver?.name}
             actorSub={<span className="text-[11.5px] font-700 text-ink-500">{p.trip.seatsAvailable} {tSeats("seats_word")}</span>}
@@ -165,8 +167,8 @@ export function MyPostsTab({ show = "both" }: { show?: "trips" | "requests" | "b
             when={fmtD(p.request.departureDate)}
             role={t("role_request")}
             status={p.request.status}
-            origin={p.request.originCity ?? ""}
-            destination={p.request.destinationCity ?? ""}
+            origin={rn(p.request).from}
+            destination={rn(p.request).to}
             avatar={<DriverAvatar name={p.request.passenger?.name ?? ""} src={p.request.passenger?.avatarUrl} shape="square" size="md" />}
             actorName={p.request.passenger?.name}
             trailing={<span className="text-[12px] font-700 text-ink-500">{p.request.seatsNeeded} {tSeats("seats_word")}</span>}

@@ -4,15 +4,17 @@ import { Circle, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CityPickerField } from "@/components/ui/city-picker-field";
 import { cn } from "@/lib/utils/cn";
+import type { Place } from "@/lib/api/cities";
+import type { RoutePlace } from "@/lib/places";
 
 // Route card — design-spec §2.4: two input rows (circle / map-pin) inside a
 // white card, leading icons tinted with the role accent (origin) / amber (dest).
 
 interface Props {
-  origin: string;
-  destination: string;
-  onOrigin: (v: string) => void;
-  onDestination: (v: string) => void;
+  origin: RoutePlace | null;
+  destination: RoutePlace | null;
+  onOrigin: (v: Place) => void;
+  onDestination: (v: Place) => void;
   iconAccent: string;
 }
 

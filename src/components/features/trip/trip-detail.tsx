@@ -37,6 +37,8 @@ import { DriverPanel } from "./_components/driver-panel";
 import { ContactRevealButton } from "@/components/ui/contact-reveal-button";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { Eye as EyeIcon, Heart as HeartIcon, Phone as PhoneIcon } from "lucide-react";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
+import { RouteSection } from "./route-section";
 
 // Viewport-agnostic trip detail — design-spec §2.3. Rendered both as the
 // desktop feed right-rail (`variant="rail"`) and the standalone page
@@ -48,7 +50,11 @@ export interface DetailTripData {
   driverId?: string | null;
   originCity?: string;
   destinationCity?: string;
-  originAddress?: string | null;
+  origin?: { nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null;
+  destination?: { nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null;
+  originPoint?: { lat: number; lng: number; address?: string | null; area?: { nameRu?: string; nameKg?: string } | null } | null;
+  destinationPoint?: { lat: number; lng: number; address?: string | null; area?: { nameRu?: string; nameKg?: string } | null } | null;
+  stops?: Array<{ kind?: string; place?: { nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null }>;
   pricePerSeat?: number | null;
   priceNegotiable?: boolean | null;
   seatsAvailable?: number | null;
@@ -270,6 +276,7 @@ function DetailCta({
 }
 
 export function TripDetailView({ trip, variant = "page", autoOpenBook = false, onClose }: Props) {
+  const rn = useRouteNames();
   const router = useRouter();
   const role = useUiRole();
   const model = useDetailModel(trip);
@@ -302,7 +309,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
   const handleShare = () => {
     const url = typeof window !== "undefined" ? window.location.href : `/trips/${tripId}`;
     if (typeof navigator !== "undefined" && navigator.share) {
-      void navigator.share({ title: `${trip.originCity} → ${trip.destinationCity}`, url }).catch(() => undefined);
+      void navigator.share({ title: `${rn(trip).from} → ${rn(trip).to}`, url }).catch(() => undefined);
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       void navigator.clipboard.writeText(url);
       pushToast({ type: "info", title: t("share_copied"), body: "" });
@@ -365,11 +372,11 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
       <div className="flex items-start gap-3">
         <HeaderSpine />
         <div className="min-w-0 flex-1">
-          <div className="text-[20px] font-900 leading-tight">{trip.originCity}</div>
+          <div className="text-[20px] font-900 leading-tight">{rn(trip).from}</div>
           {model.stops.length > 0 && (
             <div className="truncate text-[14px] font-600 text-white/70">{model.stops.join(" · ")}</div>
           )}
-          <div className="mt-2 text-[20px] font-900 leading-tight">{trip.destinationCity}</div>
+          <div className="mt-2 text-[20px] font-900 leading-tight">{rn(trip).to}</div>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[24px] font-900 leading-none">
@@ -406,6 +413,14 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
     <div className="space-y-3 px-5 py-4">
       <DriverCard model={model} showMessage={showMessage} onMessage={handleBook} />
       <InfoTiles model={model} />
+      <RouteSection
+        origin={trip.origin}
+        destination={trip.destination}
+        originPoint={trip.originPoint}
+        destinationPoint={trip.destinationPoint}
+        stops={trip.stops}
+        pickupLabel={t("pickup_point")}
+      />
       {trip.comment && (
         <div className="rounded-2xl bg-accent-50 p-3.5 text-[15px] font-600 text-ink-700 dark:bg-accent-500/10 dark:text-accent-200">
           {trip.comment}
@@ -416,7 +431,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
 
   const cta = (
     <div className="space-y-2">
-      <DetailCta role={isOwner ? "driver" : authed ? "passenger" : "guest"} onBook={handleBook} onSignin={handleSignin} originCity={trip.originCity} destinationCity={trip.destinationCity} myBooking={myBookingRef} />
+      <DetailCta role={isOwner ? "driver" : authed ? "passenger" : "guest"} onBook={handleBook} onSignin={handleSignin} originCity={rn(trip).from} destinationCity={rn(trip).to} myBooking={myBookingRef} />
       {/* Call-first flow: phone behind one tap. Never on own trips. */}
       {(!viewerId || trip.driverId !== viewerId) && tripId && (
         <ContactRevealButton target="trip" id={tripId} />
@@ -488,12 +503,12 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
               </div>
               <div className="min-w-0 flex-1 space-y-6">
                 <div>
-                  <div className="text-[22px] font-900 text-ink-900 dark:text-white">{trip.originCity}</div>
+                  <div className="text-[22px] font-900 text-ink-900 dark:text-white">{rn(trip).from}</div>
                   {model.stops.length > 0 && (
                     <div className="mt-0.5 text-[14px] font-600 text-ink-400">{model.stops.join(" · ")}</div>
                   )}
                 </div>
-                <div className="text-[22px] font-900 text-ink-900 dark:text-white">{trip.destinationCity}</div>
+                <div className="text-[22px] font-900 text-ink-900 dark:text-white">{rn(trip).to}</div>
               </div>
               <div className="shrink-0 text-right">
                 <div className="text-[32px] font-900 text-brand-700 dark:text-brand-300">
@@ -550,8 +565,8 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
                 role={isOwner ? "driver" : authed ? "passenger" : "guest"}
                 onBook={handleBook}
                 onSignin={handleSignin}
-                originCity={trip.originCity}
-                destinationCity={trip.destinationCity}
+                originCity={rn(trip).from}
+                destinationCity={rn(trip).to}
                 myBooking={myBookingRef}
                 size="desktop"
               />

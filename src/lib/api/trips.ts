@@ -5,7 +5,7 @@ import { getAnonId } from "@/lib/utils/anon-id";
 
 // Extend schema-gen types with runtime fields not yet in the generated spec
 type GeneratedTripListItem = components["schemas"]["TripListItem"];
-export type TripListItem = Omit<GeneratedTripListItem, "driver"> & {
+export type TripListItem = Omit<GeneratedTripListItem, "driver" | "metrics"> & {
   driver?: (Omit<NonNullable<GeneratedTripListItem["driver"]>, "car"> & {
     car?: ({
       make?: string;
@@ -16,17 +16,8 @@ export type TripListItem = Omit<GeneratedTripListItem, "driver"> & {
     }) | null;
     tripsCount?: number;
   }) | null;
-  // Not yet in the generated spec — pickup (origin side) / dropoff (dest side) points.
-  pickupCities?: string[];
-  dropoffCities?: string[];
-  // «Выезд 06:00–11:00»: departureAt = start, this = optional window end.
-  departureWindowEnd?: string | null;
 } & EngagementFields;
-export type TripDetail = components["schemas"]["TripDetail"] & {
-  departureWindowEnd?: string | null;
-  pickupCities?: string[];
-  dropoffCities?: string[];
-} & EngagementFields;
+export type TripDetail = Omit<components["schemas"]["TripDetail"], "metrics"> & EngagementFields;
 
 // Lean card DTO returned by GET /trips (search/browse) — a strict subset of
 // TripListItem carrying only what the ride card renders. The full trip is
@@ -37,8 +28,14 @@ export type TripCardItem = Pick<
   | "id"
   | "driverId"
   | "driver"
+  | "kind"
+  | "originCityId"
+  | "destinationCityId"
   | "originCity"
   | "destinationCity"
+  | "origin"
+  | "destination"
+  | "originPoint"
   | "pickupCities"
   | "departureAt"
   | "departureWindowEnd"
@@ -46,11 +43,17 @@ export type TripCardItem = Pick<
   | "pricePerSeat"
   | "status"
   | "liked"
->;
+> & { distanceKm?: number };
 
 export interface SearchTripsParams {
+  from_id?: number;
+  to_id?: number;
+  /** Name fallback (SEO pages, old links) when no id is known. */
   from_city?: string;
   to_city?: string;
+  kind?: "intercity" | "airport";
+  near_lat?: number;
+  near_lng?: number;
   date?: string;
   seats?: number;
   min_price?: number;
@@ -61,7 +64,7 @@ export interface SearchTripsParams {
   no_smoking?: boolean;
   pets?: boolean;
   luggage?: "yes" | "small" | "no";
-  sort?: "time" | "price_asc" | "rating_desc";
+  sort?: "time" | "price_asc" | "rating_desc" | "nearest";
   cursor?: string;
   limit?: number;
 }
@@ -79,9 +82,9 @@ export async function searchTrips(params: SearchTripsParams): Promise<TripSearch
 }
 
 /** Per-day active-trip counts for a route — calendar availability hints. */
-export async function getTripsCalendar(from: string, to: string): Promise<Record<string, number>> {
+export async function getTripsCalendar(fromId: number, toId: number): Promise<Record<string, number>> {
   const { data } = await api.get<{ data: { date: string; count: number }[] }>("/trips/calendar", {
-    params: { from_city: from, to_city: to },
+    params: { from_id: fromId, to_id: toId },
   });
   return Object.fromEntries(data.data.map((d) => [d.date, d.count]));
 }
@@ -102,6 +105,10 @@ export interface TripPatchInput {
   priceNegotiable?: boolean;
   comment?: string | null;
   luggage?: "yes" | "small" | "no";
+  /** Merged into the stored preferences server-side. */
+  preferences?: Record<string, boolean>;
+  originPoint?: { lat: number; lng: number; address?: string } | null;
+  destinationPoint?: { lat: number; lng: number; address?: string } | null;
 }
 
 export async function updateTrip(id: string, patch: TripPatchInput): Promise<TripDetail> {
@@ -133,13 +140,14 @@ export async function completeTrip(id: string): Promise<{ status: 'completed' }>
   return data;
 }
 
+/** Average price on a route over the last 30 days (null when < 3 samples). */
 export async function getPriceSuggestion(
-  from: string,
-  to: string,
-): Promise<{ suggested: number; min: number; max: number }> {
-  const { data } = await api.get<{ suggested: number; min: number; max: number }>(
+  fromId: number,
+  toId: number,
+): Promise<{ averagePrice: number | null; sampleSize: number }> {
+  const { data } = await api.get<{ averagePrice: number | null; sampleSize: number }>(
     "/routes/price-suggestion",
-    { params: { from, to } },
+    { params: { from_id: fromId, to_id: toId } },
   );
   return data;
 }

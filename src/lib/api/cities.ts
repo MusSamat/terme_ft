@@ -1,52 +1,74 @@
 import { api } from "./client";
+import type { components } from "./schema.gen";
 
-export interface City {
-  id: number;
-  type?: string; // city | town | village | raion … — used to tag район/город
+// A settlement of the SOATE directory (or an airport). Trips and requests
+// reference places by id; raion / oblast disambiguate homonyms in pickers.
+export type Place = components["schemas"]["Place"];
+export type MeetingPoint = components["schemas"]["MeetingPoint"];
+
+export interface Airport extends Place {
+  serves: Place | null;
+}
+
+/** One-tap pin inside Бишкек / Ош: a departure spot or a жилмассив. */
+export interface MeetingSpot {
+  kind: "spot" | "area";
   nameRu: string;
   nameKg: string;
-  nameEn: string;
-  regionNameRu: string;
-  regionNameKg: string;
-  districtNameRu: string | null;
-  districtNameKg: string | null;
-  aiylAimakNameRu: string | null;
-  aiylAimakNameKg: string | null;
-  lat: number | null;
-  lng: number | null;
+  lat: number;
+  lng: number;
 }
 
 export interface PopularRoute {
   from: string;
   to: string;
+  fromId: number;
+  toId: number;
   tripCount: number;
   minPrice: number | null;
 }
 
-export async function getCities(limit?: number): Promise<City[]> {
-  const { data } = await api.get<{ data: City[] }>("/cities", {
-    params: limit ? { limit } : undefined,
-  });
+/** Most prominent places (capitals, airports, cities) — the empty-query list. */
+export async function getTopPlaces(limit = 8): Promise<Place[]> {
+  const { data } = await api.get<{ data: Place[] }>("/cities", { params: { limit } });
   return data.data;
 }
 
-// The city directory is static within a session — cache each query so
-// backspacing/retyping never re-hits the network (tunnel RTT dominates).
-const searchCache = new Map<string, City[]>();
+// The directory is static within a session — cache each query so
+// backspacing/retyping never re-hits the network.
+const searchCache = new Map<string, Place[]>();
 const SEARCH_CACHE_MAX = 200;
 
-export async function searchCities(q: string, limit = 10): Promise<City[]> {
+export async function searchPlaces(q: string, limit = 10): Promise<Place[]> {
   const query = q.trim();
   if (!query) return [];
   const key = `${query.toLowerCase()}|${limit}`;
   const cached = searchCache.get(key);
   if (cached) return cached;
-  const { data } = await api.get<{ data: City[] }>("/cities", { params: { q: query, limit } });
+  const { data } = await api.get<{ data: Place[] }>("/cities", { params: { q: query, limit } });
   if (searchCache.size >= SEARCH_CACHE_MAX) {
     const first = searchCache.keys().next().value;
     if (first !== undefined) searchCache.delete(first);
   }
   searchCache.set(key, data.data);
+  return data.data;
+}
+
+/** The settlement a GPS point is in — prefills «Откуда». */
+export async function nearestPlace(lat: number, lng: number): Promise<Place | null> {
+  const { data } = await api.get<{ data: Place | null }>("/cities/nearest", { params: { lat, lng } });
+  return data.data;
+}
+
+export async function getSpots(placeId: number, q?: string): Promise<MeetingSpot[]> {
+  const { data } = await api.get<{ data: MeetingSpot[] }>(`/cities/${placeId}/spots`, {
+    params: q ? { q } : undefined,
+  });
+  return data.data;
+}
+
+export async function getAirports(): Promise<Airport[]> {
+  const { data } = await api.get<{ data: Airport[] }>("/cities/airports");
   return data.data;
 }
 

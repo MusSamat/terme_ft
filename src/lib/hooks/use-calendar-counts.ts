@@ -6,18 +6,19 @@ import { getRequestsCalendar } from "@/lib/api/passenger-requests";
 
 /**
  * Per-day counts for a route (trips or passenger requests) — availability
- * hints in date pickers. Returns undefined until loaded / without a route.
+ * hints in date pickers. Returns undefined until loaded / without both ids.
  */
 export function useCalendarCounts(
   kind: "trips" | "requests",
-  from: string,
-  to: string,
+  fromId: number | null | undefined,
+  toId: number | null | undefined,
   enabled = true,
 ): Record<string, number> | undefined {
   const { data } = useQuery({
-    queryKey: ["calendar-counts", kind, from, to],
-    queryFn: () => (kind === "requests" ? getRequestsCalendar(from, to) : getTripsCalendar(from, to)),
-    enabled: enabled && Boolean(from && to),
+    queryKey: ["calendar-counts", kind, fromId, toId],
+    queryFn: () =>
+      kind === "requests" ? getRequestsCalendar(fromId!, toId!) : getTripsCalendar(fromId!, toId!),
+    enabled: enabled && Boolean(fromId && toId),
     staleTime: 60_000,
   });
   return data;

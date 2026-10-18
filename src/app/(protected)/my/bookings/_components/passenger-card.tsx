@@ -7,6 +7,7 @@ import { DriverAvatar } from "@/components/ui";
 import { ListCard, ListCardButton } from "@/components/ui/list-card";
 import { bookingTotal, type Booking } from "@/lib/api/bookings";
 import type { PendingRating } from "@/lib/api/ratings";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 type BookingExt = Booking & {
   tripId?: string;
@@ -35,6 +36,7 @@ export function PassengerCard({ booking, pendingRating, onRate, onCancel }: {
   onRate?: () => void;
   onCancel?: () => void;
 }) {
+  const rn = useRouteNames();
   const t = useTranslations("bookings");
   const router = useRouter();
   const trip = booking.trip;
@@ -67,8 +69,8 @@ export function PassengerCard({ booking, pendingRating, onRate, onCancel }: {
       href={tripId ? `/trips/${tripId}` : undefined}
       when={fmtDate(trip?.departureAt)}
       status={status}
-      origin={trip?.originCity ?? ""}
-      destination={trip?.destinationCity ?? ""}
+      origin={rn(trip).from}
+      destination={rn(trip).to}
       avatar={<DriverAvatar name={driverName} src={trip?.driver?.avatarUrl} size="md" />}
       actorName={driverName}
       actorSub={<span className="text-[11.5px] font-700 text-ink-500">{booking.seatsCount} · {bookingTotal(booking, trip?.pricePerSeat) ?? "—"} {t("som")}</span>}

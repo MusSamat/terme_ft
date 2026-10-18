@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { Booking } from "@/lib/api/bookings";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 type BookingExt = Booking & {
   tripId?: string;
@@ -53,6 +54,7 @@ export function CancelModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const rn = useRouteNames();
   const t = useTranslations("bookings");
   const late = isLateCancel(booking.trip?.departureAt);
 
@@ -74,7 +76,7 @@ export function CancelModal({
         <div className="px-6 pb-8 pt-4">
           <h2 className="text-[20px] font-extrabold text-ink-900 dark:text-white">{t("cancel_booking_title")}</h2>
           <p className="mt-1 text-[16px] font-600 text-ink-500">
-            {booking.trip?.originCity} → {booking.trip?.destinationCity}
+            {rn(booking.trip).from} → {rn(booking.trip).to}
             {booking.trip?.departureAt ? ` · ${fmtDate(booking.trip.departureAt)}` : ""}
           </p>
 

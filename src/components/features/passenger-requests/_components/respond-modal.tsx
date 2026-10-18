@@ -13,6 +13,7 @@ import { Button, Spinner } from "@/components/ui";
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimeSelect24 } from "@/components/ui/time-select-24";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 interface Props {
   request: PassengerRequest;
@@ -22,6 +23,7 @@ interface Props {
 const FIELD_LABEL = "mb-1.5 text-[11px] font-bold uppercase tracking-widest text-sky-600";
 
 export function RespondModal({ request, onClose }: Props) {
+  const rn = useRouteNames();
   const qc = useQueryClient();
   const t = useTranslations("requests");
   const tToasts = useTranslations("toasts");
@@ -66,7 +68,7 @@ export function RespondModal({ request, onClose }: Props) {
           <ModalHeader>
             <ModalTitle className="text-[17px] font-extrabold">{t("respond_title")}</ModalTitle>
             <ModalDescription className="text-[13px] text-ink-500">
-              {request.originCity} → {request.destinationCity}
+              {rn(request).from} → {rn(request).to}
             </ModalDescription>
           </ModalHeader>
 

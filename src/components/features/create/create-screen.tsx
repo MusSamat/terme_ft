@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, User, PartyPopper, ShieldCheck, ChevronRight, ChevronDown, Check, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, CarFront, User, PartyPopper, ShieldCheck, ChevronRight, ChevronDown, Check, SlidersHorizontal, Crosshair, Plane } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { createTrip, type CreateTripInput } from "@/lib/api/trips-create";
+import { createTrip, type CreateTripInput, type PointInput } from "@/lib/api/trips-create";
+import { nearestPlace } from "@/lib/api/cities";
+import { getCurrentPoint } from "@/lib/hooks/use-geolocation";
+import { setRouteParams, toRoutePlace, type RoutePlace } from "@/lib/places";
 import { uuid } from "@/lib/utils/uuid";
 import { createPassengerRequest, type CreatePassengerRequestInput } from "@/lib/api/passenger-requests";
 import { addCar, listMyCars } from "@/lib/api/cars";
@@ -24,6 +27,7 @@ import { cn } from "@/lib/utils/cn";
 import { CarForm } from "@/components/features/cars/car-form";
 import { VerificationCard } from "@/components/features/driver/verification-card";
 import { RouteCard } from "./route-card";
+import { MeetingPointField } from "./meeting-point-field";
 import { PickupZones } from "./pickup-zones";
 import { WhenChips } from "./when-chips";
 import { SeatsStepper } from "./seats-stepper";
@@ -31,15 +35,19 @@ import { PriceCard } from "./price-card";
 import { PrefsCollapsible, PREF_KEYS, type PrefKey } from "./prefs-collapsible";
 
 // Unified single-scroll create form — design-spec §2.4. Driver publishes a
-// trip, passenger publishes a request; the variant is chosen by useUiRole.
-// All create mutations / draft-persistence / phone + verification gating are
-// preserved — this is a presentational collapse of the old multi-step wizard.
+// trip (/trips/create), passenger a request (/requests/create): the URL decides
+// the form, and switching it never changes the global driver/passenger mode.
 
 interface Draft {
-  originCity: string;
-  destinationCity: string;
-  pickup: string[];
-  dropoff: string[];
+  origin: RoutePlace | null;
+  destination: RoutePlace | null;
+  /** Exact boarding / drop-off pins (optional). */
+  originPoint: PointInput | null;
+  destinationPoint: PointInput | null;
+  pickup: RoutePlace[];
+  dropoff: RoutePlace[];
+  /** Airport transfers (requests): «SU 1882». */
+  flightNumber: string;
   date: string;
   time: string;
   timeEnd: string; // "" = exact time; else «выезжаем time–timeEnd» (driver only)
@@ -60,10 +68,13 @@ function emptyPrefs(): Record<PrefKey, boolean> {
 
 function defaults(isDriver: boolean): Draft {
   return {
-    originCity: "",
-    destinationCity: "",
+    origin: null,
+    destination: null,
+    originPoint: null,
+    destinationPoint: null,
     pickup: [],
     dropoff: [],
+    flightNumber: "",
     date: "",
     time: "09:00",
     timeEnd: "",
@@ -86,27 +97,32 @@ function dstr(offset: number): string {
 }
 
 interface Props {
-  initialFrom?: string;
-  initialTo?: string;
+  /** driver = publish a trip, passenger = post a request (from the route). */
+  intent: "driver" | "passenger";
+  initialFrom?: RoutePlace | null;
+  initialTo?: RoutePlace | null;
 }
 
-export function CreateScreen({ initialFrom, initialTo }: Props) {
+const FLIGHT_RE = /^[A-Z0-9]{2}\s?\d{1,4}[A-Z]?$/;
+
+export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
   const t = useTranslations("create");
   const tCars = useTranslations("cars");
   const fe = useFriendlyError();
   const status = useAuth((s) => s.status);
-  // Phase 1: no account roles — the user picks the intent right here.
-  const activeMode = useAuth((s) => s.activeMode);
-  const setActiveMode = useAuth((s) => s.setActiveMode);
-  const [intent, setIntent] = useState<"driver" | "passenger">(
-    activeMode === "driver" ? "driver" : "passenger",
-  );
   const isDriver = intent === "driver";
-  const role = intent;
+  // The form switch swaps the URL (keeping the route) — not the global mode.
+  const switchIntent = (next: "driver" | "passenger") => {
+    if (next === intent) return;
+    const qs = new URLSearchParams(searchParams);
+    setRouteParams(qs, draft.origin, draft.destination);
+    router.replace(`${next === "driver" ? "/trips/create" : "/requests/create"}?${qs.toString()}`);
+  };
   const theme = ROLE_THEME[intent];
-  const draftKey = isDriver ? "terme_trip_draft" : "terme_req_draft";
+  const draftKey = isDriver ? "terme_trip_draft_v2" : "terme_req_draft_v2";
   const chipAccent: ChipAccent = isDriver ? "brand" : "grape";
 
   const [draft, setDraft] = useState<Draft>(() => defaults(isDriver));
@@ -140,14 +156,35 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
       const saved = raw ? (JSON.parse(raw) as Partial<Draft>) : {};
       seatsCustomized.current = saved.seats !== undefined;
       const merged: Draft = { ...base, ...saved, prefs: { ...base.prefs, ...(saved.prefs ?? {}) } };
-      if (initialFrom) merged.originCity = initialFrom;
-      if (initialTo) merged.destinationCity = initialTo;
+      if (initialFrom) merged.origin = initialFrom;
+      if (initialTo) merged.destination = initialTo;
       setDraft(merged);
     } catch {
       setDraft(base);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDriver, draftKey]);
+
+  // «Откуда» from the device location — silently only when the permission is
+  // already granted (no surprise prompt on page open); otherwise a button.
+  const [detecting, setDetecting] = useState(false);
+  const detectOrigin = async () => {
+    setDetecting(true);
+    const p = await getCurrentPoint();
+    const place = p ? await nearestPlace(p.lat, p.lng).catch(() => null) : null;
+    setDetecting(false);
+    if (place) patch({ origin: toRoutePlace(place), originPoint: p ? { lat: p.lat, lng: p.lng } : null });
+  };
+  useEffect(() => {
+    if (initialFrom || typeof navigator === "undefined" || !navigator.permissions) return;
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((st) => {
+        if (st.state === "granted") void detectOrigin();
+      })
+      .catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const patch = (u: Partial<Draft>) =>
     setDraft((prev) => {
@@ -211,11 +248,12 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
     mutationFn: async (): Promise<string> => {
       if (isDriver) {
         const input: CreateTripInput = {
-          originCity: draft.originCity,
-          destinationCity: draft.destinationCity,
-          pickupCities: draft.pickup,
-          dropoffCities: draft.dropoff,
-          originAddress: draft.originCity,
+          originCityId: draft.origin!.id!,
+          destinationCityId: draft.destination!.id!,
+          originPoint: draft.originPoint ?? undefined,
+          destinationPoint: draft.destinationPoint ?? undefined,
+          pickupCityIds: draft.pickup.flatMap((p) => (p.id !== null ? [p.id] : [])),
+          dropoffCityIds: draft.dropoff.flatMap((p) => (p.id !== null ? [p.id] : [])),
           carId: selectedCar?.id,
           departureAt: departureAt(),
           departureWindowEnd: departureWindowEnd(),
@@ -243,8 +281,11 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
       // is folded into the comment to avoid losing it.
       const budgetNote = draft.price > 0 ? `${t("budget_note", { n: draft.price })} ` : "";
       const input: CreatePassengerRequestInput = {
-        originCity: draft.originCity,
-        destinationCity: draft.destinationCity,
+        originCityId: draft.origin!.id!,
+        destinationCityId: draft.destination!.id!,
+        originPoint: draft.originPoint ?? undefined,
+        destinationPoint: draft.destinationPoint ?? undefined,
+        flightNumber: isAirport && draft.flightNumber.trim() ? draft.flightNumber.trim().toUpperCase() : undefined,
         seatsNeeded: draft.seats,
         departureDate: departureAt(),
         flexible: draft.flexible,
@@ -259,10 +300,6 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
       } catch {
         /* ignore */
       }
-      // Publishing as a driver/passenger IS choosing that mode — sync the global
-      // active mode so «Мои» opens the matching tab set (otherwise a trip created
-      // while in passenger mode is hidden — passenger tabs have no «Поездки»).
-      setActiveMode(intent);
       void qc.invalidateQueries({ queryKey: isDriver ? ["trips"] : ["passenger-requests"] });
       // The «Мои поездки / объявления» tab reads ["my-posts"] — invalidate it so
       // the just-published item appears immediately (not after a 15s staleTime).
@@ -282,10 +319,15 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
   // Driver price must land in the backend range (pricePerSeat int 50..10000).
   // Show it inline rather than let the request 400 on the server.
   const priceOutOfRange = isDriver && (draft.price < 50 || draft.price > 10_000);
-  const sameCity = Boolean(draft.originCity) && draft.originCity === draft.destinationCity;
+  const sameCity = draft.origin?.id != null && draft.origin.id === draft.destination?.id;
+  const isAirport = draft.origin?.type === "airport" || draft.destination?.type === "airport";
+  const flightInvalid =
+    !isDriver && isAirport && draft.flightNumber.trim() !== "" && !FLIGHT_RE.test(draft.flightNumber.trim().toUpperCase());
 
   const canSubmit =
-    Boolean(draft.originCity && draft.destinationCity && draft.originCity !== draft.destinationCity) &&
+    Boolean(draft.origin?.id && draft.destination?.id) &&
+    !sameCity &&
+    !flightInvalid &&
     (draft.flexible || Boolean(draft.date)) &&
     !departureTooSoon &&
     draft.seats >= 1 &&
@@ -326,21 +368,64 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
 
   const form = (
     <div className="space-y-3.5">
-      {/* Intent — chosen right here, no account role (Phase 1) */}
-      <IntentToggle value={intent} onChange={setIntent} />
+      {/* Trip or request — the URL decides; switching keeps the route. */}
+      <IntentToggle value={intent} onChange={switchIntent} />
       <p className="text-[15px] font-700 text-ink-600 dark:text-ink-400">
         {isDriver ? t("intro_driver") : t("intro_passenger")}
       </p>
 
       <RouteCard
-        origin={draft.originCity}
-        destination={draft.destinationCity}
-        onOrigin={(v) => patch({ originCity: v })}
-        onDestination={(v) => patch({ destinationCity: v })}
+        origin={draft.origin}
+        destination={draft.destination}
+        onOrigin={(v) => patch({ origin: toRoutePlace(v), originPoint: null })}
+        onDestination={(v) => patch({ destination: toRoutePlace(v), destinationPoint: null })}
         iconAccent={theme.iconAccent}
       />
+      {!draft.origin && (
+        <button
+          type="button"
+          onClick={() => void detectOrigin()}
+          disabled={detecting}
+          className="-mt-1.5 flex items-center gap-1.5 px-1 text-[13px] font-800 text-brand-700 disabled:opacity-60 dark:text-brand-300"
+        >
+          <Crosshair className="h-4 w-4" aria-hidden="true" />
+          {detecting ? <Spinner size={14} /> : t("detect_location")}
+        </button>
+      )}
       {sameCity && (
         <p className="-mt-1 text-[13px] font-700 text-coral-600">{t("err_same_city")}</p>
+      )}
+      <MeetingPointField
+        place={draft.origin}
+        value={draft.originPoint}
+        onChange={(p) => patch({ originPoint: p })}
+        label={isDriver ? t("pickup_point_driver") : t("pickup_point_passenger")}
+        hint={t("pickup_point_hint")}
+        color={isDriver ? "#0D9488" : "#6366F1"}
+      />
+      {isAirport && isDriver && (
+        <p className="flex items-start gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-[13.5px] font-700 text-sky-800 dark:bg-sky-500/10 dark:text-sky-200">
+          <Plane className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          {t("airport_note_driver")}
+        </p>
+      )}
+      {isAirport && !isDriver && (
+        <div className="rounded-2xl bg-white p-4 shadow-xs ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
+          <label htmlFor="flight" className="flex items-center gap-2 text-[15px] font-800 text-ink-900 dark:text-white">
+            <Plane className="h-4 w-4 text-sky-600" aria-hidden="true" />
+            {t("flight_label")}
+          </label>
+          <input
+            id="flight"
+            value={draft.flightNumber}
+            onChange={(e) => patch({ flightNumber: e.target.value.toUpperCase().slice(0, 10) })}
+            placeholder={t("flight_placeholder")}
+            className="mt-2 h-11 w-full rounded-xl border border-ink-200 bg-ink-50 px-3.5 text-[16px] font-800 uppercase tracking-wide text-ink-900 outline-none focus:border-sky-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+          />
+          <p className={cn("mt-1.5 text-[12.5px] font-600", flightInvalid ? "text-coral-600" : "text-ink-500")}>
+            {t("flight_hint")}
+          </p>
+        </div>
       )}
       {/* Driver intent: the trip rides on a car. First car is added inline; once
           the garage has cars, it's a compact row → selection sheet (mirrors the
@@ -474,14 +559,21 @@ export function CreateScreen({ initialFrom, initialTo }: Props) {
           no pickup/dropoff, so surfacing it to passengers would silently drop it. */}
       {isDriver && (
         <PickupZones
-          role={role}
           pickup={draft.pickup}
           dropoff={draft.dropoff}
           onPickup={(v) => patch({ pickup: v })}
           onDropoff={(v) => patch({ dropoff: v })}
         />
       )}
-      <PrefsCollapsible role={role} prefs={draft.prefs} onToggle={(k) => patch({ prefs: { ...draft.prefs, [k]: !draft.prefs[k] } })} />
+      <MeetingPointField
+        place={draft.destination}
+        value={draft.destinationPoint}
+        onChange={(p) => patch({ destinationPoint: p })}
+        label={t("dropoff_point")}
+        hint={t("dropoff_point_hint")}
+        color="#F59E0B"
+      />
+      <PrefsCollapsible role={intent} prefs={draft.prefs} onToggle={(k) => patch({ prefs: { ...draft.prefs, [k]: !draft.prefs[k] } })} />
     </>
   );
 

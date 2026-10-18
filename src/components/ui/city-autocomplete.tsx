@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState, useId } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { MapPin } from "lucide-react";
-import { searchCities, getCities, type City } from "@/lib/api/cities";
+import { searchPlaces, getTopPlaces, type Place } from "@/lib/api/cities";
+import { placeName, placeSubtitle } from "@/lib/places";
 import { cn } from "@/lib/utils/cn";
 import type { Locale } from "@/i18n.config";
 
 interface Props {
-  value: string;
-  onChange: (value: string) => void;
+  /** The picked place (anything with names), or null while nothing is picked. */
+  value: { nameRu: string; nameKg: string } | null;
+  onChange: (value: Place | null) => void;
   /** Fires on every keystroke with the raw typed text (before dropdown selection) */
   onInputChange?: (raw: string) => void;
   placeholder?: string;
@@ -34,30 +36,13 @@ function useDebounce<T>(value: T, ms: number): T {
   return debounced;
 }
 
-/**
- * Dropdown subtitle in the selected language: "район, айыл аймак" (the most
- * useful disambiguators). Falls back to район alone, then to region for
- * oblast-level cities that have neither.
- */
-function getSubtitle(city: City, locale: Locale): string {
-  const kg = locale === "kg";
-  if (city.type === "raion") return "район";
-  // Oblast-level город → tag «город/шаар» (never the oblast, and skip a district
-  // that just repeats the name, e.g. «Баткен» город in «Баткен» район).
-  if (city.type === "city") return kg ? "шаар" : "город";
-  const district = (kg ? city.districtNameKg : city.districtNameRu)?.trim();
-  const aimak = (kg ? city.aiylAimakNameKg : city.aiylAimakNameRu)?.trim();
-  return [district, aimak].filter((p): p is string => !!p).join(", ");
-}
-
 // Module-level cache — fetched once for the session, shared across all instances.
-let popularCache: City[] | null = null;
-async function loadPopularCities(): Promise<City[]> {
+let popularCache: Place[] | null = null;
+async function loadPopularCities(): Promise<Place[]> {
   if (popularCache) return popularCache;
   try {
-    // Endpoint orders by priority DESC — the first 7 ARE the popular ones;
-    // don't pull the whole 1000-row directory just to slice it.
-    popularCache = await getCities(7);
+    // Ordered by prominence — capitals, airports, oblast cities first.
+    popularCache = await getTopPlaces(7);
     return popularCache;
   } catch {
     // Don't cache a failure — the next focus retries instead of leaving the
@@ -85,8 +70,9 @@ export function CityAutocomplete({
   const autoId = useId();
   const inputId = externalId ?? autoId;
 
-  const [query, setQuery] = useState(value);
-  const [results, setResults] = useState<City[]>([]);
+  const valueName = placeName(value, locale);
+  const [query, setQuery] = useState(valueName);
+  const [results, setResults] = useState<Place[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [loading, setLoading] = useState(false);
@@ -103,9 +89,9 @@ export function CityAutocomplete({
 
   // Sync external value → internal query when not actively typing.
   useEffect(() => {
-    if (value !== query && !open) setQuery(value);
+    if (valueName !== query && !open) setQuery(valueName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [valueName]);
 
   useEffect(() => {
     if (selectedRef.current) {
@@ -125,7 +111,7 @@ export function CityAutocomplete({
     // Guard against out-of-order responses: a slow reply for an older query
     // must never overwrite results of the newer one.
     const seq = ++searchSeqRef.current;
-    searchCities(debouncedQuery, 8)
+    searchPlaces(debouncedQuery, 8)
       .then((rows) => {
         if (seq !== searchSeqRef.current) return;
         setResults(rows);
@@ -145,13 +131,13 @@ export function CityAutocomplete({
       });
   }, [debouncedQuery, showingPopular]);
 
-  const commit = (city: City) => {
+  const commit = (city: Place) => {
     selectedRef.current = true;
     userTypingRef.current = false;
     setShowingPopular(false);
     setNoMatch(false);
-    setQuery(city.nameRu);
-    onChange(city.nameRu);
+    setQuery(placeName(city, locale));
+    onChange(city);
     setOpen(false);
     setResults([]);
     setActiveIdx(-1);
@@ -223,7 +209,7 @@ export function CityAutocomplete({
             setShowingPopular(false);
             setNoMatch(false);
             setQuery(e.target.value);
-            onChange("");
+            if (value) onChange(null);
             onInputChange?.(e.target.value);
           }}
           onKeyDown={handleKeyDown}
@@ -307,8 +293,10 @@ export function CityAutocomplete({
               >
                 <MapPin className="h-3 w-3 flex-shrink-0 text-ink-400" aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className={cn("font-bold text-ink-900 dark:text-white", compact ? "text-[14px]" : "text-[16px]")}>{city.nameRu}</p>
-                  <p className="text-[14px] font-semibold text-ink-400">{getSubtitle(city, locale)}</p>
+                  <p className={cn("truncate font-bold text-ink-900 dark:text-white", compact ? "text-[14px]" : "text-[16px]")}>{placeName(city, locale)}</p>
+                  {placeSubtitle(city, locale) && (
+                    <p className="truncate text-[13px] font-semibold text-ink-400">{placeSubtitle(city, locale)}</p>
+                  )}
                 </div>
               </li>
             ))}

@@ -3,20 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Check, Circle, Flag, MapPin, X } from "lucide-react";
-import { searchCities, getCities, type City } from "@/lib/api/cities";
-
-// Result tag: раionы show «район», settlements show their «район, айыл» context
-// (never the oblast), and an oblast-level город with no district shows «город»
-// — so «Баткен · район» vs «Баткен · город» read clearly.
-function citySubtitle(city: City, kg: boolean): string {
-  if (city.type === "raion") return "район";
-  // Oblast-level город → tag «город/шаар» (its district is often the same name,
-  // e.g. «Баткен» город in «Баткен» район — showing the district would be noise).
-  if (city.type === "city") return kg ? "шаар" : "город";
-  const d = (kg ? city.districtNameKg : city.districtNameRu)?.trim();
-  const a = (kg ? city.aiylAimakNameKg : city.aiylAimakNameRu)?.trim();
-  return [d, a].filter((s): s is string => !!s).join(", ");
-}
+import { searchPlaces, getTopPlaces, type Place } from "@/lib/api/cities";
+import { placeName, placeSubtitle, toRoutePlace, type RoutePlace } from "@/lib/places";
 
 // Route search modal (Yandex «Межгород» style): Откуда + Куда together at the
 // top, one shared suggestions list below, max 95vh. Mirrors the Flutter
@@ -30,19 +18,22 @@ export function RouteSearchModal({
   onApply,
 }: {
   open: boolean;
-  initialFrom: string;
-  initialTo: string;
+  initialFrom: RoutePlace | null;
+  initialTo: RoutePlace | null;
   focusTo: boolean;
   onClose: () => void;
-  onApply: (from: string, to: string) => void;
+  onApply: (from: RoutePlace, to: RoutePlace) => void;
 }) {
   const t = useTranslations("feed");
-  const kg = useLocale() === "kg";
-  const [from, setFrom] = useState(initialFrom);
-  const [to, setTo] = useState(initialTo);
+  const locale = useLocale();
+  // Picked places + the text shown in each field (typing clears the pick).
+  const [from, setFrom] = useState<RoutePlace | null>(initialFrom);
+  const [to, setTo] = useState<RoutePlace | null>(initialTo);
+  const [fromText, setFromText] = useState(placeName(initialFrom, locale));
+  const [toText, setToText] = useState(placeName(initialTo, locale));
   const [activeTo, setActiveTo] = useState(focusTo);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<City[]>([]);
+  const [results, setResults] = useState<Place[]>([]);
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
 
@@ -51,11 +42,14 @@ export function RouteSearchModal({
     if (!open) return;
     setFrom(initialFrom);
     setTo(initialTo);
+    setFromText(placeName(initialFrom, locale));
+    setToText(placeName(initialTo, locale));
     setActiveTo(focusTo);
-    setQuery(focusTo ? initialTo : initialFrom);
+    setQuery(placeName(focusTo ? initialTo : initialFrom, locale));
     const el = focusTo ? toRef.current : fromRef.current;
     // rAF so the element is mounted before focusing
     requestAnimationFrame(() => el?.focus());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialFrom, initialTo, focusTo]);
 
   // Debounced suggestions for the active field.
@@ -65,7 +59,7 @@ export function RouteSearchModal({
     const q = query.trim();
     const id = setTimeout(async () => {
       try {
-        const r = q ? await searchCities(q, 12) : await getCities(12);
+        const r = q ? await searchPlaces(q, 12) : await getTopPlaces(12);
         if (!cancelled) setResults(r);
       } catch {
         if (!cancelled) setResults([]);
@@ -81,24 +75,28 @@ export function RouteSearchModal({
 
   if (!open) return null;
 
-  const pick = (city: City) => {
-    const name = city.nameRu;
+  const pick = (city: Place) => {
+    const picked = toRoutePlace(city);
+    const name = placeName(city, locale);
     if (activeTo) {
-      setTo(name);
-      if (!from.trim()) { setActiveTo(false); setQuery(from); requestAnimationFrame(() => fromRef.current?.focus()); }
-      else onApply(from, name);
+      setTo(picked);
+      setToText(name);
+      if (!from) { setActiveTo(false); setQuery(fromText); requestAnimationFrame(() => fromRef.current?.focus()); }
+      else onApply(from, picked);
     } else {
-      setFrom(name);
-      if (!to.trim()) { setActiveTo(true); setQuery(to); requestAnimationFrame(() => toRef.current?.focus()); }
-      else onApply(name, to);
+      setFrom(picked);
+      setFromText(name);
+      if (!to) { setActiveTo(true); setQuery(toText); requestAnimationFrame(() => toRef.current?.focus()); }
+      else onApply(picked, to);
     }
   };
 
-  const bothSet = Boolean(from.trim() && to.trim());
+  const bothSet = Boolean(from && to);
 
   const field = (
     value: string,
     setValue: (v: string) => void,
+    clearPick: () => void,
     ref: React.RefObject<HTMLInputElement>,
     isTo: boolean,
     dot: React.ReactNode,
@@ -109,7 +107,7 @@ export function RouteSearchModal({
       <input
         ref={ref}
         value={value}
-        onChange={(e) => { setValue(e.target.value); setActiveTo(isTo); setQuery(e.target.value); }}
+        onChange={(e) => { setValue(e.target.value); clearPick(); setActiveTo(isTo); setQuery(e.target.value); }}
         onFocus={() => { setActiveTo(isTo); setQuery(value); }}
         placeholder={placeholder}
         className="min-w-0 flex-1 bg-transparent py-3 text-[14px] font-700 text-ink-900 outline-none placeholder:font-600 placeholder:text-ink-400 dark:text-white"
@@ -117,7 +115,7 @@ export function RouteSearchModal({
       {value && (
         <button
           type="button"
-          onClick={() => { setValue(""); setActiveTo(isTo); setQuery(""); ref.current?.focus(); }}
+          onClick={() => { setValue(""); clearPick(); setActiveTo(isTo); setQuery(""); ref.current?.focus(); }}
           className="p-1.5 text-ink-400 hover:text-ink-600 dark:hover:text-ink-200"
           aria-label={t("clear")}
         >
@@ -133,17 +131,17 @@ export function RouteSearchModal({
       <div className="fixed inset-x-0 bottom-0 z-[90] mx-auto flex max-h-[82vh] w-full max-w-[560px] flex-col rounded-t-4xl bg-ink-50 shadow-lift dark:bg-ink-950">
         <div className="flex items-start gap-2 p-4">
           <div className="min-w-0 flex-1 rounded-2xl border border-ink-200 bg-white dark:border-ink-800 dark:bg-ink-900">
-            {field(from, setFrom, fromRef, false,
+            {field(fromText, setFromText, () => setFrom(null), fromRef, false,
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-600"><Circle className="h-2.5 w-2.5 fill-white text-white" aria-hidden="true" /></span>,
               t("from_placeholder"))}
             <div className="ml-[46px] border-t border-ink-100 dark:border-ink-800" />
-            {field(to, setTo, toRef, true,
+            {field(toText, setToText, () => setTo(null), toRef, true,
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-500"><Flag className="h-4 w-4 text-white" aria-hidden="true" /></span>,
               t("to_placeholder"))}
           </div>
           <button
             type="button"
-            onClick={() => (bothSet ? onApply(from, to) : onClose())}
+            onClick={() => (from && to ? onApply(from, to) : onClose())}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-700 dark:bg-ink-800 dark:text-ink-200"
             aria-label={bothSet ? t("find_trip") : t("close")}
           >
@@ -161,9 +159,9 @@ export function RouteSearchModal({
             >
               <MapPin className="h-[18px] w-[18px] shrink-0 text-ink-400" aria-hidden="true" />
               <span className="min-w-0">
-                <span className="block truncate text-[14px] font-700 text-ink-900 dark:text-white">{city.nameRu}</span>
-                {citySubtitle(city, kg) && (
-                  <span className="block truncate text-[12px] font-600 text-ink-400">{citySubtitle(city, kg)}</span>
+                <span className="block truncate text-[14px] font-700 text-ink-900 dark:text-white">{placeName(city, locale)}</span>
+                {placeSubtitle(city, locale) && (
+                  <span className="block truncate text-[12px] font-600 text-ink-400">{placeSubtitle(city, locale)}</span>
                 )}
               </span>
             </button>

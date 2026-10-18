@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { ArrowDownUp, CalendarDays, Circle, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
+import { ArrowDownUp, CalendarDays, Circle, Map as MapIcon, MapPin, Plane, Search, SlidersHorizontal } from "lucide-react";
 import { DatePickerModal } from "@/components/ui/date-picker";
 import { RouteSearchModal } from "./route-search-modal";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
@@ -12,9 +13,9 @@ import { IntentToggle } from "./intent-toggle";
 import { RideTypeToggle } from "./ride-type-toggle";
 import { FeedEntryHints } from "./feed-entry-hints";
 import { BecomeDriverBanner } from "@/components/features/driver/become-driver-banner";
-import { addRecentRoute } from "@/lib/recent-routes";
+import { addRecentRoute, readLastRoute, saveLastRoute } from "@/lib/recent-routes";
+import { placeName, setRouteParams, toRoutePlace, type RoutePlace } from "@/lib/places";
 import { useAuth } from "@/store/auth";
-import { useRolePrompt, hasChosenRole } from "@/store/role-prompt";
 import { cn } from "@/lib/utils/cn";
 
 // Home `/` — the search HUB. Rails on top (destinations · popular · history)
@@ -22,27 +23,15 @@ import { cn } from "@/lib/utils/cn";
 // footer. Search happens here; «Найти» NAVIGATES to the results page — /trips
 // (passenger) or /requests (driver) — by role. Results never render here.
 
-function readLastRoute(): { from: string; to: string } {
-  try {
-    const raw = localStorage.getItem("terme_last_route");
-    if (raw) {
-      const v = JSON.parse(raw) as { from?: string; to?: string };
-      if (v.from && v.to) return { from: v.from, to: v.to };
-    }
-  } catch { /* ignore */ }
-  return { from: "", to: "" };
-}
-
 export function SearchHub() {
   const t = useTranslations("feed");
+  const locale = useLocale();
   const router = useRouter();
   const driver = useAuth((s) => s.activeMode === "driver");
   const setActiveMode = useAuth((s) => s.setActiveMode);
-  const authed = useAuth((s) => s.status === "authenticated");
-  const openRolePrompt = useRolePrompt((s) => s.openPrompt);
 
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState<RoutePlace | null>(null);
+  const [to, setTo] = useState<RoutePlace | null>(null);
   const [whole, setWhole] = useState(false);
   const [date, setDate] = useState(""); // "" = today
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -52,29 +41,22 @@ export function SearchHub() {
 
   useEffect(() => {
     const r = readLastRoute();
-    setFrom(r.from);
-    setTo(r.to);
+    if (r) {
+      setFrom(r.from);
+      setTo(r.to);
+    }
   }, []);
-
-  // First login / reopen on the hub with no saved choice → open the role gate
-  // once. Picking (or dismissing) sets terme_role_chosen so it never nags again.
-  useEffect(() => {
-    if (authed && !hasChosenRole()) openRolePrompt("gate");
-  }, [authed, openRolePrompt]);
 
   const today = new Date(Date.now() + 6 * 3_600_000).toISOString().slice(0, 10);
 
   // Submit → go to the results page for the active role (as before), carrying
   // the route + ride-type (+ date, + open-filters). Also used by the rails.
-  const goRoute = (f: string, tt: string, wholeCabin: boolean, openFilters = false) => {
+  const goRoute = (f: RoutePlace | null, tt: RoutePlace | null, wholeCabin: boolean, openFilters = false) => {
     if (!f || !tt) return;
     addRecentRoute(f, tt);
-    try {
-      localStorage.setItem("terme_last_route", JSON.stringify({ from: f, to: tt }));
-    } catch { /* ignore */ }
+    saveLastRoute(f, tt);
     const qs = new URLSearchParams();
-    qs.set("from", f);
-    qs.set("to", tt);
+    setRouteParams(qs, f, tt);
     if (wholeCabin) qs.set("seats", "4");
     if (date && date !== today) qs.set("date", date);
     if (openFilters) qs.set("filters", "1");
@@ -93,6 +75,34 @@ export function SearchHub() {
             <OnlineBadge className="bg-ink-50 dark:bg-ink-900" />
           </div>
           <IntentToggle value={driver ? "driver" : "passenger"} onChange={(v) => setActiveMode(v)} showHint />
+        </div>
+
+        {/* Separate products: airport transfers and the map. */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          <Link
+            href="/airport"
+            className="flex items-center gap-2.5 rounded-2xl bg-white p-3 shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
+              <Plane className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[14px] font-900 text-ink-900 dark:text-white">{t("airport_entry")}</span>
+              <span className="block truncate text-[11.5px] font-700 text-ink-400">{t("airport_entry_sub")}</span>
+            </span>
+          </Link>
+          <Link
+            href={driver ? "/map?kind=requests" : "/map"}
+            className="flex items-center gap-2.5 rounded-2xl bg-white p-3 shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600/10 text-brand-600 dark:text-brand-300">
+              <MapIcon className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[14px] font-900 text-ink-900 dark:text-white">{t("map_entry")}</span>
+              <span className="block truncate text-[11.5px] font-700 text-ink-400">{t("map_entry_sub")}</span>
+            </span>
+          </Link>
         </div>
 
         <div className="mt-4">
@@ -118,12 +128,12 @@ export function SearchHub() {
                 onClick={() => openSearch(false)}
                 className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700 md:hidden"
               >
-                <span className={from ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{from || t("from_placeholder")}</span>
+                <span className={from ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{from ? placeName(from, locale) : t("from_placeholder")}</span>
               </button>
               <CityAutocomplete
                 borderless
                 value={from}
-                onChange={(v) => { if (v) setFrom(v); }}
+                onChange={(v) => { if (v) setFrom(toRoutePlace(v)); }}
                 placeholder={t("from_placeholder")}
                 className="hidden min-w-0 flex-1 md:block"
               />
@@ -145,12 +155,12 @@ export function SearchHub() {
                 onClick={() => openSearch(true)}
                 className="min-w-0 flex-1 truncate py-2.5 text-left text-[15px] font-700 md:hidden"
               >
-                <span className={to ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{to || t("to_placeholder")}</span>
+                <span className={to ? "text-ink-900 dark:text-white" : "font-600 text-ink-400"}>{to ? placeName(to, locale) : t("to_placeholder")}</span>
               </button>
               <CityAutocomplete
                 borderless
                 value={to}
-                onChange={(v) => { if (v) setTo(v); }}
+                onChange={(v) => { if (v) setTo(toRoutePlace(v)); }}
                 placeholder={t("to_placeholder")}
                 className="hidden min-w-0 flex-1 md:block"
               />

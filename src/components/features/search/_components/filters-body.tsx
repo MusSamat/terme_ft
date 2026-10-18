@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeftRight, ShieldCheck, UserCheck, CigaretteOff, PawPrint, type LucideIcon } from "lucide-react";
@@ -10,6 +10,8 @@ import { Chip } from "@/components/ui/chip";
 import { SectionLabel } from "@/components/ui/section-label";
 import { Switch } from "@/components/ui/switch";
 import { useCalendarCounts } from "@/lib/hooks/use-calendar-counts";
+import { getCurrentPoint } from "@/lib/hooks/use-geolocation";
+import { routeFromParams, setRouteParams, toRoutePlace, type RoutePlace } from "@/lib/places";
 
 // Kyrgyzstan is fixed UTC+6 — anchor «Сегодня/Завтра» to the local calendar day.
 function ymdKg(offsetDays = 0) {
@@ -27,11 +29,13 @@ export function FiltersBody() {
   const pathname = usePathname();
   const params = useSearchParams();
   const [, startTransition] = useTransition();
+  const [geoDenied, setGeoDenied] = useState(false);
 
   const SORT_OPTIONS = [
     { value: "time",        label: t("sort_time") },
     { value: "price_asc",   label: t("sort_price_asc") },
     { value: "rating_desc", label: t("sort_rating_desc") },
+    { value: "nearest",     label: t("sort_nearest") },
   ] as const;
 
   // Real YYYY-MM-DD values — the API validates dates, symbolic tokens 400.
@@ -54,10 +58,9 @@ export function FiltersBody() {
     { value: "no",    label: t("luggage_none") },
   ] as const;
 
-  const fromCity     = params.get("from") ?? params.get("from_city") ?? "";
-  const toCity       = params.get("to")   ?? params.get("to_city")   ?? "";
+  const { from: fromCity, to: toCity } = routeFromParams((k) => params.get(k));
   // Availability per day for the custom-date calendar below.
-  const dayCounts    = useCalendarCounts("trips", fromCity, toCity);
+  const dayCounts    = useCalendarCounts("trips", fromCity?.id, toCity?.id);
   const sort         = params.get("sort")          ?? "time";
   const onlyVerified = params.get("only_verified") === "true";
   const womenOnly    = params.get("women_only")    === "true";
@@ -82,6 +85,28 @@ export function FiltersBody() {
     [params, pathname, router],
   );
 
+  const setRoute = (f: RoutePlace | null, tt: RoutePlace | null) => {
+    const next = new URLSearchParams(params);
+    setRouteParams(next, f, tt);
+    next.delete("cursor");
+    startTransition(() => router.replace(`${pathname}?${next.toString()}`, { scroll: false }));
+  };
+
+  // «Ближайшие» needs the viewer point — ask once, keep it in the URL.
+  const pickSort = async (value: string) => {
+    if (value !== "nearest") {
+      update({ sort: value === "time" ? null : value, near: null });
+      return;
+    }
+    const p = await getCurrentPoint();
+    if (!p) {
+      setGeoDenied(true);
+      return;
+    }
+    setGeoDenied(false);
+    update({ sort: "nearest", near: `${p.lat.toFixed(5)},${p.lng.toFixed(5)}` });
+  };
+
   const PREF_ROWS: { key: string; active: boolean; icon: LucideIcon; label: string }[] = [
     { key: "women_only",    active: womenOnly,    icon: UserCheck,    label: t("pref_women_only") },
     { key: "no_smoking",    active: noSmoking,    icon: CigaretteOff, label: t("pref_no_smoking") },
@@ -97,15 +122,15 @@ export function FiltersBody() {
         <div className="flex flex-col gap-1">
           {/* Commit only a chosen city — typing emits "" per keystroke and an
               empty from/to would bounce the user back to route entry. */}
-          <CityAutocomplete compact value={fromCity} onChange={(v) => { if (v) update({ from: v }); }} placeholder={t("from_placeholder")} />
+          <CityAutocomplete compact value={fromCity} onChange={(v) => { if (v) setRoute(toRoutePlace(v), toCity); }} placeholder={t("from_placeholder")} />
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-ink-100 dark:bg-ink-800" />
-            <button type="button" onClick={() => update({ from: toCity || null, to: fromCity || null })} disabled={!fromCity || !toCity} className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-400 transition-colors hover:border-brand-400 hover:text-brand-600 disabled:opacity-30 dark:border-ink-700" aria-label={t("swap_aria")}>
+            <button type="button" onClick={() => setRoute(toCity, fromCity)} disabled={!fromCity || !toCity} className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-ink-200 text-ink-400 transition-colors hover:border-brand-400 hover:text-brand-600 disabled:opacity-30 dark:border-ink-700" aria-label={t("swap_aria")}>
               <ArrowLeftRight className="h-2.5 w-2.5" />
             </button>
             <div className="h-px flex-1 bg-ink-100 dark:bg-ink-800" />
           </div>
-          <CityAutocomplete compact value={toCity} onChange={(v) => { if (v) update({ to: v }); }} placeholder={t("to_placeholder")} />
+          <CityAutocomplete compact value={toCity} onChange={(v) => { if (v) setRoute(fromCity, toRoutePlace(v)); }} placeholder={t("to_placeholder")} />
         </div>
       </div>
 
@@ -136,9 +161,12 @@ export function FiltersBody() {
         <SectionLabel size="xs" className="mb-1.5">{t("sort_label")}</SectionLabel>
         <div className="flex flex-wrap gap-1.5">
           {SORT_OPTIONS.map((o) => (
-            <Chip key={o.value} kind="filter" selected={sort === o.value} onClick={() => update({ sort: o.value === "time" ? null : o.value })}>{o.label}</Chip>
+            <Chip key={o.value} kind="filter" selected={sort === o.value} onClick={() => void pickSort(o.value)}>{o.label}</Chip>
           ))}
         </div>
+        {geoDenied && (
+          <p className="mt-1.5 text-[12.5px] font-700 text-coral-500">{t("geo_denied")}</p>
+        )}
       </div>
 
       {/* Rating */}

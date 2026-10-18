@@ -1,4 +1,5 @@
 import type { SearchTripsParams } from "@/lib/api/trips";
+import { placeFilter, routeFromParams } from "@/lib/places";
 
 // Chips write YYYY-MM-DD; the API wants a full ISO datetime. Anchor the day at
 // local Kyrgyzstan midnight (fixed UTC+6, no DST). "today" is a legacy alias.
@@ -26,11 +27,17 @@ function num(v: string | null): number | undefined {
  * result, and filtering happens client-side without a blocking server round-trip.
  */
 export function buildTripSearchParams(get: (k: string) => string | null): SearchTripsParams {
-  const from = get("from") ?? get("from_city");
-  const to = get("to") ?? get("to_city");
+  const { from, to } = routeFromParams(get);
+  // sort=nearest needs the viewer point: ?near=lat,lng (set by the client).
+  const [nearLat, nearLng] = (get("near") ?? "").split(",").map(Number);
+  const near =
+    get("sort") === "nearest" && Number.isFinite(nearLat) && Number.isFinite(nearLng)
+      ? { near_lat: nearLat, near_lng: nearLng }
+      : null;
   return {
-    ...(from ? { from_city: from } : {}),
-    ...(to ? { to_city: to } : {}),
+    ...placeFilter("from", from),
+    ...placeFilter("to", to),
+    ...(get("kind") === "airport" ? { kind: "airport" as const } : {}),
     // Default to today (Yandex-style) — the results screen always has a day selected.
     date: normalizeDate(get("date") ?? "today"),
     seats: num(get("seats")),
@@ -42,7 +49,9 @@ export function buildTripSearchParams(get: (k: string) => string | null): Search
     ...(get("no_smoking") === "true" ? { no_smoking: true } : {}),
     ...(get("pets") === "true" ? { pets: true } : {}),
     luggage: (get("luggage") as SearchTripsParams["luggage"]) || undefined,
-    sort: (get("sort") as SearchTripsParams["sort"]) || undefined,
+    ...(near ?? {}),
+    // nearest without a point falls back to the default order.
+    sort: get("sort") === "nearest" && !near ? undefined : (get("sort") as SearchTripsParams["sort"]) || undefined,
     limit: 20,
   };
 }

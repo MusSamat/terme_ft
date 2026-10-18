@@ -7,6 +7,7 @@ import { CalendarCheck, CalendarSearch, ChevronRight } from "lucide-react";
 import { useCalendarCounts } from "@/lib/hooks/use-calendar-counts";
 import { DatePickerModal } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils/cn";
+import { routeFromParams } from "@/lib/places";
 
 // Inline «next day» jump shown when the selected day is empty or its list ends —
 // so the user reaches the next day WITH rides without scrolling back to the
@@ -26,9 +27,10 @@ export function NextDayCta({ kind }: { kind: "trips" | "requests" }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
-  const from = sp.get("from") ?? "";
-  const to = sp.get("to") ?? "";
-  const counts = useCalendarCounts(kind, from, to, Boolean(from && to));
+  const route = routeFromParams((k) => sp.get(k));
+  const from = route.from?.id ?? null;
+  const to = route.to?.id ?? null;
+  const counts = useCalendarCounts(kind, from, to);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   // Only when the per-day counts are loaded AND non-empty — an all-empty map

@@ -18,6 +18,7 @@ import { FeedHeader } from "@/components/features/search/feed-header";
 import { FeedEntryHints } from "@/components/features/search/feed-entry-hints";
 import { NextDayCta } from "@/components/features/search/next-day-cta";
 import { addRecentRoute } from "@/lib/recent-routes";
+import { placeFilter, routeFromParams, setRouteParams, type RoutePlace } from "@/lib/places";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardSkeletonList } from "@/components/ui/card-skeleton";
 import { QueryError } from "@/components/ui/query-error";
@@ -93,16 +94,20 @@ export function RequestsFeed() {
   // No explicit date → default to today; «any» sentinel = no date filter.
   const rawDate =
     params.get("date") ?? new Date(Date.now() + 6 * 3_600_000).toISOString().slice(0, 10);
+  const route = routeFromParams((k) => params.get(k));
+  const [nearLat, nearLng] = (params.get("near") ?? "").split(",").map(Number);
+  const nearest = params.get("sort") === "nearest" && Number.isFinite(nearLat) && Number.isFinite(nearLng);
   const filters = {
-    from_city: params.get("from") ?? undefined,
-    to_city: params.get("to") ?? undefined,
+    ...placeFilter("from", route.from),
+    ...placeFilter("to", route.to),
     date: /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? `${rawDate}T00:00:00+06:00` : undefined,
     seats: params.get("seats") ? Number(params.get("seats")) : undefined,
+    ...(nearest ? { sort: "nearest" as const, near_lat: nearLat, near_lng: nearLng } : {}),
   };
 
   // Route-first: don't fetch or show any requests until origin AND destination
   // are both set (matches the trips feed / «Межгород» flow).
-  const hasRoute = Boolean(filters.from_city && filters.to_city);
+  const hasRoute = Boolean(route.from && route.to);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, error, refetch } = useInfiniteQuery({
     queryKey: ["passenger-requests", filters],
@@ -153,11 +158,10 @@ export function RequestsFeed() {
   // so only the body swaps to results while the header stays put.
   const router = useRouter();
   const pathname = usePathname();
-  const pickRoute = (f: string, tt: string) => {
+  const pickRoute = (f: RoutePlace, tt: RoutePlace) => {
     addRecentRoute(f, tt);
     const next = new URLSearchParams(params);
-    next.set("from", f);
-    next.set("to", tt);
+    setRouteParams(next, f, tt);
     next.delete("cursor");
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };

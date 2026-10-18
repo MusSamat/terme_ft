@@ -16,6 +16,7 @@ import { QueryError } from "@/components/ui/query-error";
 import { ChatSidebar } from "./_components/chat-sidebar";
 import { ChatHeader } from "./_components/chat-header";
 import { ChatMessages } from "./_components/chat-messages";
+import { useRouteNames } from "@/lib/hooks/use-route-names";
 
 interface PendingMessage extends ChatMessage {
   pending?: boolean;
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export function ChatPanel({ bookingId }: Props) {
+  const rn = useRouteNames();
   const me = useAuth((s) => s.user);
   const [messages, setMessages] = useState<PendingMessage[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -287,7 +289,7 @@ export function ChatPanel({ bookingId }: Props) {
           otherAvatarUrl={otherAvatarUrl}
           otherPhone={otherPhone}
           bookingStatus={booking?.status}
-          tripRoute={rawBooking?.trip ? `${rawBooking.trip.originCity} → ${rawBooking.trip.destinationCity}` : undefined}
+          tripRoute={rawBooking?.trip ? `${rn(rawBooking.trip).from} → ${rn(rawBooking.trip).to}` : undefined}
           tripId={tripId}
           connected={chat.connected}
           typingUserId={typingUserId}

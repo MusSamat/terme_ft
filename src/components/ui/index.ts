@@ -2,7 +2,6 @@ export { BackButton } from "./back-button";
 export { LocaleSwitcher } from "./locale-switcher";
 export { Container } from "./container";
 export { CityAutocomplete } from "./city-autocomplete";
-export { RouteCitiesPicker } from "./route-cities-picker";
 export { RouteStops } from "./route-stops";
 export { DatePicker, DatePickerModal, type DatePickerProps, type DatePickerModalProps } from "./date-picker";
 export { TimeSelect24 } from "./time-select-24";

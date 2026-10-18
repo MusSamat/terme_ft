@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CarFront, ChevronRight, Clock, User, X } from "lucide-react";
 import { getRecentRoutes, clearRecentRoutes, type RecentRoute } from "@/lib/recent-routes";
@@ -11,6 +11,10 @@ import { listMyTrips } from "@/lib/api/my-trips";
 import { listMyPassengerRequests } from "@/lib/api/passenger-requests";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
+import { placeName, type RoutePlace } from "@/lib/places";
+
+// Popular routes carry ids + RU names (no KG names from the API yet).
+const routeEnd = (id: number, name: string): RoutePlace => ({ id, nameRu: name, nameKg: name });
 
 // Home entry body (redesign): three horizontal rails shown before a route is
 // picked — «Куда едем» (top destinations), «Популярные маршруты» (from→to with
@@ -31,8 +35,17 @@ function Rail({ title, action, children }: { title: string; action?: React.React
   );
 }
 
-export function FeedEntryHints({ onPick, onDestination, tab = "trips" }: { onPick: (from: string, to: string) => void; onDestination?: (to: string) => void; tab?: Tab }) {
+export function FeedEntryHints({
+  onPick,
+  onDestination,
+  tab = "trips",
+}: {
+  onPick: (from: RoutePlace, to: RoutePlace) => void;
+  onDestination?: (to: RoutePlace) => void;
+  tab?: Tab;
+}) {
   const t = useTranslations("feed");
+  const locale = useLocale();
   const grape = tab === "requests";
   const [recent, setRecent] = useState<RecentRoute[]>([]);
   useEffect(() => setRecent(getRecentRoutes()), []);
@@ -99,7 +112,7 @@ export function FeedEntryHints({ onPick, onDestination, tab = "trips" }: { onPic
             <button
               key={`p-${r.from}-${r.to}`}
               type="button"
-              onClick={() => onPick(r.from, r.to)}
+              onClick={() => onPick(routeEnd(r.fromId, r.from), routeEnd(r.toId, r.to))}
               className="flex shrink-0 flex-col gap-1.5 rounded-2xl bg-white px-3.5 py-3 text-left shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
             >
               <span className="flex items-center gap-1.5 whitespace-nowrap text-[13px] font-900 text-ink-900 dark:text-white">
@@ -160,15 +173,15 @@ export function FeedEntryHints({ onPick, onDestination, tab = "trips" }: { onPic
         >
           {recent.map((r, i) => (
             <button
-              key={`r-${r.from}-${r.to}-${i}`}
+              key={`r-${r.from.id ?? r.from.nameRu}-${r.to.id ?? r.to.nameRu}-${i}`}
               type="button"
               onClick={() => onPick(r.from, r.to)}
               className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl bg-ink-50 px-3.5 py-2.5 text-[12.5px] font-800 text-ink-800 transition-colors hover:bg-ink-100 dark:bg-ink-800/60 dark:text-ink-100 dark:hover:bg-ink-800"
             >
               <Clock className="h-3.5 w-3.5 shrink-0 text-ink-400" aria-hidden="true" />
-              {r.from}
+              {placeName(r.from, locale)}
               <span className="text-ink-400">→</span>
-              {r.to}
+              {placeName(r.to, locale)}
             </button>
           ))}
         </Rail>
@@ -180,7 +193,11 @@ export function FeedEntryHints({ onPick, onDestination, tab = "trips" }: { onPic
             <button
               key={`d-${r.to}`}
               type="button"
-              onClick={() => (onDestination ? onDestination(r.to) : onPick(r.from, r.to))}
+              onClick={() =>
+                onDestination
+                  ? onDestination(routeEnd(r.toId, r.to))
+                  : onPick(routeEnd(r.fromId, r.from), routeEnd(r.toId, r.to))
+              }
               className="flex shrink-0 items-center gap-2.5 rounded-2xl bg-white px-3.5 py-3 text-left shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
             >
               <div className="min-w-0">
