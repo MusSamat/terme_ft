@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { searchTrips } from "@/lib/api/trips";
 import { buildTripSearchParams } from "@/lib/trip-search-params";
+import { routeFromParams } from "@/lib/places";
 import { SearchLayout } from "@/components/features/search/search-layout";
 
 export const revalidate = 0;
@@ -23,7 +24,11 @@ function paramsFromSearch(sp: Props["searchParams"]) {
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const t = await getTranslations("trips_meta");
   const params = paramsFromSearch(searchParams);
-  if (!params.from_city || !params.to_city) {
+  // Id-based URLs carry names in from/to (from_city only on legacy links).
+  const route = routeFromParams((k) => str(searchParams[k]) ?? null);
+  const from = route.from?.nameRu;
+  const to = route.to?.nameRu;
+  if (!from || !to) {
     return {
       title: t("all_trips"),
       description: t("all_trips_desc"),
@@ -31,12 +36,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   }
   const hasDate = params.date ? "yes" : "no";
   const date = params.date ?? "";
-  const title = t("route_title", { from: params.from_city, to: params.to_city, hasDate, date });
+  const title = t("route_title", { from, to, hasDate, date });
   return {
     title,
-    description: t("route_desc", { from: params.from_city, to: params.to_city, hasDate, date }),
+    description: t("route_desc", { from, to, hasDate, date }),
     alternates: {
-      canonical: `/trips?from=${encodeURIComponent(params.from_city)}&to=${encodeURIComponent(params.to_city)}`,
+      canonical: `/trips?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
     },
   };
 }
@@ -48,11 +53,13 @@ export default async function TripsPage({ searchParams }: Props) {
   // entry hints (recent/popular) until both cities are set — no separate gate
   // screen. SSR-seed the first page only when a route is present.
   let initial;
-  if (params.from_city && params.to_city) {
+  if ((params.from_id || params.from_city) && (params.to_id || params.to_city)) {
     try {
       initial = await searchTrips(params);
     } catch {
-      initial = { data: [], nextCursor: null };
+      // No seed: the client query refetches and shows a real error state
+      // instead of an «empty» result.
+      initial = undefined;
     }
   }
 

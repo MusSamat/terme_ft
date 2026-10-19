@@ -85,6 +85,7 @@ const FeedRequestRow = memo(function FeedRequestRow({
 export function RequestsFeed() {
   const params = useSearchParams();
   const t = useTranslations("requests");
+  const tFeed = useTranslations("feed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Arrive with ?filters=1 (from the hub's filter icon) → open the sheet.
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(() => params.get("filters") === "1");
@@ -101,7 +102,8 @@ export function RequestsFeed() {
     ...placeFilter("from", route.from),
     ...placeFilter("to", route.to),
     date: /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? `${rawDate}T00:00:00+06:00` : undefined,
-    seats: params.get("seats") ? Number(params.get("seats")) : undefined,
+    // Ignore a malformed ?seats= (NaN would 400 the whole feed).
+    seats: Number.isInteger(Number(params.get("seats"))) && Number(params.get("seats")) > 0 ? Number(params.get("seats")) : undefined,
     ...(nearest ? { sort: "nearest" as const, near_lat: nearLat, near_lng: nearLng } : {}),
   };
 
@@ -225,6 +227,7 @@ export function RequestsFeed() {
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
+            aria-label={tFeed("close")}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300"
           >
             <X className="h-4 w-4" aria-hidden />
@@ -253,6 +256,7 @@ export function RequestsFeed() {
           <button
             type="button"
             onClick={() => setMobileDetailOpen(false)}
+            aria-label={tFeed("close")}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300"
           >
             <X className="h-4 w-4" aria-hidden />

@@ -60,7 +60,21 @@ export function CityPickerField({ value, placeholder, onChange, className }: Pro
   useEffect(() => {
     if (!open) return;
     const term = q.trim();
-    if (!term) return;
+    if (!term) {
+      // Cleared field: cancel any in-flight search and bring the popular list back.
+      ++seqRef.current;
+      setLoading(false);
+      let active = true;
+      void loadPopular().then((p) => {
+        if (active) {
+          setResults(p);
+          setPopularShown(true);
+        }
+      });
+      return () => {
+        active = false;
+      };
+    }
     setLoading(true);
     setPopularShown(false);
     const seq = ++seqRef.current;

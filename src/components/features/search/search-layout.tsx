@@ -216,7 +216,8 @@ export function SearchLayout({ initial }: Props) {
             <FeedEntryHints onPick={pickRoute} tab="trips" />
           ) : isFetching && trips.length === 0 ? (
             <CardSkeletonList variant="trip" />
-          ) : trips.length === 0 ? (
+          ) : trips.length === 0 || (isError && isPlaceholderData) ? (
+            // A failed refetch must not keep showing the previous filter's trips.
             isError ? (
               <QueryError error={error} onRetry={() => void refetch()} />
             ) : (
@@ -271,6 +272,7 @@ export function SearchLayout({ initial }: Props) {
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
+            aria-label={t("close")}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-100 text-ink-500 hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300"
           >
             <X className="h-4 w-4" aria-hidden="true" />
