@@ -9,6 +9,8 @@ export interface AdminUser {
   email: string;
   name: string;
   role: "admin" | "superadmin";
+  // Set from the login response; a temp password must be replaced first.
+  mustChangePassword?: boolean;
 }
 
 interface AdminAuthState {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAdminAuth } from "@/store/admin-auth";
 import { adminChangePassword } from "@/lib/api/admin";
 import { Button } from "@/components/ui";
@@ -18,6 +19,7 @@ export default function AdminChangePasswordPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const clearSession = useAdminAuth((s) => s.clearSession);
+  const forced = useAdminAuth((s) => !!s.admin?.mustChangePassword);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -52,7 +54,9 @@ export default function AdminChangePasswordPage() {
       <div className="mb-6 text-center">
         <p className="text-[18px] font-extrabold text-ink-900">Смена пароля</p>
         <p className="mt-1 text-[13px] text-ink-500">
-          Задайте новый пароль, затем войдите с ним заново.
+          {forced
+            ? "Временный пароль нужно заменить. Затем войдите с новым паролем."
+            : "Задайте новый пароль, затем войдите с ним заново."}
         </p>
       </div>
 
@@ -100,16 +104,25 @@ export default function AdminChangePasswordPage() {
         <Button type="submit" variant="invert" size="lg" disabled={loading} className="w-full">
           {loading ? "Сохраняем…" : "Сменить пароль"}
         </Button>
-        <button
-          type="button"
-          onClick={() => {
-            clearSession();
-            router.replace("/admin/login");
-          }}
-          className="text-[13px] font-semibold text-ink-500 hover:text-ink-800"
-        >
-          Выйти
-        </button>
+        {forced ? (
+          <button
+            type="button"
+            onClick={() => {
+              clearSession();
+              router.replace("/admin/login");
+            }}
+            className="text-[13px] font-semibold text-ink-500 hover:text-ink-800"
+          >
+            Выйти
+          </button>
+        ) : (
+          <Link
+            href="/admin/dashboard"
+            className="text-center text-[13px] font-semibold text-ink-500 hover:text-ink-800"
+          >
+            Вернуться в панель
+          </Link>
+        )}
       </form>
     </div>
   );

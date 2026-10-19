@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
       } else if (code === "VALIDATION_ERROR") {
         setError("Проверьте формат: email и пароль не короче 8 символов");
       } else if (code === "RATE_LIMITED") {
-        setError("Слишком много попыток — подождите минуту");
+        setError("Слишком много попыток — вход временно заблокирован, попробуйте через 15 минут");
       } else {
         setError(`Ошибка входа. Попробуйте снова${reason ? ` (${reason})` : ""}.`);
       }

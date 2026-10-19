@@ -42,6 +42,7 @@ adminApi.interceptors.response.use(
     const code = (error.response?.data as { error?: { code?: string } })?.error?.code;
     const isRefreshCall = original?.url?.includes("/auth/admin/refresh");
     const isChangePasswordCall = original?.url?.includes("/auth/admin/change-password");
+    const isLoginCall = original?.url?.includes("/auth/admin/login");
     const reason = (error.response?.data as { error?: { details?: { reason?: string } } })?.error?.details?.reason;
 
     if (
@@ -72,8 +73,9 @@ adminApi.interceptors.response.use(
       }
     }
 
-    // A wrong current password is a 401 too — the page shows it, no logout.
-    if (status === 401 && !isChangePasswordCall && typeof window !== "undefined") {
+    // Wrong credentials / TOTP on login and a wrong current password are 401s
+    // too — the page shows them inline; reloading would drop the TOTP step.
+    if (status === 401 && !isChangePasswordCall && !isLoginCall && typeof window !== "undefined") {
       useAdminAuth.getState().clearSession();
       window.location.assign("/admin/login");
     }
@@ -586,7 +588,7 @@ export interface AdminTripItem {
 }
 
 export interface AdminTripDetail extends AdminTripItem {
-  originAddress: string;
+  originAddress: string | null;
   comment: string | null;
   driverProfile: {
     verificationStatus: string;
