@@ -1,4 +1,4 @@
-import { api, setAccessToken, clearSessionHint } from "./client";
+import { api, setAccessToken, setTokens, clearSessionHint } from "./client";
 import type { AuthResult, CheckPhoneResult, SelfUser } from "./types";
 
 // Web sign-in flows (backend /auth):
@@ -88,6 +88,13 @@ export async function updateProfile(patch: {
 }
 
 // Change an existing password; 409 password_not_set → use the WhatsApp reset.
+// Every session is revoked and this tab gets a fresh pair (refresh → HttpOnly
+// cookie via channel=web) — keep the new access token or the tab signs out.
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
-  await api.patch("/users/me/password", { currentPassword, newPassword });
+  const { data } = await api.patch<AuthResult>("/users/me/password", {
+    currentPassword,
+    newPassword,
+    channel: "web",
+  });
+  if (data.accessToken) setTokens({ accessToken: data.accessToken });
 }

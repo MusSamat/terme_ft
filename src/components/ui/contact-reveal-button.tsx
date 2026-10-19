@@ -75,13 +75,15 @@ export function ContactRevealButton({ target, id, className, variant = "full" }:
     onError: (e) => {
       const err = extractError(e) as { code?: string; details?: { reason?: string } };
       const msg =
-        err.code === "RATE_LIMITED"
+        err.code === "CONTACT_LIMIT"
           ? t("limit_reached")
-          : err.details?.reason === "no_phone"
-            ? t("no_phone")
-            : err.code === "TRIP_NOT_ACTIVE" || err.code === "CONFLICT" || err.code === "NOT_FOUND"
-              ? t("not_active")
-              : t("error");
+          : err.code === "RATE_LIMITED"
+            ? t("rate_limited")
+            : err.details?.reason === "no_phone"
+              ? t("no_phone")
+              : err.code === "TRIP_NOT_ACTIVE" || err.code === "CONFLICT" || err.code === "NOT_FOUND"
+                ? t("not_active")
+                : t("error");
       if (variant === "icon") toastError(msg);
       else setError(msg);
     },
