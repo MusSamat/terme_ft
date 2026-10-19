@@ -46,7 +46,9 @@ interface AuthState {
 export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   status: "idle",
-  activeMode: readGuestMode(),
+  // Same on server and client (no hydration mismatch); the guest's stored mode
+  // is applied once AuthBootstrap resolves the status to "anonymous".
+  activeMode: "passenger",
   setStatus: (status) => set({ status, ...(status === "anonymous" ? { activeMode: readGuestMode() } : {}) }),
   setActiveMode: (mode) => {
     const { user, activeMode: prev } = get();

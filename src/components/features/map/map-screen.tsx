@@ -87,7 +87,7 @@ export function MapScreen() {
   const [selected, setSelected] = useState<MapItem | null>(null);
   useEffect(() => setSelected(null), [kind, airport, date, to?.id]);
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
   const markers = useMemo(
     () =>
       items.map((it) => ({

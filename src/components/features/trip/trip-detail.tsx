@@ -22,7 +22,6 @@ import {
   Quote,
   X,
 } from "lucide-react";
-import { useUiRole } from "@/lib/hooks/use-role-colors";
 import { useAuth } from "@/store/auth";
 import { listMyBookings } from "@/lib/api/bookings";
 import { useRecordView } from "@/lib/hooks/use-record-view";
@@ -278,7 +277,6 @@ function DetailCta({
 export function TripDetailView({ trip, variant = "page", autoOpenBook = false, onClose }: Props) {
   const rn = useRouteNames();
   const router = useRouter();
-  const role = useUiRole();
   const model = useDetailModel(trip);
   const { t, driver } = model;
   const tripId = trip.id ?? "";
@@ -321,7 +319,8 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
     saveDeferredAction({ action: "book_trip", trip_id: tripId, seats: 1 });
     router.push("/auth/login");
   };
-  const showMessage = role !== "guest" && role !== "driver";
+  // Ownership, not the driver/passenger mode, decides the listing actions.
+  const showMessage = authed && !isOwner;
 
   const price = trip.pricePerSeat ?? 0;
 

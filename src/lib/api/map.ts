@@ -33,7 +33,8 @@ export async function getMapListings(q: MapQuery): Promise<MapListingsResult> {
     params: {
       kind: q.kind,
       bbox: [west, south, east, north].map((n) => n.toFixed(4)).join(","),
-      zoom: Math.round(q.zoom),
+      // The API accepts zoom 3..20; the map itself can zoom out further.
+      zoom: Math.min(20, Math.max(3, Math.round(q.zoom))),
       ...(q.toId ? { to_id: q.toId } : {}),
       ...(q.ride ? { ride: q.ride } : {}),
       ...(q.date ? { date: q.date } : {}),

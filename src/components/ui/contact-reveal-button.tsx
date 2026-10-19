@@ -33,7 +33,13 @@ function readCached(target: string, id: string): RevealedContact | null {
 
 function act(action: Action, phone: string) {
   if (action === "call") window.location.href = `tel:${phone}`;
-  else window.open(whatsappUrl(phone), "_blank", "noopener,noreferrer");
+  else {
+    // After the async reveal the tap's user activation may be gone and Safari
+    // blocks the popup — fall back to opening WhatsApp in this tab.
+    const w = window.open(whatsappUrl(phone), "_blank");
+    if (w) w.opener = null;
+    else window.location.href = whatsappUrl(phone);
+  }
 }
 
 interface Props {

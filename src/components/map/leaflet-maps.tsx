@@ -49,10 +49,14 @@ export interface MapPoint {
 // ─── Route map (trip / request detail) ─────────────────────────────────
 function FitBounds({ points }: { points: LatLngTuple[] }) {
   const map = useMap();
+  // Refit only when the coordinates change — not on every parent re-render
+  // (refetches would otherwise snap the map back while the user pans).
+  const key = points.map((p) => p.join(",")).join(";");
   useEffect(() => {
     if (points.length === 1) map.setView(points[0]!, 13);
     else if (points.length > 1) map.fitBounds(L.latLngBounds(points), { padding: [36, 36] });
-  }, [map, points]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, key]);
   return null;
 }
 
