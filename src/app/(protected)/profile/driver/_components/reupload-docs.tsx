@@ -65,7 +65,12 @@ export function ReuploadDocs({ requestedDocs, onDone }: {
       const compressed = await compressImage(file);
       mutate({ category: activeDoc, file: compressed });
     } catch (err) {
-      setError(err instanceof ImageValidationError ? err.message : t("doc_error_generic"));
+      // err.message is a raw reason code («too_small») — never show it as-is.
+      setError(
+        err instanceof ImageValidationError && err.reason === "too_small"
+          ? t("photo_too_small")
+          : t("doc_error_generic"),
+      );
     } finally {
       setCompressing(false);
     }

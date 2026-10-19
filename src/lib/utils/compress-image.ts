@@ -69,7 +69,11 @@ export async function compressImage(file: File, opts: CompressOptions = {}): Pro
   }
 
   const img = await loadImage(file);
-  if (img.width < minWidth || img.height < minHeight) {
+  // Orientation-agnostic like the backend (lib/uploads.ts): 800×600 must also
+  // accept a 600×800 portrait shot — compare sorted dimensions.
+  const [dimMin, dimMax] = [Math.min(img.width, img.height), Math.max(img.width, img.height)];
+  const [reqMin, reqMax] = [Math.min(minWidth, minHeight), Math.max(minWidth, minHeight)];
+  if (dimMax < reqMax || dimMin < reqMin) {
     throw new ImageValidationError("too_small");
   }
 

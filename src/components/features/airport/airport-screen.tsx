@@ -14,6 +14,7 @@ import { TripCard } from "@/components/ui/trip-card";
 import { RequestCard } from "@/components/features/passenger-requests/request-card";
 import { CardSkeletonList } from "@/components/ui/card-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { QueryError } from "@/components/ui/query-error";
 import { placeName, setRouteParams, toRoutePlace, type RoutePlace } from "@/lib/places";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
@@ -29,11 +30,12 @@ export function AirportScreen() {
   const locale = useLocale();
   const mode = useAuth((s) => s.activeMode);
 
-  const { data: airports = [] } = useQuery({
+  const airportsQuery = useQuery({
     queryKey: ["airports"],
     queryFn: getAirports,
     staleTime: 60 * 60_000,
   });
+  const airports = useMemo(() => airportsQuery.data ?? [], [airportsQuery.data]);
   const [airportId, setAirportId] = useState<number | null>(null);
   const airport: Airport | null = airports.find((a) => a.id === airportId) ?? airports[0] ?? null;
   const [toAirport, setToAirport] = useState(true);
@@ -207,8 +209,12 @@ export function AirportScreen() {
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-2.5">
-        {!ready ? null : list.isLoading ? (
+        {airportsQuery.isError ? (
+          <QueryError error={airportsQuery.error} onRetry={() => void airportsQuery.refetch()} />
+        ) : !ready ? null : list.isLoading ? (
           <CardSkeletonList variant={tab === "trips" ? "trip" : "request"} />
+        ) : list.isError ? (
+          <QueryError error={list.error} onRetry={() => void list.refetch()} />
         ) : rows.length === 0 ? (
           <EmptyState
             icon="route"

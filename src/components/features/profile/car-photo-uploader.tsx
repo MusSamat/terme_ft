@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Car } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -45,6 +45,10 @@ export function CarPhotoUploader() {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  // Release local blob previews when replaced or on unmount.
+  useEffect(() => () => {
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+  }, [preview]);
 
   const { data: status, isLoading } = useQuery({
     queryKey: ["driver-status"],
@@ -58,7 +62,7 @@ export function CarPhotoUploader() {
       return uploadCarPhoto(compressed);
     },
     onSuccess: (result) => {
-      setPreview(result.carPhotoUrl);
+      setPreview(normalizeMediaUrl(result.carPhotoUrl));
       void queryClient.invalidateQueries({ queryKey: ["driver-status"] });
     },
     onError: () => {

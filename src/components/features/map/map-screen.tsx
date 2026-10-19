@@ -25,6 +25,7 @@ const ymdKg = (offset = 0) =>
 // tap a bubble to zoom in, tap a marker for the listing.
 export function MapScreen() {
   const t = useTranslations("map");
+  const tErr = useTranslations("errors");
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
@@ -68,7 +69,7 @@ export function MapScreen() {
     }
   };
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, isError, refetch } = useQuery({
     queryKey: ["map", kind, airport, date, to?.id, debounced],
     queryFn: () =>
       getMapListings({
@@ -178,9 +179,20 @@ export function MapScreen() {
       </div>
 
       <div className="absolute bottom-[calc(108px+env(safe-area-inset-bottom))] right-3 z-[500] flex flex-col items-end gap-2 md:bottom-6">
-        <span className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-ink-700 shadow-card dark:bg-ink-900/95 dark:text-ink-200">
-          {isFetching ? t("loading") : t("count", { n: total })}
-        </span>
+        {isError && !isFetching ? (
+          // A failed load is not «0 on the map» — say so and offer a retry.
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-coral-600 shadow-card dark:bg-ink-900/95"
+          >
+            {tErr("page_title")} · {tErr("retry")}
+          </button>
+        ) : (
+          <span className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-ink-700 shadow-card dark:bg-ink-900/95 dark:text-ink-200">
+            {isFetching ? t("loading") : t("count", { n: total })}
+          </span>
+        )}
         <button
           type="button"
           onClick={() => void locate()}

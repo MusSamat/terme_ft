@@ -16,6 +16,9 @@ import { useTranslations } from "next-intl";
 import { updateProfile } from "@/lib/api/auth";
 import { useAuth } from "@/store/auth";
 import { Button } from "@/components/ui";
+import { extractError } from "@/lib/api/client";
+import { useFriendlyError } from "@/lib/hooks/use-api-error";
+import { toastError } from "@/components/layout/quick-toast";
 import { POLICY_LAST_UPDATED, needsTermsConsent } from "@/lib/policy";
 
 const DISMISS_KEY = `terme_terms_later:${POLICY_LAST_UPDATED.toISOString().slice(0, 10)}`;
@@ -25,6 +28,7 @@ export function TermsGate() {
   const user = useAuth((s) => s.user);
   const status = useAuth((s) => s.status);
   const updateUser = useAuth((s) => s.updateUser);
+  const fe = useFriendlyError();
   const [dismissed, setDismissed] = useState(() => {
     try {
       return typeof window !== "undefined" && localStorage.getItem(DISMISS_KEY) === "1";
@@ -36,6 +40,7 @@ export function TermsGate() {
   const { mutate: accept, isPending } = useMutation({
     mutationFn: () => updateProfile({ termsAccepted: true }),
     onSuccess: (updated) => updateUser({ termsAcceptedAt: updated.termsAcceptedAt }),
+    onError: (e) => toastError(fe(extractError(e))),
   });
 
   const needsAcceptance =

@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { changePassword } from "@/lib/api/auth";
 import { extractError } from "@/lib/api/client";
+import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { useAuth } from "@/store/auth";
 import { Button, Label, PasswordInput, Spinner } from "@/components/ui";
 
@@ -19,6 +20,7 @@ type FormData = {
 
 export function PasswordForm() {
   const t = useTranslations("password_form");
+  const fe = useFriendlyError();
   const phone = useAuth((s) => s.user?.phone ?? "");
   // Accounts created in the mobile app / Telegram bot have no password yet:
   // the first one is set with a WhatsApp code (forgot-password flow).
@@ -51,7 +53,13 @@ export function PasswordForm() {
   });
 
   const reason = error ? extractError(error).details?.reason : undefined;
-  const serverError = error ? t("wrong_current") : null;
+  // Only a real mismatch reads as «wrong current password»; rate limits, network
+  // and new-password validation get their own message.
+  const serverError = error
+    ? reason === "current_password_mismatch"
+      ? t("wrong_current")
+      : fe(extractError(error))
+    : null;
   const setViaWhatsapp = `/auth/login?step=forgot&phone=${encodeURIComponent(phone)}`;
 
   if (!hasPassword || reason === "password_not_set") {

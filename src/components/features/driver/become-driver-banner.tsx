@@ -27,7 +27,12 @@ export function BecomeDriverBanner() {
       setVisible(false);
       return;
     }
-    const raw = localStorage.getItem(KEY);
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(KEY);
+    } catch {
+      /* storage blocked */
+    }
     const dismissedAt = raw ? Number(raw) : 0;
     setVisible(!dismissedAt || Date.now() - dismissedAt > SEVEN_DAYS);
   }, [authed, isDriver]);
@@ -35,7 +40,11 @@ export function BecomeDriverBanner() {
   if (!visible) return null;
 
   const dismiss = () => {
-    localStorage.setItem(KEY, String(Date.now()));
+    try {
+      localStorage.setItem(KEY, String(Date.now()));
+    } catch {
+      /* storage blocked — hide for this visit only */
+    }
     setVisible(false);
   };
 

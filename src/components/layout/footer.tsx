@@ -45,7 +45,8 @@ export function Footer() {
       title: t("support"),
       items: [
         { href: "https://t.me/terme_support", label: t("telegram_support"), external: true },
-        { href: "/complaint", label: t("complaint") },
+        // /complaint needs a target user — it is reached from a profile instead.
+        { href: "/faq", label: t("faq") },
       ],
     },
   ];

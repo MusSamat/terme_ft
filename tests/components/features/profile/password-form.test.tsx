@@ -10,6 +10,7 @@ vi.mock("next-intl", async () => {
   >;
   return {
     useTranslations: (ns: string) => (key: string) => messages[ns]?.[key] ?? `${ns}.${key}`,
+    useMessages: () => messages,
   };
 });
 

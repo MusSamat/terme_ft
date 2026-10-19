@@ -13,19 +13,20 @@ import { Button, Input, Label, Spinner } from "@/components/ui";
 // Language is NOT part of this form: the single источник — LocaleSwitcher
 // (settings tab / footer), which also syncs user.language to the backend.
 // A second dropdown here used to silently overwrite the switcher's choice.
-const schema = z.object({
-  name: z.string().min(2).max(50),
-  bio: z.string().max(300).optional(),
-});
-type FormData = z.infer<typeof schema>;
+type FormData = { name: string; bio?: string };
 
 export function ProfileForm() {
   const t = useTranslations("profile_forms");
   const tToasts = useTranslations("toasts");
   const user = useAuth((s) => s.user);
   const updateUser = useAuth((s) => s.updateUser);
+  // Localized messages; the name is trimmed like the backend does.
+  const schema = z.object({
+    name: z.string().trim().min(2, t("name_min")).max(50, t("name_max")),
+    bio: z.string().max(300).optional(),
+  });
 
-  const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
+  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: user?.name ?? "",
@@ -38,6 +39,8 @@ export function ProfileForm() {
     onSuccess: (updated) => {
       updateUser({ name: updated.name, ...( { bio: (updated as { bio?: string | null }).bio } as object ) });
       toastSuccess(tToasts("profile_saved"));
+      // New baseline → the save button disables again until the next edit.
+      reset({ name: updated.name ?? "", bio: (updated as { bio?: string | null }).bio ?? "" });
     },
   });
 

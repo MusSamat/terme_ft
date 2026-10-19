@@ -22,6 +22,14 @@ const CARD_HEAD = "mb-4 flex items-center gap-2 text-[15px] font-900 text-ink-90
 
 export function SettingsTab({ isDriver, exportMutation, logoutMutation, logoutAllMutation }: Props) {
   const t = useTranslations("profile");
+  const tFooter = useTranslations("footer");
+  // The footer is desktop-only — mobile reaches the legal/help pages from here.
+  const INFO_LINKS = [
+    { href: "/faq", label: tFooter("faq") },
+    { href: "/about", label: tFooter("about") },
+    { href: "/privacy", label: tFooter("privacy") },
+    { href: "/terms", label: tFooter("terms") },
+  ];
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -98,6 +106,14 @@ export function SettingsTab({ isDriver, exportMutation, logoutMutation, logoutAl
           </Link>
         </div>
       </div>
+
+      <nav aria-label={tFooter("company")} className="flex flex-wrap justify-center gap-x-4 gap-y-1 px-2 pb-2 md:hidden">
+        {INFO_LINKS.map((l) => (
+          <Link key={l.href} href={l.href} className="py-2 text-[13px] font-700 text-ink-400 hover:text-ink-600 dark:hover:text-ink-200">
+            {l.label}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

@@ -121,7 +121,8 @@ export default function ProfilePage() {
   const tabLabel: Record<Tab, string> = {
     about: t("tab_about"),
     cars: t("tab_cars"),
-    reviews: ratingsData ? t("tab_reviews_count", { n: ratingsData.data.length }) : t("tab_reviews"),
+    // Total from the profile — the ratings page holds at most 20 rows.
+    reviews: user?.ratingCount != null ? t("tab_reviews_count", { n: user.ratingCount }) : ratingsData ? t("tab_reviews_count", { n: ratingsData.data.length }) : t("tab_reviews"),
     history: t("tab_history"),
     settings: t("tab_settings"),
   };

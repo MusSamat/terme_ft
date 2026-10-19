@@ -18,10 +18,13 @@ export function VerificationCard({ variant = "card" }: { variant?: "card" | "inl
     staleTime: 60_000,
   });
   const verified = data?.status === "verified";
-  const pending = data?.status === "pending" || data?.status === "docs_requested";
+  // docs_requested is «in review» too, but the user must act — keep the CTA.
+  const docsRequested = data?.status === "docs_requested";
+  const pending = data?.status === "pending" || docsRequested;
+  const locked = data?.status === "suspended" || data?.status === "blocked";
 
   if (variant === "inline") {
-    if (verified || pending) return null;
+    if (verified || locked || (pending && !docsRequested)) return null;
     return (
       <Link
         href="/profile/driver"
@@ -49,7 +52,7 @@ export function VerificationCard({ variant = "card" }: { variant?: "card" | "inl
           {verified ? t("verif_done_text") : pending ? t("verif_pending_text") : t("verif_text")}
         </span>
       </span>
-      {!verified && !pending && (
+      {!verified && !locked && (!pending || docsRequested) && (
         <Link
           href="/profile/driver"
           className="shrink-0 rounded-full bg-brand-600 px-4 py-2 text-[14px] font-800 text-white transition-colors hover:bg-brand-700"

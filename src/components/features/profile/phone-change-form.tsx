@@ -9,12 +9,15 @@ import { toastSuccess } from "@/components/layout/quick-toast";
 import { Button, Label, OtpInput, PhoneInput, Spinner } from "@/components/ui";
 import type { OtpInputHandle } from "@/components/ui/otp-input";
 import { useCountdown } from "@/lib/hooks/use-countdown";
+import { extractError } from "@/lib/api/client";
+import { useFriendlyError } from "@/lib/hooks/use-api-error";
 
 type Step = "idle" | "otp";
 
 export function PhoneChangeForm() {
   const t = useTranslations("profile_forms");
   const tToasts = useTranslations("toasts");
+  const fe = useFriendlyError();
   const updateUser = useAuth((s) => s.updateUser);
   const [step, setStep] = useState<Step>("idle");
   const [newPhone, setNewPhone] = useState("");
@@ -62,8 +65,11 @@ export function PhoneChangeForm() {
             className="mt-2"
           />
         </div>
-        {confirmMutation.error && (
-          <p className="text-caption text-coral-500">{t("otp_invalid")}</p>
+        {/* Real reason: wrong / expired code, too many attempts, number taken… */}
+        {(confirmMutation.error || sendMutation.error) && (
+          <p className="text-caption text-coral-500">
+            {fe(extractError(confirmMutation.error ?? sendMutation.error))}
+          </p>
         )}
         <div className="flex items-center gap-3">
           <Button
@@ -78,10 +84,7 @@ export function PhoneChangeForm() {
             variant="ghost"
             size="md"
             disabled={counting}
-            onClick={() => {
-              sendMutation.mutate();
-              startCountdown(60);
-            }}
+            onClick={() => sendMutation.mutate()}
           >
             {counting ? t("resend_in", { seconds: remaining }) : t("resend")}
           </Button>
@@ -105,7 +108,7 @@ export function PhoneChangeForm() {
       </div>
       <p className="text-[13px] font-600 text-ink-500">{t("whatsapp_note")}</p>
       {sendMutation.error && (
-        <p className="text-caption text-coral-500">{t("send_error")}</p>
+        <p className="text-caption text-coral-500">{fe(extractError(sendMutation.error))}</p>
       )}
       <Button
         variant="primary"

@@ -18,6 +18,7 @@ import { api, extractError } from "@/lib/api/client";
 import { getDriverStatus } from "@/lib/api/profile";
 import { listMyCars } from "@/lib/api/cars";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
+import { useAuth } from "@/store/auth";
 import { compressImage, ImageValidationError } from "@/lib/utils/compress-image";
 import { CarForm } from "@/components/features/cars/car-form";
 import { Button, NotifCard, Spinner } from "@/components/ui";
@@ -43,6 +44,7 @@ export default function DriverVerifyPage() {
   const t = useTranslations("driver_reg");
   const fe = useFriendlyError();
   const router = useRouter();
+  const setActiveMode = useAuth((st) => st.setActiveMode);
   const queryClient = useQueryClient();
 
   const { data: driverStatus, isLoading: statusLoading } = useQuery({
@@ -223,7 +225,10 @@ export default function DriverVerifyPage() {
           variant="primary"
           size="md"
           className="mt-6"
-          onClick={() => router.push("/")}
+          onClick={() => {
+            setActiveMode("driver");
+            router.push("/");
+          }}
         >
           {t("switch_to_driver")}
         </Button>
@@ -237,6 +242,18 @@ export default function DriverVerifyPage() {
     return <ReuploadDocs requestedDocs={driverStatus.requestedDocs} onDone={() => {
       void queryClient.invalidateQueries({ queryKey: ["driver-status"] });
     }} />;
+  }
+  // Suspended / blocked by moderation: no fresh wizard — explain and stop.
+  if (driverStatus && (driverStatus.status === "suspended" || driverStatus.status === "blocked")) {
+    return (
+      <div className="mx-auto max-w-[480px] p-6 pt-16 text-center">
+        <h1 className="text-[20px] font-900 text-ink-900 dark:text-white">{t("suspended_title")}</h1>
+        <p className="mt-2 text-[15px] font-600 text-ink-500">{t("suspended_desc")}</p>
+        <Button variant="ghost" size="md" className="mt-6" onClick={() => router.push("/profile")}>
+          {t("back_to_profile")}
+        </Button>
+      </div>
+    );
   }
   // rejected → show the reason banner above a fresh wizard (resubmission allowed)
 

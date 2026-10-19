@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+// global-error replaces the root layout — it must load the styles itself.
+import "./globals.css";
 
 type Locale = "ru" | "kg";
 
@@ -41,7 +43,7 @@ export default function GlobalError({
   const msg = MSGS[locale];
 
   return (
-    <html>
+    <html lang={locale}>
       <body className="flex min-h-screen flex-col items-center justify-center bg-ink-50 px-5 py-12 text-center font-sans dark:bg-ink-950">
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-danger-100 text-danger-600">
           <AlertTriangle className="h-8 w-8" aria-hidden="true" />
