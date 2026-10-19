@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/store/admin-auth";
 import { adminLogin } from "@/lib/api/admin";
@@ -18,6 +18,11 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const { setSession } = useAdminAuth();
   const router = useRouter();
+  const [changed, setChanged] = useState(false);
+
+  useEffect(() => {
+    setChanged(new URLSearchParams(window.location.search).get("changed") === "1");
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,6 +119,12 @@ export default function AdminLoginPage() {
               maxLength={6}
             />
           </div>
+        )}
+
+        {changed && !error && (
+          <p className="rounded-xl bg-ink-50 px-4 py-3 text-[13px] text-ink-700">
+            Пароль изменён — войдите с новым паролем
+          </p>
         )}
 
         {error && (

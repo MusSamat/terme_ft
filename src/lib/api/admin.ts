@@ -41,6 +41,8 @@ adminApi.interceptors.response.use(
     const status = error.response?.status;
     const code = (error.response?.data as { error?: { code?: string } })?.error?.code;
     const isRefreshCall = original?.url?.includes("/auth/admin/refresh");
+    const isChangePasswordCall = original?.url?.includes("/auth/admin/change-password");
+    const reason = (error.response?.data as { error?: { details?: { reason?: string } } })?.error?.details?.reason;
 
     if (
       status === 401 &&
@@ -70,9 +72,18 @@ adminApi.interceptors.response.use(
       }
     }
 
-    if (status === 401 && typeof window !== "undefined") {
+    // A wrong current password is a 401 too — the page shows it, no logout.
+    if (status === 401 && !isChangePasswordCall && typeof window !== "undefined") {
       useAdminAuth.getState().clearSession();
       window.location.assign("/admin/login");
+    }
+    if (
+      status === 403 &&
+      reason === "must_change_password" &&
+      typeof window !== "undefined" &&
+      window.location.pathname !== "/admin/change-password"
+    ) {
+      window.location.assign("/admin/change-password");
     }
     return Promise.reject(error);
   },

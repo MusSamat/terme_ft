@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
+  KeyRound,
 } from "lucide-react";
 
 const NAV = [
@@ -56,6 +57,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [sidebarReady, setSidebarReady] = useState(false);
 
   const isLoginPage = pathname === "/admin/login";
+  const isChangePasswordPage = pathname === "/admin/change-password";
 
   // Read collapsed preference after mount to avoid SSR mismatch
   useEffect(() => {
@@ -75,6 +77,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   if (isLoginPage) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink-100">
+        <AdminAuthBootstrap />
+        {children}
+      </div>
+    );
+  }
+
+  if (isChangePasswordPage && token) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink-100">
         <AdminAuthBootstrap />
@@ -174,6 +185,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </span>
             </div>
           )}
+          <Link
+            href="/admin/change-password"
+            title={collapsed ? "Сменить пароль" : undefined}
+            className={cn(
+              "flex w-full items-center rounded-lg px-2 py-2 text-[12px] font-semibold text-ink-400 transition-colors hover:bg-ink-800 hover:text-white",
+              collapsed ? "justify-center" : "gap-2 px-3",
+            )}
+          >
+            <KeyRound className="h-4 w-4 flex-shrink-0" />
+            {!collapsed && "Сменить пароль"}
+          </Link>
           <button
             type="button"
             title={collapsed ? "Выйти" : undefined}
