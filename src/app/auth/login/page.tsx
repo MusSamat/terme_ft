@@ -19,7 +19,7 @@ import { useTranslations } from "next-intl";
 import { LogoMark, Wordmark, PhoneInput, Spinner } from "@/components/ui";
 import { ResetStep } from "./_steps/reset-step";
 import { cn } from "@/lib/utils/cn";
-import { isValidPhone } from "@/lib/phone";
+import { isValidPhone, sanitizePhone } from "@/lib/phone";
 
 type Step = "login" | "forgot" | "reset";
 
@@ -58,7 +58,28 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement>(null);
   const newPasswordRef = useRef<HTMLInputElement>(null);
 
-  const canSubmitLogin = isValidPhone(phone) && password.length > 0;
+  const phoneRef = useRef<HTMLInputElement>(null);
+
+  // Browser autofill (Chrome) can show a saved phone/password without firing
+  // onChange until the user interacts, so React state may still be empty.
+  // Never gate the button on it — read the real field values on submit.
+  const submitLogin = () => {
+    if (loginMutation.isPending) return;
+    const p = isValidPhone(phone) ? phone : sanitizePhone(phoneRef.current?.value ?? "");
+    const pw = password || passwordRef.current?.value || "";
+    if (!isValidPhone(p)) {
+      setServerError(tl("enter_phone_first"));
+      return;
+    }
+    if (!pw) {
+      setServerError(tl("enter_password_first"));
+      passwordRef.current?.focus();
+      return;
+    }
+    if (p !== phone) setPhone(p);
+    if (pw !== password) setPassword(pw);
+    loginMutation.mutate({ phone: p, password: pw });
+  };
   // Same rule as the backend PasswordSchema: 8+ chars with at least one digit.
   const canReset =
     newPassword.length >= 8 && /\d/.test(newPassword) && newPassword === confirmPassword && resetOtp.length === 6;
@@ -106,7 +127,7 @@ export default function LoginPage() {
 
   // ── Login with password ────────────────────────────────────────────────
   const loginMutation = useMutation({
-    mutationFn: () => loginWithPassword(phone, password),
+    mutationFn: (v: { phone: string; password: string }) => loginWithPassword(v.phone, v.password),
     onSuccess: (result) => {
       setSession(result);
       goAfterAuth();
@@ -260,6 +281,7 @@ export default function LoginPage() {
             {/* Phone */}
             <div className="mb-3">
               <PhoneInput
+                ref={phoneRef}
                 value={phone}
                 onValueChange={(v) => { setPhone(v); setServerError(null); setLoginHint(null); }}
                 invalid={false}
@@ -278,7 +300,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setServerError(null); }}
-                  onKeyDown={(e) => { if (e.key === "Enter" && canSubmitLogin && !loginMutation.isPending) loginMutation.mutate(); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitLogin(); }}
                   placeholder={tl("password_placeholder")}
                   className={cn(
                     "h-12 w-full rounded-2xl border-2 bg-ink-50 px-4 pr-10 text-[16px] font-800 outline-none transition-colors dark:bg-ink-800 dark:text-white",
@@ -302,8 +324,8 @@ export default function LoginPage() {
             {/* Submit */}
             <button
               type="button"
-              disabled={!canSubmitLogin || loginMutation.isPending}
-              onClick={() => loginMutation.mutate()}
+              disabled={loginMutation.isPending}
+              onClick={submitLogin}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
             >
               {loginMutation.isPending ? <><Spinner size={16} />{tl("logging_in")}</> : tl("login_btn")}
@@ -337,13 +359,13 @@ export default function LoginPage() {
                 onValueChange={(v) => { setPhone(v); setServerError(null); }}
                 invalid={false}
                 autoFocus
-                onKeyDown={(e) => { if (e.key === "Enter" && isValidPhone(phone)) sendResetCode(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") sendResetCode(); }}
               />
             </div>
 
             <button
               type="button"
-              disabled={!isValidPhone(phone) || sendOtpMutation.isPending || resendSeconds > 0}
+              disabled={sendOtpMutation.isPending || resendSeconds > 0}
               onClick={sendResetCode}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
             >

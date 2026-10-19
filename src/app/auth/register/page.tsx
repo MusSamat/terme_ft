@@ -218,7 +218,7 @@ export default function RegisterPage() {
                     onValueChange={(v) => { setPhone(v); setServerError(null); }}
                     invalid={false}
                     autoFocus
-                    onKeyDown={(e) => { if (e.key === "Enter" && isValidPhone(phone)) handleStart(); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleStart(); }}
                   />
                 </div>
 
@@ -226,7 +226,7 @@ export default function RegisterPage() {
                     WhatsApp delivery channel is signalled by the green hint below. */}
                 <button
                   type="button"
-                  disabled={!isValidPhone(phone) || startMutation.isPending}
+                  disabled={startMutation.isPending}
                   onClick={handleStart}
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
                 >

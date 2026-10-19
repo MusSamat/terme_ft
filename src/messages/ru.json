@@ -305,7 +305,8 @@
       "hint_no_account_title": "Номер ещё не зарегистрирован",
       "hint_no_account_desc": "Зарегистрируйтесь — код придёт в WhatsApp.",
       "hint_no_password_title": "У аккаунта ещё нет пароля",
-      "hint_no_password_desc": "Аккаунт создан в мобильном приложении или Telegram-боте. Задайте пароль — код придёт в WhatsApp."
+      "hint_no_password_desc": "Аккаунт создан в мобильном приложении или Telegram-боте. Задайте пароль — код придёт в WhatsApp.",
+      "enter_password_first": "Введите пароль."
     },
     "register": {
       "title": "Регистрация",

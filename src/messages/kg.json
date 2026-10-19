@@ -305,7 +305,8 @@
       "hint_no_account_title": "Бул номер катталган эмес",
       "hint_no_account_desc": "Катталыңыз — код WhatsApp аркылуу келет.",
       "hint_no_password_title": "Аккаунтта азырынча сырсөз жок",
-      "hint_no_password_desc": "Аккаунт мобилдик колдонмодо же Telegram-ботто түзүлгөн. Сырсөз коюңуз — код WhatsAppка келет."
+      "hint_no_password_desc": "Аккаунт мобилдик колдонмодо же Telegram-ботто түзүлгөн. Сырсөз коюңуз — код WhatsAppка келет.",
+      "enter_password_first": "Сырсөздү жазыңыз."
     },
     "register": {
       "title": "Катталуу",
