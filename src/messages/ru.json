@@ -1873,7 +1873,11 @@
     "view_map": "Карта",
     "view_toggle_aria": "Вид результатов",
     "load_more": "Показать ещё",
-    "nearby_sorted_time": "По времени отправления"
+    "nearby_sorted_time": "По времени отправления",
+    "route_nearby": "Показаны ближайшие сёла",
+    "route_truncated": "Показаны первые 500 объявлений",
+    "approx_short": "центр села",
+    "approx_point": "Примерно, центр села"
   },
   "airport": {
     "title": "Аэропорт",

@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n.config";
 import { getTrip, type TripDetail } from "@/lib/api/trips";
 import { extractError } from "@/lib/api/client";
 import { formatDepartureLabel, formatPrice } from "@/lib/utils/date";
+import { routeNames } from "@/lib/places";
 import { absoluteUrl, hreflangAlternates, ogLocales } from "@/lib/seo/site";
 import { buildTripJsonLd } from "@/lib/seo/trip-jsonld";
 import { TripDetailView, type DetailTripData } from "@/components/features/trip/trip-detail";
@@ -49,12 +50,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (cancelled) return { title: t("not_found"), robots: { index: false } };
 
   const dateLabel = trip.departureAt ? formatDepartureLabel(trip.departureAt, locale) : "";
-  const title = dateLabel
-    ? `${trip.originCity} → ${trip.destinationCity}, ${dateLabel}`
-    : `${trip.originCity} → ${trip.destinationCity}`;
+  const names = routeNames(trip, locale);
+  const title = dateLabel ? `${names.from} → ${names.to}, ${dateLabel}` : `${names.from} → ${names.to}`;
   const desc = t("detail_desc", {
-    from: trip.originCity,
-    to: trip.destinationCity,
+    from: names.from,
+    to: names.to,
     seats: trip.seatsAvailable ?? 0,
     price: formatPrice(trip.pricePerSeat ?? 0),
     hasDriver: trip.driver?.name ? "yes" : "no",

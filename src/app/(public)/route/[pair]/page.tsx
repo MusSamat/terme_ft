@@ -6,6 +6,7 @@ import { ArrowRight, Users } from "lucide-react";
 import type { Locale } from "@/i18n.config";
 import { searchTrips, type TripCardItem } from "@/lib/api/trips";
 import { formatDepartureLabel, formatPrice } from "@/lib/utils/date";
+import { routeNames } from "@/lib/places";
 import {
   ROUTE_PAIRS,
   findRoutePair,
@@ -100,7 +101,7 @@ function TripRow({ trip, locale }: { trip: TripCardItem; locale: Locale }) {
       >
         <div className="min-w-0">
           <p className="truncate font-disp text-[16px] font-900 text-ink-900 dark:text-white">
-            {trip.originCity} → {trip.destinationCity}
+            {routeNames(trip, locale).from} → {routeNames(trip, locale).to}
           </p>
           <p className="mt-0.5 text-[13px] text-ink-500 dark:text-ink-400">
             {trip.departureAt ? formatDepartureLabel(trip.departureAt, locale) : ""}

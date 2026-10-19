@@ -255,6 +255,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description OTP_BUDGET_EXCEEDED — daily OTP budget (global or non-+996) spent */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -914,6 +923,437 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/admin/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin sign-out: revokes admin refresh tokens and clears the cookie
+         * @description Public (works with an expired access token). With a valid admin refresh token (terme_admin_rt cookie or body.refreshToken) it bumps the admin token epoch, revoking every admin refresh token of that admin; always clears the cookie. The client must also drop its in-memory access token.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        refreshToken?: string;
+                        /** @enum {string} */
+                        channel?: "mobile" | "web";
+                    };
+                };
+            };
+            responses: {
+                /** @description Signed out */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/admin/totp/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin TOTP enrolment step 1: new secret (stored pending, encrypted)
+         * @description Reachable while ADMIN_TOTP_REQUIRED gating is active. 409 totp_already_enabled if enrolled.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Secret + otpauth:// URI for the authenticator app (render as QR) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            secret?: string;
+                            otpauthUri?: string;
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/admin/totp/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin TOTP enrolment step 2: verify a code → TOTP enabled
+         * @description Rotates the admin token epoch (other sessions end) and returns a fresh admin token pair (web: refresh token in the terme_admin_rt cookie). 400 totp_invalid on a wrong code.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        /** @enum {string} */
+                        channel?: "mobile" | "web";
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminAuthResult"];
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/admin/totp/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable admin TOTP (self with a current code, or superadmin for another admin)
+         * @description Self: { code }. Superadmin: { adminId } (audited as disable_admin_totp). Bumps the target admin token epoch — their refresh tokens are revoked.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        adminId?: string;
+                        code?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description TOTP disabled */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout/all": {
         parameters: {
             query?: never;
@@ -1044,7 +1484,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["AdminAuthResult"];
+                    };
                 };
                 /** @description Validation */
                 400: {
@@ -1314,6 +1756,7 @@ export interface paths {
                         preferredMode?: "passenger" | "driver";
                         /** @enum {boolean} */
                         termsAccepted?: true;
+                        notificationsEnabled?: boolean;
                     };
                 };
             };
@@ -1508,7 +1951,7 @@ export interface paths {
         head?: never;
         /**
          * Change the password (current one required)
-         * @description No password yet → 409 password_not_set: use /auth/phone/reset-password. New password must be ≥8 chars and contain a digit.
+         * @description No password yet → 409 password_not_set: use /auth/phone/reset-password. New password must be ≥8 chars and contain a digit. Every session is revoked; the response carries a fresh token pair (channel=web → refresh token in the HttpOnly cookie).
          */
         patch: {
             parameters: {
@@ -1523,16 +1966,20 @@ export interface paths {
                         currentPassword: string;
                         /** @description must contain at least one digit */
                         newPassword: string;
+                        /** @enum {string} */
+                        channel?: "mobile" | "web";
                     };
                 };
             };
             responses: {
-                /** @description Set */
-                204: {
+                /** @description Changed — fresh session */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["AuthResult"];
+                    };
                 };
                 /** @description Validation */
                 400: {
@@ -2490,6 +2937,159 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/map/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every active listing of one route (route-first «Список | Карта» screen)
+         * @description No viewport, no clustering: all trips / passenger requests from from_id to to_id, ordered by departure, capped at 500 (truncated=true when more exist). Same visibility as GET /trips and GET /passenger-requests (trips also match pickup / drop-off stops); when the exact places have nothing, nearby settlements (25 km) are used and nearby=true. lat/lng is the meeting pin (exact=true) or the origin settlement — never null.
+         */
+        get: {
+            parameters: {
+                query: {
+                    kind: "trips" | "requests";
+                    from_id: number;
+                    /** @description Must differ from from_id */
+                    to_id: number;
+                    /** @description Asia/Bishkek calendar day */
+                    date?: string;
+                    ride?: "intercity" | "airport";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            kind: "trips" | "requests";
+                            truncated: boolean;
+                            nearby: boolean;
+                            items: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** @enum {string} */
+                                kind?: "trip" | "request";
+                                lat?: number;
+                                lng?: number;
+                                /** @description false = origin settlement point */
+                                exact?: boolean;
+                                /** Format: date-time */
+                                departureAt?: string;
+                                /** @description Trips only */
+                                seatsFree?: number | null;
+                                /** @description Requests only */
+                                passengers?: number | null;
+                                /** @description Per seat; null for requests */
+                                price?: number | null;
+                                origin?: {
+                                    id?: number;
+                                    nameRu?: string;
+                                    nameKg?: string;
+                                };
+                                destination?: {
+                                    id?: number;
+                                    nameRu?: string;
+                                    nameKg?: string;
+                                };
+                                /** @description Driver (trips) or passenger (requests) */
+                                user?: {
+                                    /** Format: uuid */
+                                    id?: string;
+                                    name?: string;
+                                    avatarUrl?: string | null;
+                                    /** @description null until 3 ratings */
+                                    rating?: number | null;
+                                    ratingCount?: number;
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/drivers/verification": {
         parameters: {
             query?: never;
@@ -3176,12 +3776,19 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description OK */
+                /** @description OK — { data: (TripListItem + comment)[], nextCursor } */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            data?: (components["schemas"]["TripListItem"] & {
+                                comment?: string | null;
+                            })[];
+                            nextCursor?: string | null;
+                        };
+                    };
                 };
                 /** @description Validation */
                 400: {
@@ -4045,11 +4652,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Driver's pending incoming requests */
+        /** Driver's incoming requests (pending by default) */
         get: {
             parameters: {
                 query?: {
                     tripId?: string;
+                    /** @description pending = pending+viewed (default), accepted, all = both */
+                    status?: "pending" | "accepted" | "all";
                     cursor?: string;
                     limit?: number;
                 };
@@ -7606,7 +8215,7 @@ export interface components {
         Error: {
             error?: {
                 /** @enum {string} */
-                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "TOKEN_EXPIRED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SEATS_NOT_AVAILABLE" | "BOOKING_ALREADY_EXISTS" | "TRIP_NOT_ACTIVE" | "RATE_LIMITED" | "OTP_EXPIRED" | "OTP_WRONG" | "OTP_TOO_MANY_ATTEMPTS" | "INTERNAL_ERROR" | "SERVICE_UNAVAILABLE";
+                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "TOKEN_EXPIRED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "SEATS_NOT_AVAILABLE" | "BOOKING_ALREADY_EXISTS" | "TRIP_NOT_ACTIVE" | "RATE_LIMITED" | "OTP_EXPIRED" | "OTP_WRONG" | "OTP_TOO_MANY_ATTEMPTS" | "INTERNAL_ERROR" | "SERVICE_UNAVAILABLE" | "OTP_BUDGET_EXCEEDED" | "CONTACT_LIMIT";
                 message: string;
                 message_kg?: string;
                 details?: {
@@ -7639,6 +8248,25 @@ export interface components {
                 termsAcceptedAt?: string | null;
             };
         };
+        AdminAuthResult: {
+            accessToken?: string;
+            refreshToken?: string;
+            accessTokenExpiresIn?: number;
+            refreshTokenExpiresIn?: number;
+            admin?: {
+                /** Format: uuid */
+                id?: string;
+                /** Format: email */
+                email?: string;
+                name?: string;
+                /** @enum {string} */
+                role?: "admin" | "superadmin";
+                mustChangePassword?: boolean;
+                totpEnabled?: boolean;
+                /** @description ADMIN_TOTP_REQUIRED and not enrolled yet → the UI must run TOTP setup */
+                totpEnrollmentRequired?: boolean;
+            };
+        };
         PublicUser: {
             /** Format: uuid */
             id?: string;
@@ -7647,6 +8275,7 @@ export interface components {
             roles?: string[];
             rating?: number | null;
             ratingCount?: number;
+            bio?: string | null;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -7742,6 +8371,9 @@ export interface components {
             origin?: components["schemas"]["Place"];
             destination?: components["schemas"]["Place"];
             originPoint?: components["schemas"]["MeetingPoint"] | null;
+            /** @description Boarding point: originPoint, else origin settlement coords */
+            lat?: number | null;
+            lng?: number | null;
             pickupCities?: string[];
             /** Format: date-time */
             departureAt?: string;
@@ -7788,6 +8420,9 @@ export interface components {
             destination?: components["schemas"]["Place"];
             originPoint?: components["schemas"]["MeetingPoint"] | null;
             destinationPoint?: components["schemas"]["MeetingPoint"] | null;
+            /** @description Boarding point: originPoint, else origin settlement coords */
+            lat?: number | null;
+            lng?: number | null;
             pickupCities?: string[];
             dropoffCities?: string[];
             stops?: {
@@ -7850,7 +8485,13 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             expiresAt?: string | null;
-            trip?: Record<string, never>;
+            /** @description originCity/destinationCity (name_ru snapshots) plus origin/destination place refs */
+            trip?: {
+                originCityId?: number;
+                destinationCityId?: number;
+                origin?: components["schemas"]["Place"];
+                destination?: components["schemas"]["Place"];
+            };
             passenger?: Record<string, never>;
         };
         ChatMessage: {

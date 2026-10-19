@@ -40,6 +40,7 @@ export function NearbyPanel({
   onPick,
   onOpen,
   hint,
+  notes,
   hasMore,
   loadingMore,
   onLoadMore,
@@ -52,6 +53,8 @@ export function NearbyPanel({
   onPick: (item: ResultPin) => void;
   onOpen: (id: string) => void;
   hint: string;
+  /** Small accent notes under the hint (nearby settlements, truncated). */
+  notes: string[];
   hasMore: boolean;
   loadingMore: boolean;
   onLoadMore: () => void;
@@ -93,6 +96,11 @@ export function NearbyPanel({
             </span>
           </h2>
           <p className="truncate text-[12px] font-600 text-ink-400">{hint}</p>
+          {notes.map((n) => (
+            <p key={n} className="text-[12px] font-700 text-accent-700 dark:text-accent-300">
+              {n}
+            </p>
+          ))}
         </div>
         <button
           type="button"
@@ -189,6 +197,11 @@ const NearbyRow = memo(function NearbyRow({
             {item.price != null && (
               <span>
                 {item.price.toLocaleString("ru-RU")} {t("som")}
+              </span>
+            )}
+            {!item.exact && (
+              <span className="text-ink-400" title={t("approx_point")}>
+                ~ {t("approx_short")}
               </span>
             )}
           </span>

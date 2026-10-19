@@ -162,6 +162,8 @@ export interface MapListing {
   label: string;
   /** Free seats (trips) / passengers (requests); hidden when null. */
   badge: number | null;
+  /** Settlement centre, not a meeting pin — drawn slightly faded. */
+  approx?: boolean;
 }
 
 export interface Viewport {
@@ -292,6 +294,7 @@ const ListingMarker = memo(function ListingMarker({
       position={[item.lat, item.lng]}
       icon={listingIcon(glyph, item.badge, selected)}
       zIndexOffset={selected ? 1000 : 0}
+      opacity={item.approx && !selected ? 0.75 : 1}
       eventHandlers={handlers}
     >
       <Tooltip direction="top">{item.label}</Tooltip>

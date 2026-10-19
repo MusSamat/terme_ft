@@ -1873,7 +1873,11 @@
     "view_map": "Карта",
     "view_toggle_aria": "Натыйжаларды көрсөтүү түрү",
     "load_more": "Дагы көрсөтүү",
-    "nearby_sorted_time": "Жөнөө убактысы боюнча"
+    "nearby_sorted_time": "Жөнөө убактысы боюнча",
+    "route_nearby": "Жакынкы айылдар көрсөтүлдү",
+    "route_truncated": "Алгачкы 500 жарыя көрсөтүлдү",
+    "approx_short": "айылдын борбору",
+    "approx_point": "Болжолдуу, айылдын борбору"
   },
   "airport": {
     "title": "Аэропорт",

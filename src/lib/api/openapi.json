@@ -86,7 +86,9 @@
                   "OTP_WRONG",
                   "OTP_TOO_MANY_ATTEMPTS",
                   "INTERNAL_ERROR",
-                  "SERVICE_UNAVAILABLE"
+                  "SERVICE_UNAVAILABLE",
+                  "OTP_BUDGET_EXCEEDED",
+                  "CONTACT_LIMIT"
                 ]
               },
               "message": {
@@ -181,6 +183,56 @@
           }
         ]
       },
+      "AdminAuthResult": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "accessTokenExpiresIn": {
+            "type": "integer"
+          },
+          "refreshTokenExpiresIn": {
+            "type": "integer"
+          },
+          "admin": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "superadmin"
+                ]
+              },
+              "mustChangePassword": {
+                "type": "boolean"
+              },
+              "totpEnabled": {
+                "type": "boolean"
+              },
+              "totpEnrollmentRequired": {
+                "type": "boolean",
+                "description": "ADMIN_TOTP_REQUIRED and not enrolled yet → the UI must run TOTP setup"
+              }
+            }
+          }
+        }
+      },
       "PublicUser": {
         "type": "object",
         "properties": {
@@ -207,6 +259,10 @@
           },
           "ratingCount": {
             "type": "integer"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -516,6 +572,15 @@
             ],
             "nullable": true
           },
+          "lat": {
+            "type": "number",
+            "nullable": true,
+            "description": "Boarding point: originPoint, else origin settlement coords"
+          },
+          "lng": {
+            "type": "number",
+            "nullable": true
+          },
           "pickupCities": {
             "type": "array",
             "items": {
@@ -652,6 +717,15 @@
                 "$ref": "#/components/schemas/MeetingPoint"
               }
             ],
+            "nullable": true
+          },
+          "lat": {
+            "type": "number",
+            "nullable": true,
+            "description": "Boarding point: originPoint, else origin settlement coords"
+          },
+          "lng": {
+            "type": "number",
             "nullable": true
           },
           "pickupCities": {
@@ -850,7 +924,22 @@
             "nullable": true
           },
           "trip": {
-            "type": "object"
+            "type": "object",
+            "description": "originCity/destinationCity (name_ru snapshots) plus origin/destination place refs",
+            "properties": {
+              "originCityId": {
+                "type": "integer"
+              },
+              "destinationCityId": {
+                "type": "integer"
+              },
+              "origin": {
+                "$ref": "#/components/schemas/Place"
+              },
+              "destination": {
+                "$ref": "#/components/schemas/Place"
+              }
+            }
           },
           "passenger": {
             "type": "object"
@@ -1303,6 +1392,16 @@
           },
           "500": {
             "description": "Internal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "OTP_BUDGET_EXCEEDED — daily OTP budget (global or non-+996) spent",
             "content": {
               "application/json": {
                 "schema": {
@@ -2022,6 +2121,447 @@
         }
       }
     },
+    "/auth/admin/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Admin sign-out: revokes admin refresh tokens and clears the cookie",
+        "description": "Public (works with an expired access token). With a valid admin refresh token (terme_admin_rt cookie or body.refreshToken) it bumps the admin token epoch, revoking every admin refresh token of that admin; always clears the cookie. The client must also drop its in-memory access token.",
+        "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "mobile",
+                      "web"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/admin/totp/setup": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Admin TOTP enrolment step 1: new secret (stored pending, encrypted)",
+        "description": "Reachable while ADMIN_TOTP_REQUIRED gating is active. 409 totp_already_enabled if enrolled.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Secret + otpauth:// URI for the authenticator app (render as QR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string"
+                    },
+                    "otpauthUri": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/admin/totp/confirm": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Admin TOTP enrolment step 2: verify a code → TOTP enabled",
+        "description": "Rotates the admin token epoch (other sessions end) and returns a fresh admin token pair (web: refresh token in the terme_admin_rt cookie). 400 totp_invalid on a wrong code.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "mobile",
+                      "web"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAuthResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/admin/totp/disable": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Disable admin TOTP (self with a current code, or superadmin for another admin)",
+        "description": "Self: { code }. Superadmin: { adminId } (audited as disable_admin_totp). Bumps the target admin token epoch — their refresh tokens are revoked.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "adminId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "TOTP disabled"
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/logout/all": {
       "post": {
         "tags": [
@@ -2140,7 +2680,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAuthResult"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation",
@@ -2348,6 +2895,9 @@
                     "enum": [
                       true
                     ]
+                  },
+                  "notificationsEnabled": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -2611,7 +3161,7 @@
           "Users"
         ],
         "summary": "Change the password (current one required)",
-        "description": "No password yet → 409 password_not_set: use /auth/phone/reset-password. New password must be ≥8 chars and contain a digit.",
+        "description": "No password yet → 409 password_not_set: use /auth/phone/reset-password. New password must be ≥8 chars and contain a digit. Every session is revoked; the response carries a fresh token pair (channel=web → refresh token in the HttpOnly cookie).",
         "requestBody": {
           "required": true,
           "content": {
@@ -2631,6 +3181,13 @@
                     "minLength": 8,
                     "maxLength": 200,
                     "description": "must contain at least one digit"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "mobile",
+                      "web"
+                    ]
                   }
                 }
               }
@@ -2638,8 +3195,15 @@
           }
         },
         "responses": {
-          "204": {
-            "description": "Set"
+          "200": {
+            "description": "Changed — fresh session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation",
@@ -3749,6 +4313,272 @@
         }
       }
     },
+    "/map/route": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Every active listing of one route (route-first «Список | Карта» screen)",
+        "description": "No viewport, no clustering: all trips / passenger requests from from_id to to_id, ordered by departure, capped at 500 (truncated=true when more exist). Same visibility as GET /trips and GET /passenger-requests (trips also match pickup / drop-off stops); when the exact places have nothing, nearby settlements (25 km) are used and nearby=true. lat/lng is the meeting pin (exact=true) or the origin settlement — never null.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "trips",
+                "requests"
+              ]
+            }
+          },
+          {
+            "name": "from_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Must differ from from_id"
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Asia/Bishkek calendar day"
+          },
+          {
+            "name": "ride",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "intercity",
+                "airport"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "items",
+                    "truncated",
+                    "nearby"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "trips",
+                        "requests"
+                      ]
+                    },
+                    "truncated": {
+                      "type": "boolean"
+                    },
+                    "nearby": {
+                      "type": "boolean"
+                    },
+                    "items": {
+                      "type": "array",
+                      "maxItems": 500,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "trip",
+                              "request"
+                            ]
+                          },
+                          "lat": {
+                            "type": "number"
+                          },
+                          "lng": {
+                            "type": "number"
+                          },
+                          "exact": {
+                            "type": "boolean",
+                            "description": "false = origin settlement point"
+                          },
+                          "departureAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "seatsFree": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "Trips only"
+                          },
+                          "passengers": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "Requests only"
+                          },
+                          "price": {
+                            "type": "integer",
+                            "nullable": true,
+                            "description": "Per seat; null for requests"
+                          },
+                          "origin": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "nameRu": {
+                                "type": "string"
+                              },
+                              "nameKg": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "destination": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "nameRu": {
+                                "type": "string"
+                              },
+                              "nameKg": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "user": {
+                            "type": "object",
+                            "description": "Driver (trips) or passenger (requests)",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "rating": {
+                                "type": "number",
+                                "nullable": true,
+                                "description": "null until 3 ratings"
+                              },
+                              "ratingCount": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/drivers/verification": {
       "post": {
         "tags": [
@@ -4696,7 +5526,39 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK — { data: (TripListItem + comment)[], nextCursor }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/TripListItem"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "comment": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation",
@@ -5659,7 +6521,7 @@
         "tags": [
           "Bookings"
         ],
-        "summary": "Driver's pending incoming requests",
+        "summary": "Driver's incoming requests (pending by default)",
         "parameters": [
           {
             "name": "tripId",
@@ -5667,6 +6529,20 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "pending = pending+viewed (default), accepted, all = both",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "all"
+              ],
+              "default": "pending"
             }
           },
           {

@@ -1,5 +1,6 @@
 import type { TripCardItem } from "@/lib/api/trips";
 import type { PassengerRequestCardItem } from "@/lib/api/passenger-requests";
+import type { MapRouteItem } from "@/lib/api/map";
 import { placeName } from "@/lib/places";
 import type { LatLng } from "@/lib/geo";
 import type { ResultPin } from "./nearby-panel";
@@ -46,6 +47,21 @@ export function requestPins(requests: PassengerRequestCardItem[], locale: string
     });
     return p ? [p] : [];
   });
+}
+
+/** GET /map/route items — coordinates are always set (pin or settlement). */
+export function routeItemPins(items: MapRouteItem[], locale: string): Pin[] {
+  return items.map((it) => ({
+    id: it.id,
+    lat: it.lat,
+    lng: it.lng,
+    exact: it.exact,
+    originName: placeName(it.origin, locale),
+    destinationName: placeName(it.destination, locale),
+    departureAt: it.departureAt,
+    seats: it.seatsFree ?? it.passengers ?? 0,
+    price: it.price,
+  }));
 }
 
 /** Origin settlement of the results (all share the searched origin). */

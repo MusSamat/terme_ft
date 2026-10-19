@@ -126,8 +126,10 @@ export function RequestsFeed() {
   });
 
   const requests = data?.pages.flatMap((p) => p.data) ?? [];
-  const selectedRequest: PassengerRequestCardItem | null =
-    requests.find((r) => r.id === selectedId) ?? requests[0] ?? null;
+  // A map pin may be beyond the loaded pages → no placeholder, fetch by id.
+  const selectedRequest: PassengerRequestCardItem | null = selectedId
+    ? (requests.find((r) => r.id === selectedId) ?? null)
+    : (requests[0] ?? null);
 
   // Browse items are card-lean (no comment/metrics) — fetch the full request
   // when the detail sheet opens; the lean card seeds it as placeholder.
@@ -164,6 +166,10 @@ export function RequestsFeed() {
   const [view, setView] = useResultsView();
   const pins = useMemo(() => (view === "map" ? requestPins(requests, locale) : []), [view, data, locale]); // eslint-disable-line react-hooks/exhaustive-deps
   const fitKey = JSON.stringify(filters);
+  const mapQuery =
+    route.from?.id && route.to?.id
+      ? { kind: "requests" as const, from_id: route.from.id, to_id: route.to.id, date: filters.date }
+      : null;
 
   // Pick a route from the entry hints — update the URL on THIS page (no nav),
   // so only the body swaps to results while the header stays put.
@@ -208,6 +214,7 @@ export function RequestsFeed() {
               {view === "map" ? (
                 <RouteResultsMap
                   kind="requests"
+                  query={mapQuery}
                   pins={pins}
                   origin={originOf(requests)}
                   fitKey={fitKey}

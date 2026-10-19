@@ -157,7 +157,10 @@ export function SearchLayout({ initial }: Props) {
       .map((b) => (b as { tripId?: string }).tripId)
       .filter(Boolean) as string[],
   );
-  const selectedTrip: TripCardItem | null = trips.find((t) => t.id === selectedId) ?? trips[0] ?? null;
+  // A map pin may be beyond the loaded pages → no placeholder, fetch by id.
+  const selectedTrip: TripCardItem | null = selectedId
+    ? (trips.find((t) => t.id === selectedId) ?? null)
+    : (trips[0] ?? null);
 
   // Full detail is fetched by id when the sheet opens (the card already
   // prefetched ["trip", id], so this is instant). The list item is the
@@ -196,6 +199,13 @@ export function SearchLayout({ initial }: Props) {
   const [view, setView] = useResultsView();
   const pins = useMemo(() => (view === "map" ? tripPins(trips, locale) : []), [view, data, locale]); // eslint-disable-line react-hooks/exhaustive-deps
   const fitKey = useMemo(() => JSON.stringify(params), [params]);
+  const mapQuery = useMemo(
+    () =>
+      params.from_id && params.to_id
+        ? { kind: "trips" as const, from_id: params.from_id, to_id: params.to_id, date: params.date, ride: params.kind }
+        : null,
+    [params],
+  );
 
   // Pick a route from the entry hints — updates the URL on THIS page (no
   // navigation), so only the body swaps to results (header stays put).
@@ -245,6 +255,7 @@ export function SearchLayout({ initial }: Props) {
               {view === "map" ? (
                 <RouteResultsMap
                   kind="trips"
+                  query={mapQuery}
                   pins={pins}
                   origin={originOf(trips)}
                   fitKey={fitKey}

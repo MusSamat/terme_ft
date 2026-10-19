@@ -8,9 +8,11 @@ import { clusterPins, haversineKm, inKg, routeFitPoints, sortByDistance, type La
 import { formatDepartureLabel } from "@/lib/utils/date";
 import { cn } from "@/lib/utils/cn";
 import type { Locale } from "@/i18n.config";
+import type { MapRouteParams } from "@/lib/api/map";
 import { useMapLocation } from "./use-map-location";
 import { GeoBanner, LocationCard } from "./location-prompt";
 import { NearbyPanel, type ResultPin } from "./nearby-panel";
+import { useRouteMap } from "./use-route-map";
 
 const USER_ZOOM = 13;
 const PIN_ZOOM = 15;
@@ -24,10 +26,13 @@ const FIT_WIDE: FitPadding = { topLeft: [390, 40], bottomRight: [80, 40] };
  * «Карта» view of a route's results: one pin per listing at its pickup point,
  * the user dot, and the same results as a «Рядом» list (nearest first when the
  * position is known, else by time). Opening a result is the feed's job.
+ * All of the route's listings come from GET /map/route; the loaded list pages
+ * stand in until it answers (and for legacy name-only routes without ids).
  */
 export function RouteResultsMap({
   kind,
-  pins,
+  query,
+  pins: listPins,
   origin,
   fitKey,
   hasMore,
@@ -36,7 +41,9 @@ export function RouteResultsMap({
   onOpen,
 }: {
   kind: "trips" | "requests";
-  /** In departure order, as the API returns them. */
+  /** GET /map/route filters (same as the list); null without place ids. */
+  query: MapRouteParams | null;
+  /** Loaded list pages, in departure order — the fallback. */
   pins: Omit<ResultPin, "distanceKm">[];
   /** Origin settlement centre (frames the map without results / with the user). */
   origin: LatLng | null;
@@ -51,6 +58,9 @@ export function RouteResultsMap({
   const locale = useLocale() as Locale;
   const loc = useMapLocation();
   const meInKg = loc.me && inKg(loc.me) ? loc.me : null;
+  const routeMap = useRouteMap(query, locale);
+  const live = routeMap.pins !== null;
+  const pins = routeMap.pins ?? listPins;
 
   const rows: ResultPin[] = useMemo(
     () => (meInKg ? sortByDistance(pins, meInKg) : pins.map((p) => ({ ...p, distanceKm: null }))),
@@ -69,7 +79,7 @@ export function RouteResultsMap({
   const meNear = Boolean(meInKg && origin && haversineKm(meInKg, origin) <= NEAR_ORIGIN_KM);
   const fitted = useRef("");
   useEffect(() => {
-    const key = `${fitKey}|${pins.length > 0}|${meNear}`;
+    const key = `${fitKey}|${pins.length > 0}|${meNear}|${live}`;
     if (fitted.current === key) return;
     if (fitted.current.split("|")[0] !== fitKey) userMoved.current = false;
     if (userMoved.current) return;
@@ -77,9 +87,9 @@ export function RouteResultsMap({
     const points = routeFitPoints(pins, origin, meNear ? meInKg : null, NEAR_ORIGIN_KM);
     if (points.length === 1) setCommand({ kind: "center", ...points[0]!, zoom: pins.length ? PIN_ZOOM : 12, animate: false });
     else if (points.length > 1) setCommand({ kind: "fit", points, maxZoom: PIN_ZOOM });
-    // Keyed by search / first results / first nearby fix only.
+    // Keyed by search / first results / full route results / first nearby fix only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitKey, pins.length > 0, meNear]);
+  }, [fitKey, pins.length > 0, meNear, live]);
 
   // «Разрешить» / crosshair → show the fresh position.
   useEffect(() => {
@@ -99,6 +109,7 @@ export function RouteResultsMap({
       lat: p.lat,
       lng: p.lng,
       badge: p.seats,
+      approx: !p.exact,
       label: `${p.originName} → ${p.destinationName}, ${formatDepartureLabel(p.departureAt, locale)}`,
     });
     const list = singles.map(toMarker);
@@ -188,7 +199,10 @@ export function RouteResultsMap({
               onPick={onPick}
               onOpen={onOpen}
               hint={meInKg ? t("nearby_sorted_hint") : t("nearby_sorted_time")}
-              hasMore={hasMore}
+              notes={[routeMap.nearby && t("route_nearby"), routeMap.truncated && t("route_truncated")].filter(
+                (n): n is string => Boolean(n),
+              )}
+              hasMore={!live && hasMore}
               loadingMore={loadingMore}
               onLoadMore={onLoadMore}
             />
