@@ -22,6 +22,7 @@ import { RespondModal } from "./_components/respond-modal";
 import { ContactRevealButton } from "@/components/ui/contact-reveal-button";
 import { useRouteNames } from "@/lib/hooks/use-route-names";
 import { RouteSection } from "@/components/features/trip/route-section";
+import { RequestExtras, hasRequestExtras } from "./request-extras";
 
 interface Props {
   request: PassengerRequest;
@@ -181,12 +182,15 @@ export function RequestDetailPane({ request }: Props) {
           pickupLabel={tDetail("wait_point")}
         />
 
-        {request.flightNumber && (
-          <div className="flex items-center gap-2.5 rounded-2xl bg-brand-50 px-4 py-3 dark:bg-brand-500/10">
-            <Plane className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
-            <p className="text-[15px] font-800 text-brand-900 dark:text-brand-100">
-              {t("flight")}: {request.flightNumber}
-            </p>
+        {(request.flightNumber || hasRequestExtras(request)) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl bg-brand-50 px-4 py-3 dark:bg-brand-500/10">
+            {request.flightNumber && (
+              <p className="flex items-center gap-2.5 text-[15px] font-800 text-brand-900 dark:text-brand-100">
+                <Plane className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+                {t("flight")}: {request.flightNumber}
+              </p>
+            )}
+            <RequestExtras request={request} className="text-[14px] font-800 text-brand-900 dark:text-brand-100" />
           </div>
         )}
 

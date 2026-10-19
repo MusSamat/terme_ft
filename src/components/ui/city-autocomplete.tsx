@@ -25,7 +25,11 @@ interface Props {
   borderless?: boolean;
   /** Open the results dropdown UPWARD (above the input) — use when docked near the screen bottom */
   dropUp?: boolean;
+  /** Non-airport end of a transfer: also районы / айыл аймактары / city districts, never airports. */
+  transferEnd?: boolean;
 }
+
+const notAirport = (p: Place) => p.type !== "airport";
 
 function useDebounce<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -63,6 +67,7 @@ export function CityAutocomplete({
   compact = false,
   borderless = false,
   dropUp = false,
+  transferEnd = false,
 }: Props) {
   const t = useTranslations("city_autocomplete");
   const locale = useLocale() as Locale;
@@ -111,8 +116,9 @@ export function CityAutocomplete({
     // Guard against out-of-order responses: a slow reply for an older query
     // must never overwrite results of the newer one.
     const seq = ++searchSeqRef.current;
-    searchPlaces(debouncedQuery, 8)
-      .then((rows) => {
+    searchPlaces(debouncedQuery, 8, transferEnd ? "any" : undefined)
+      .then((all) => {
+        const rows = transferEnd ? all.filter(notAirport) : all;
         if (seq !== searchSeqRef.current) return;
         setResults(rows);
         setOpen(userTypingRef.current && rows.length > 0);
@@ -129,7 +135,7 @@ export function CityAutocomplete({
       .finally(() => {
         if (seq === searchSeqRef.current) setLoading(false);
       });
-  }, [debouncedQuery, showingPopular]);
+  }, [debouncedQuery, showingPopular, transferEnd]);
 
   const commit = (city: Place) => {
     selectedRef.current = true;
@@ -151,7 +157,8 @@ export function CityAutocomplete({
     // Filled field: select the text so the first keystroke replaces it.
     if (query.trim()) e?.target.select();
     // Focus (empty OR already-filled) → popular cities; editing → live search.
-    const popular = await loadPopularCities();
+    const top = await loadPopularCities();
+    const popular = transferEnd ? top.filter(notAirport) : top;
     if (popular.length > 0) {
       setResults(popular);
       setShowingPopular(true);

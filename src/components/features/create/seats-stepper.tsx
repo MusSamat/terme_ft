@@ -14,10 +14,13 @@ interface Props {
   /** e.g. «Мест в вашем авто: 4» — a small hint under the label (driver mode). */
   hint?: string;
   counterText: string;
+  /** −/+ names when the stepper counts something other than seats. */
+  lessAria?: string;
+  moreAria?: string;
   onChange: (v: number) => void;
 }
 
-export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText, onChange }: Props) {
+export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText, lessAria, moreAria, onChange }: Props) {
   const t = useTranslations("trips.create");
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-xs ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
@@ -30,7 +33,7 @@ export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
-          aria-label={t("seats_less_aria")}
+          aria-label={lessAria ?? t("seats_less_aria")}
           className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-ink-200 text-[20px] font-900 text-ink-600 disabled:opacity-40 dark:border-ink-700 dark:text-ink-300"
         >
           −
@@ -40,7 +43,7 @@ export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText
           type="button"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          aria-label={t("seats_more_aria")}
+          aria-label={moreAria ?? t("seats_more_aria")}
           className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-ink-200 text-[20px] font-900 text-ink-600 disabled:opacity-40 dark:border-ink-700 dark:text-ink-300"
         >
           +

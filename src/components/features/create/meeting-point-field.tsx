@@ -43,7 +43,8 @@ export function MeetingPointField({ place, value, onChange, label, hint, color =
     }
   }, [open, value]);
 
-  const capital = place?.type === "capital" && place.id !== null;
+  // Capitals: spots + жилмассивы; airports: approximate terminal spots.
+  const capital = (place?.type === "capital" || place?.type === "airport") && place.id !== null;
   const { data: spots = [] } = useQuery({
     queryKey: ["spots", place?.id, q.trim()],
     queryFn: () => getSpots(place!.id!, q.trim() || undefined),

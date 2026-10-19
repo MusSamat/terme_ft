@@ -194,15 +194,15 @@ export type MapCommand =
 // divIcons are cached per look so re-renders never rebuild DOM for unchanged pins.
 const iconCache = new Map<string, L.DivIcon>();
 
-function listingIcon(glyph: GlyphKind, badge: number | null, selected: boolean): L.DivIcon {
-  const key = `${glyph}|${badge ?? ""}|${selected ? 1 : 0}`;
+function listingIcon(glyph: GlyphKind, badge: number | null, selected: boolean, extraClass = ""): L.DivIcon {
+  const key = `${glyph}|${badge ?? ""}|${selected ? 1 : 0}|${extraClass}`;
   let icon = iconCache.get(key);
   if (!icon) {
     const badgeHtml = badge != null ? `<span class="tm-pin__badge">${badge > 99 ? "99+" : badge}</span>` : "";
     icon = L.divIcon({
       className: "",
       // Ø40 circle (2.5px white ring) + 8px pointer; the tip is the coordinate.
-      html: `<div class="tm-pin${selected ? " tm-pin--sel" : ""}"><svg width="40" height="48" viewBox="0 0 40 48" aria-hidden="true"><path d="M20 47 L13.3 37.5 A18.75 18.75 0 1 1 26.7 37.5 Z" fill="currentColor" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><svg class="tm-pin__glyph" x="9" y="9" width="22" height="22" viewBox="0 0 24 24">${glyphPathsMarkup(glyph)}</svg></svg>${badgeHtml}</div>`,
+      html: `<div class="tm-pin${selected ? " tm-pin--sel" : ""}${extraClass ? ` ${extraClass}` : ""}"><svg width="40" height="48" viewBox="0 0 40 48" aria-hidden="true"><path d="M20 47 L13.3 37.5 A18.75 18.75 0 1 1 26.7 37.5 Z" fill="currentColor" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><svg class="tm-pin__glyph" x="9" y="9" width="22" height="22" viewBox="0 0 24 24">${glyphPathsMarkup(glyph)}</svg></svg>${badgeHtml}</div>`,
       iconSize: [40, 48],
       iconAnchor: [20, 48],
       tooltipAnchor: [0, -48],
@@ -359,6 +359,7 @@ export function ListingsMapInner({
   command,
   fitPadding = DEFAULT_FIT_PADDING,
   clusterLabel,
+  landmark,
   className,
 }: {
   items: MapListing[];
@@ -375,6 +376,8 @@ export function ListingsMapInner({
   command: MapCommand | null;
   fitPadding?: FitPadding;
   clusterLabel: (count: number) => string;
+  /** A fixed, non-interactive place pin (the airport of a transfer route). */
+  landmark?: MapPoint & { glyph: GlyphKind; label: string };
   className?: string;
 }) {
   return (
@@ -389,6 +392,16 @@ export function ListingsMapInner({
         {items.map((it) => (
           <ListingMarker key={it.id} item={it} glyph={glyph} selected={it.id === selectedId} onSelect={onSelect} />
         ))}
+        {landmark && (
+          <Marker
+            position={[landmark.lat, landmark.lng]}
+            icon={listingIcon(landmark.glyph, null, false, "tm-pin--landmark")}
+            interactive={false}
+            keyboard={false}
+            zIndexOffset={-100}
+            title={landmark.label}
+          />
+        )}
         {me && <MeMarker me={me} />}
       </MapContainer>
     </div>

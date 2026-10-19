@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils/cn";
 import { useRouteNames } from "@/lib/hooks/use-route-names";
 import { placeName } from "@/lib/places";
+import { RequestExtras, hasRequestExtras } from "./request-extras";
 
 // Passenger-request card — ticket variant of TripCard (same teal palette). A
 // tile split by a dashed perforation: top half = the request (date · route ·
@@ -85,12 +86,18 @@ function RequestCardInner({
             {rn(request).from}
             {request.originPoint?.area && ` · ${placeName(request.originPoint.area, locale)}`} → {rn(request).to}
           </div>
-          {(typeof request.distanceKm === "number" || request.flightNumber) && (
+          {(typeof request.distanceKm === "number" || request.flightNumber || hasRequestExtras(request)) && (
             <div className="mt-0.5 truncate text-[11.5px] font-800 text-brand-600 dark:text-brand-300">
               {typeof request.distanceKm === "number" &&
                 tc("distance_from_you", { km: request.distanceKm.toLocaleString(locale === "kg" ? "ky-KG" : "ru-RU") })}
               {typeof request.distanceKm === "number" && request.flightNumber ? " · " : ""}
               {request.flightNumber && `✈️ ${request.flightNumber}`}
+              {hasRequestExtras(request) && (
+                <RequestExtras
+                  request={request}
+                  className={cn((typeof request.distanceKm === "number" || request.flightNumber) && "ml-2")}
+                />
+              )}
             </div>
           )}
         </div>

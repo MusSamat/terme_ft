@@ -21,6 +21,8 @@ export interface MapRouteItem {
   origin: PlaceName;
   destination: PlaceName;
   user: { id: string; name: string; avatarUrl: string | null; rating: number | null; ratingCount: number };
+  /** Only with target_time: departure within ±2h of it. */
+  nearTarget?: boolean;
 }
 
 export interface MapRouteResult {

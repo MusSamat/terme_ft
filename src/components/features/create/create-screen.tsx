@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, User, PartyPopper, ShieldCheck, ChevronRight, ChevronDown, Check, SlidersHorizontal, Crosshair, Plane } from "lucide-react";
+import { ArrowLeft, CarFront, User, PartyPopper, ShieldCheck, ChevronRight, ChevronDown, Check, SlidersHorizontal, Crosshair, Plane, Signpost } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createTrip, type CreateTripInput, type PointInput } from "@/lib/api/trips-create";
 import { nearestPlace } from "@/lib/api/cities";
@@ -34,6 +34,14 @@ import { WhenChips } from "./when-chips";
 import { SeatsStepper } from "./seats-stepper";
 import { PriceCard } from "./price-card";
 import { PrefsCollapsible, PREF_KEYS, type PrefKey } from "./prefs-collapsible";
+import { AirportWizard, FLIGHT_RE } from "@/components/features/airport/airport-wizard";
+import {
+  EMPTY_PLAN,
+  planReady,
+  planRoute,
+  useAirports,
+  type AirportPlan,
+} from "@/components/features/airport/airport-plan";
 
 // Unified single-scroll create form — design-spec §2.4. Driver publishes a
 // trip (/trips/create), passenger a request (/requests/create): the URL decides
@@ -49,6 +57,9 @@ interface Draft {
   dropoff: RoutePlace[];
   /** Airport transfers (requests): «SU 1882». */
   flightNumber: string;
+  /** Airport requests: meet at arrivals with a name sign; luggage pieces (null = not said). */
+  meetWithSign: boolean;
+  luggage: number | null;
   date: string;
   time: string;
   timeEnd: string; // "" = exact time; else «выезжаем time–timeEnd» (driver only)
@@ -76,6 +87,8 @@ function defaults(isDriver: boolean): Draft {
     pickup: [],
     dropoff: [],
     flightNumber: "",
+    meetWithSign: false,
+    luggage: null,
     date: "",
     time: "09:00",
     timeEnd: "",
@@ -113,8 +126,6 @@ interface Props {
   initialTo?: RoutePlace | null;
 }
 
-const FLIGHT_RE = /^[A-Z0-9]{2}\s?\d{1,4}[A-Z]?$/;
-
 export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -138,6 +149,13 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
   const [draft, setDraft] = useState<Draft>(() => defaults(isDriver));
   const [createError, setCreateError] = useState<string | null>(null);
   const [publishedId, setPublishedId] = useState<string | null>(null);
+  // ?airport=1 without a ready route → the 3 airport steps first, then this form.
+  const [airportStep, setAirportStep] = useState(
+    () => searchParams.get("airport") === "1" && !(initialFrom && initialTo),
+  );
+  const [plan, setPlan] = useState<AirportPlan>(EMPTY_PLAN);
+  const airportsQuery = useAirports(airportStep);
+  const planAirport = (airportsQuery.data ?? []).find((a) => a.id === plan.airportId) ?? null;
 
   // Guest gate (proper gate screen lands in a later batch — this is the seam).
   useEffect(() => {
@@ -168,6 +186,13 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
       const merged: Draft = { ...base, ...saved, prefs: { ...base.prefs, ...(saved.prefs ?? {}) } };
       if (initialFrom) merged.origin = initialFrom;
       if (initialTo) merged.destination = initialTo;
+      // Airport screen hands over the listing day / time and the flight.
+      const qDate = searchParams.get("date");
+      const qTime = searchParams.get("time");
+      const qFlight = searchParams.get("flight");
+      if (qDate && /^\d{4}-\d{2}-\d{2}$/.test(qDate)) merged.date = qDate;
+      if (qTime && /^\d{2}:\d{2}$/.test(qTime)) Object.assign(merged, { time: qTime, timeEnd: "", flexible: false });
+      if (qFlight) merged.flightNumber = qFlight.toUpperCase().slice(0, 10);
       setDraft(merged);
     } catch {
       setDraft(base);
@@ -302,6 +327,9 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
         originPoint: draft.originPoint ?? undefined,
         destinationPoint: draft.destinationPoint ?? undefined,
         flightNumber: isAirport && draft.flightNumber.trim() ? draft.flightNumber.trim().toUpperCase() : undefined,
+        ...(isAirport
+          ? { meetWithSign: draft.meetWithSign, ...(draft.luggage !== null ? { luggageCount: draft.luggage } : {}) }
+          : {}),
         seatsNeeded: draft.seats,
         departureDate: departureAt(),
         flexible: draft.flexible,
@@ -351,6 +379,27 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
     // Driver intent needs a car (Phase 1 gate — inline form adds one below).
     (!isDriver || Boolean(selectedCar));
 
+  // Airport steps done → the regular form, prefilled (route, day, time, flight).
+  const planFlightInvalid =
+    plan.flightNumber.trim() !== "" && !FLIGHT_RE.test(plan.flightNumber.trim().toUpperCase());
+  const finishAirport = () => {
+    const route = planRoute(plan, planAirport);
+    if (!route) return;
+    const when = plan.toAirport && plan.pickup ? plan.pickup : { date: plan.flightDate, time: plan.flightTime };
+    patch({
+      origin: route.from,
+      destination: route.to,
+      originPoint: null,
+      destinationPoint: null,
+      date: when.date,
+      time: when.time,
+      timeEnd: "",
+      flexible: false,
+      flightNumber: plan.flightNumber.trim().toUpperCase(),
+    });
+    setAirportStep(false);
+  };
+
   if (status === "loading" || status === "idle" || status === "anonymous") {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -382,6 +431,54 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
     </Button>
   );
 
+  // To the airport: the terminal spot is part of the essentials, not «Дополнительно».
+  const dropoffField = (
+    <MeetingPointField
+      place={draft.destination}
+      value={draft.destinationPoint}
+      onChange={(p) => patch({ destinationPoint: p })}
+      label={t("dropoff_point")}
+      hint={t("dropoff_point_hint")}
+      color="#F59E0B"
+    />
+  );
+
+  const airportBlock = (
+    <div className="space-y-3.5">
+      <IntentToggle value={intent} onChange={switchIntent} />
+      <p className="text-[15px] font-700 text-ink-600 dark:text-ink-400">
+        {isDriver ? t("airport_intro_driver") : t("airport_intro_passenger")}
+      </p>
+      {airportsQuery.isError ? (
+        <p className="rounded-xl bg-danger-50 px-4 py-2 text-[15px] font-700 text-danger-700 dark:bg-danger-500/10">
+          {fe(extractError(airportsQuery.error))}
+        </p>
+      ) : airportsQuery.isLoading ? (
+        <div className="flex justify-center py-6">
+          <Spinner size={24} />
+        </div>
+      ) : (
+        <AirportWizard airports={airportsQuery.data ?? []} plan={plan} setPlan={setPlan} />
+      )}
+      <Button
+        variant="cta"
+        size="lg"
+        className="w-full"
+        disabled={!planReady(plan, planAirport) || planFlightInvalid}
+        onClick={finishAirport}
+      >
+        {t("airport_next")}
+      </Button>
+      <button
+        type="button"
+        onClick={() => setAirportStep(false)}
+        className="w-full text-center text-[13.5px] font-800 text-brand-700 dark:text-brand-300"
+      >
+        {t("airport_skip")}
+      </button>
+    </div>
+  );
+
   const form = (
     <div className="space-y-3.5">
       {/* Trip or request — the URL decides; switching keeps the route. */}
@@ -408,6 +505,16 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
           {detecting ? <Spinner size={14} /> : t("detect_location")}
         </button>
       )}
+      {!isAirport && (
+        <button
+          type="button"
+          onClick={() => setAirportStep(true)}
+          className="-mt-1.5 flex items-center gap-1.5 px-1 text-[13px] font-800 text-brand-700 dark:text-brand-300"
+        >
+          <Plane className="h-4 w-4" aria-hidden="true" />
+          {t("airport_entry")}
+        </button>
+      )}
       {sameCity && (
         <p className="-mt-1 text-[13px] font-700 text-danger-600">{t("err_same_city")}</p>
       )}
@@ -419,6 +526,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
         hint={t("pickup_point_hint")}
         color="#0D9488"
       />
+      {draft.destination?.type === "airport" && dropoffField}
       {isAirport && isDriver && (
         <p className="flex items-start gap-2 rounded-2xl bg-brand-50 px-4 py-3 text-[13.5px] font-700 text-brand-800 dark:bg-brand-500/10 dark:text-brand-200">
           <Plane className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -442,6 +550,48 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
             {t("flight_hint")}
           </p>
         </div>
+      )}
+      {isAirport && !isDriver && (
+        <>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={draft.meetWithSign}
+            onClick={() => patch({ meetWithSign: !draft.meetWithSign })}
+            className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-xs ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
+          >
+            <Signpost className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-900 text-ink-900 dark:text-white">{t("meet_sign")}</span>
+              <span className="block text-[12.5px] font-700 text-ink-500 dark:text-ink-400">{t("meet_sign_hint")}</span>
+            </span>
+            <span
+              className={cn(
+                "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+                draft.meetWithSign ? "bg-brand-600" : "bg-ink-200 dark:bg-ink-700",
+              )}
+              aria-hidden="true"
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all",
+                  draft.meetWithSign ? "left-[22px]" : "left-0.5",
+                )}
+              />
+            </span>
+          </button>
+          <SeatsStepper
+            value={draft.luggage ?? 0}
+            min={0}
+            max={5}
+            label={t("luggage_label")}
+            hint={t("luggage_hint")}
+            counterText={theme.counterText}
+            lessAria={t("luggage_less_aria")}
+            moreAria={t("luggage_more_aria")}
+            onChange={(v) => patch({ luggage: v })}
+          />
+        </>
       )}
       {/* Driver intent: the trip rides on a car. First car is added inline; once
           the garage has cars, it's a compact row → selection sheet (mirrors the
@@ -581,14 +731,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
           onDropoff={(v) => patch({ dropoff: v })}
         />
       )}
-      <MeetingPointField
-        place={draft.destination}
-        value={draft.destinationPoint}
-        onChange={(p) => patch({ destinationPoint: p })}
-        label={t("dropoff_point")}
-        hint={t("dropoff_point_hint")}
-        color="#F59E0B"
-      />
+      {draft.destination?.type !== "airport" && dropoffField}
       {/* Preferences exist only on trips — the request API has no field for them. */}
       {isDriver && (
         <PrefsCollapsible role={intent} prefs={draft.prefs} onToggle={(k) => patch({ prefs: { ...draft.prefs, [k]: !draft.prefs[k] } })} />
@@ -635,8 +778,8 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
           <h1 className="text-[16px] font-900">{isDriver ? t("title_driver") : t("title_passenger")}</h1>
           <p className="text-[14px] font-700 text-white/90">{isDriver ? t("subtitle_driver") : t("subtitle_passenger")}</p>
         </div>
-        <div className="flex-1 space-y-3.5 px-4 py-4">{form}</div>
-        <div className="space-y-3.5 px-4 pb-4">
+        <div className="flex-1 space-y-3.5 px-4 py-4">{airportStep ? airportBlock : form}</div>
+        <div className={cn("space-y-3.5 px-4 pb-4", airportStep && "hidden")}>
           {moreBlock}
           <div className="rounded-2xl bg-white p-4 shadow-card dark:bg-ink-900">
             <p className="mb-1.5 text-center text-[14px] font-700 text-ink-500 dark:text-ink-400">{isDriver ? t("note_driver") : t("note_passenger")}</p>
@@ -661,6 +804,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
           </div>
         </aside>
         <div className="rounded-4xl bg-white p-7 shadow-card dark:bg-ink-900">
+          {airportStep ? airportBlock : (
           <div className="space-y-3.5">
             {form}
             {moreBlock}
@@ -669,6 +813,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
             <p className="text-center text-[13px] font-600 text-ink-400">{t("consent_phone")}</p>
             {submitBtn}
           </div>
+          )}
         </div>
       </div>
 

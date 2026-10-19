@@ -39,6 +39,7 @@ export function RouteResultsMap({
   loadingMore,
   onLoadMore,
   onOpen,
+  landmark,
 }: {
   kind: "trips" | "requests";
   /** GET /map/route filters (same as the list); null without place ids. */
@@ -53,6 +54,8 @@ export function RouteResultsMap({
   loadingMore: boolean;
   onLoadMore: () => void;
   onOpen: (id: string) => void;
+  /** The airport of a transfer route — a plane pin. */
+  landmark?: LatLng & { label: string };
 }) {
   const t = useTranslations("map");
   const locale = useLocale() as Locale;
@@ -85,6 +88,7 @@ export function RouteResultsMap({
     if (userMoved.current) return;
     fitted.current = key;
     const points = routeFitPoints(pins, origin, meNear ? meInKg : null, NEAR_ORIGIN_KM);
+    if (landmark) points.push({ lat: landmark.lat, lng: landmark.lng });
     if (points.length === 1) setCommand({ kind: "center", ...points[0]!, zoom: pins.length ? PIN_ZOOM : 12, animate: false });
     else if (points.length > 1) setCommand({ kind: "fit", points, maxZoom: PIN_ZOOM });
     // Keyed by search / first results / full route results / first nearby fix only.
@@ -182,6 +186,7 @@ export function RouteResultsMap({
         command={command}
         fitPadding={wide ? FIT_WIDE : FIT_SHEET}
         clusterLabel={clusterLabel}
+        landmark={landmark ? { ...landmark, glyph: "plane" } : undefined}
       />
 
       <div className="pointer-events-none absolute inset-0 z-[500] flex flex-col gap-2 p-2 lg:right-auto lg:w-[370px]">

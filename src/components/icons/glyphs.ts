@@ -9,10 +9,15 @@ export const PASSENGER_GLYPH_PATHS = [
   "M5 19.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5c0 .8-.7 1.5-1.5 1.5h-11c-.8 0-1.5-.7-1.5-1.5Z",
 ] as const;
 
-export type GlyphKind = "car" | "passenger";
+// Airport landmark (airport transfers).
+export const PLANE_GLYPH_PATH =
+  "M21 15.5v-1.7l-8-5V3.5a1.5 1.5 0 0 0-3 0v5.3l-8 5v1.7l8-2.5v5.2l-2 1.5v1.3l3.5-1 3.5 1v-1.3l-2-1.5V13l8 2.5Z";
+
+export type GlyphKind = "car" | "passenger" | "plane";
 
 /** Inner SVG markup (paths only) for HTML-string icons (Leaflet divIcon). */
 export function glyphPathsMarkup(kind: GlyphKind): string {
+  if (kind === "plane") return `<path fill="currentColor" d="${PLANE_GLYPH_PATH}"/>`;
   return kind === "car"
     ? `<path fill="currentColor" fill-rule="evenodd" d="${CAR_GLYPH_PATH}"/>`
     : PASSENGER_GLYPH_PATHS.map((d) => `<path fill="currentColor" d="${d}"/>`).join("");

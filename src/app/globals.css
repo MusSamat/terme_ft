@@ -247,6 +247,9 @@
   color: theme("colors.ink.900");
   transform: scale(1.15);
 }
+.tm-pin--landmark {
+  color: theme("colors.ink.700");
+}
 .tm-pin__glyph {
   color: theme("colors.white");
 }

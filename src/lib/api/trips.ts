@@ -43,7 +43,7 @@ export type TripCardItem = Pick<
   | "pricePerSeat"
   | "status"
   | "liked"
-> & { distanceKm?: number };
+> & { distanceKm?: number; nearTarget?: boolean };
 
 export interface SearchTripsParams {
   from_id?: number;
@@ -55,6 +55,8 @@ export interface SearchTripsParams {
   near_lat?: number;
   near_lng?: number;
   date?: string;
+  /** Airport searches: that day ranked by |departure − target_time|; cursor t_<n> needs the same value. */
+  target_time?: string;
   seats?: number;
   min_price?: number;
   max_price?: number;

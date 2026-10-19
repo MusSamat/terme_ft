@@ -9,6 +9,12 @@ export interface PassengerRequest extends EngagementFields {
   /** airport = transfer to / from an airport. */
   kind: "intercity" | "airport";
   flightNumber: string | null;
+  /** Airport only: meet at arrivals with a name sign. */
+  meetWithSign: boolean;
+  /** Airport only: luggage pieces 0–5, null = not said. */
+  luggageCount: number | null;
+  /** Only with target_time: departure within ±2h of it. */
+  nearTarget?: boolean;
   originCityId: number;
   destinationCityId: number;
   /** name_ru snapshots — prefer origin / destination for display. */
@@ -48,6 +54,9 @@ export type PassengerRequestCardItem = Pick<
   | "passengerId"
   | "kind"
   | "flightNumber"
+  | "meetWithSign"
+  | "luggageCount"
+  | "nearTarget"
   | "originCityId"
   | "destinationCityId"
   | "originCity"
@@ -76,6 +85,8 @@ export interface ListPassengerRequestsParams {
   near_lat?: number;
   near_lng?: number;
   date?: string;
+  /** Airport searches: that day ranked by |departure − target_time|; cursor t_<n> needs the same value. */
+  target_time?: string;
   seats?: number;
   cursor?: string;
   limit?: number;
@@ -102,6 +113,8 @@ export interface CreatePassengerRequestInput {
   destinationPoint?: { lat: number; lng: number; address?: string };
   /** Airport transfers: «SU 1882». */
   flightNumber?: string;
+  meetWithSign?: boolean;
+  luggageCount?: number;
   seatsNeeded: number;
   departureDate: string;
   flexible?: boolean;
@@ -147,6 +160,8 @@ export interface UpdatePassengerRequestInput {
   flexible?: boolean;
   comment?: string | null;
   flightNumber?: string | null;
+  meetWithSign?: boolean;
+  luggageCount?: number | null;
   originPoint?: { lat: number; lng: number; address?: string } | null;
   destinationPoint?: { lat: number; lng: number; address?: string } | null;
 }

@@ -2586,6 +2586,8 @@ export interface paths {
                 query?: {
                     q?: string;
                     limit?: number;
+                    /** @description any = also районы, айыл аймактары and Бишкек city districts (the non-airport end of a transfer) */
+                    scope?: "settlements" | "any";
                 };
                 header?: never;
                 path?: never;
@@ -2621,7 +2623,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Airports with the city each one serves (airport transfers) */
+        /** Active transfer airports: served city, title, flight-type defaults, popular other ends */
         get: {
             parameters: {
                 query?: never;
@@ -2640,8 +2642,146 @@ export interface paths {
                         "application/json": {
                             data?: (components["schemas"]["Place"] & {
                                 serves?: components["schemas"]["Place"] | null;
+                                /** @example Манас · Бишкек */
+                                titleRu?: string;
+                                /** @example Манас · Бишкек */
+                                titleKg?: string;
+                                /**
+                                 * @description Default of the international / domestic toggle
+                                 * @enum {string}
+                                 */
+                                flightType?: "international" | "domestic";
+                                /** @description Minutes to be at the airport before departure */
+                                departureBufferMin?: {
+                                    /** @example 150 */
+                                    international?: number;
+                                    /** @example 90 */
+                                    domestic?: number;
+                                };
+                                /** @description Quick chips for the other end, served city first */
+                                popularDestinations?: components["schemas"]["Place"][];
                             })[];
                         };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cities/airports/{id}/pickup-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * When to leave for a flight: departure − check-in buffer − travel time
+         * @description pickupAt = flight_time − bufferMin (international 150 / domestic 90) − travelMin, where travelMin = straight-line km from from_id to the airport at 50 km/h, rounded up to 15 min (min 15). flight_type defaults to the airport's flightType. 404 for an unknown / inactive airport.
+         */
+        get: {
+            parameters: {
+                query: {
+                    from_id: number;
+                    /** @description Flight departure */
+                    flight_time: string;
+                    flight_type?: "international" | "domestic";
+                };
+                header?: never;
+                path: {
+                    /** @description Airport place id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: {
+                                /** Format: date-time */
+                                pickupAt: string;
+                                travelMin: number;
+                                bufferMin: number;
+                                distanceKm: number;
+                                /** @enum {string} */
+                                flightType: "international" | "domestic";
+                            };
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
                     };
                 };
             };
@@ -2765,7 +2905,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Pin picker inside Бишкек / Ош: departure spots, then жилмассивы (draggable) */
+        /** Pin picker inside Бишкек / Ош (spots, then жилмассивы) and airports (meeting spots) */
         get: {
             parameters: {
                 query?: {
@@ -2793,6 +2933,8 @@ export interface paths {
                                 nameKg?: string;
                                 lat?: number;
                                 lng?: number;
+                                /** @description Approximate point (airport terminals) */
+                                approx?: boolean;
                             }[];
                         };
                     };
@@ -2958,6 +3100,8 @@ export interface paths {
                     /** @description Asia/Bishkek calendar day */
                     date?: string;
                     ride?: "intercity" | "airport";
+                    /** @description Airport searches: that Bishkek day, items ordered by |departure − target_time| (overrides date) */
+                    target_time?: string;
                 };
                 header?: never;
                 path?: never;
@@ -2993,6 +3137,8 @@ export interface paths {
                                 passengers?: number | null;
                                 /** @description Per seat; null for requests */
                                 price?: number | null;
+                                /** @description Only with target_time: within ±2h of it */
+                                nearTarget?: boolean;
                                 origin?: {
                                     id?: number;
                                     nameRu?: string;
@@ -3540,7 +3686,9 @@ export interface paths {
                     no_smoking?: "true" | "false";
                     pets?: "true" | "false";
                     sort?: "time" | "price_asc" | "rating_desc" | "nearest";
-                    /** @description Opaque */
+                    /** @description Airport searches (flight / pickup instant): trips of that Asia/Bishkek day ordered by |departure − target_time| (within ±2h first, nearTarget=true), then the rest of the day. Overrides sort and date. Pages with an offset cursor "t_<n>" ("nb_t_<n>" on the nearby tier). */
+                    target_time?: string;
+                    /** @description Opaque; pass back as received */
                     cursor?: string;
                     limit?: number;
                 };
@@ -4434,6 +4582,346 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/passenger-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open passenger requests (drivers browse) */
+        get: {
+            parameters: {
+                query?: {
+                    from_id?: number;
+                    to_id?: number;
+                    from_city?: string;
+                    to_city?: string;
+                    near_lat?: number;
+                    near_lng?: number;
+                    date?: string;
+                    seats?: number;
+                    kind?: "intercity" | "airport";
+                    sort?: "time" | "nearest";
+                    /** @description Same as GET /trips: that day ordered by |departure − target_time|, cursor "t_<n>" */
+                    target_time?: string;
+                    /** @description Opaque; pass back as received */
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK (nearby=true when the nearby-settlements tier was used) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["PassengerRequestCardItem"][];
+                            /** Format: uuid */
+                            nextCursor?: string | null;
+                        };
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Post a passenger request («Нужна поездка») */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        originCityId: number;
+                        destinationCityId: number;
+                        originPoint?: components["schemas"]["MeetingPoint"];
+                        destinationPoint?: components["schemas"]["MeetingPoint"];
+                        /** @example SU 1882 */
+                        flightNumber?: string;
+                        /** @description Airport requests only (ignored otherwise) */
+                        meetWithSign?: boolean;
+                        /** @description Airport requests only (ignored otherwise) */
+                        luggageCount?: number;
+                        seatsNeeded: number;
+                        /** Format: date-time */
+                        departureDate: string;
+                        flexible?: boolean;
+                        comment?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PassengerRequest"];
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/passenger-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit own open request */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        seatsNeeded?: number;
+                        /** Format: date-time */
+                        departureDate?: string;
+                        flexible?: boolean;
+                        comment?: string | null;
+                        originPoint?: components["schemas"]["MeetingPoint"] | null;
+                        destinationPoint?: components["schemas"]["MeetingPoint"] | null;
+                        flightNumber?: string | null;
+                        /** @description Airport requests only (ignored otherwise) */
+                        meetWithSign?: boolean;
+                        /** @description Airport requests only */
+                        luggageCount?: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PassengerRequest"];
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Internal */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/bookings": {
@@ -8299,8 +8787,11 @@ export interface components {
         };
         Place: {
             id: number;
-            /** @enum {string} */
-            type: "capital" | "city" | "town" | "village" | "airport";
+            /**
+             * @description raion / aiyl_aimak / city_district only via scope=any (the non-airport end of a transfer)
+             * @enum {string}
+             */
+            type: "capital" | "city" | "town" | "village" | "airport" | "raion" | "aiyl_aimak" | "city_district";
             nameRu: string;
             nameKg: string;
             lat?: number | null;
@@ -8387,6 +8878,63 @@ export interface components {
             liked?: boolean;
             /** @description Only with sort=nearest */
             distanceKm?: number;
+            /** @description Only with target_time: departure within ±2h of it */
+            nearTarget?: boolean;
+        };
+        PassengerRequestCardItem: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            passengerId?: string;
+            /** @enum {string} */
+            kind?: "intercity" | "airport";
+            flightNumber?: string | null;
+            /** @description Airport requests: meet at arrivals with a name sign (false on intercity) */
+            meetWithSign?: boolean;
+            /** @description Airport requests: luggage pieces; null = not said */
+            luggageCount?: number | null;
+            originCityId?: number;
+            destinationCityId?: number;
+            originCity?: string;
+            destinationCity?: string;
+            origin?: components["schemas"]["Place"];
+            destination?: components["schemas"]["Place"];
+            originPoint?: components["schemas"]["MeetingPoint"] | null;
+            lat?: number | null;
+            lng?: number | null;
+            seatsNeeded?: number;
+            /** Format: date-time */
+            departureDate?: string;
+            flexible?: boolean;
+            status?: string;
+            liked?: boolean;
+            myResponse?: {
+                id?: string;
+                status?: string;
+            } | null;
+            passenger?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string;
+                avatarUrl?: string | null;
+                rating?: number | null;
+                ratingCount?: number;
+            };
+            /** @description Only with sort=nearest */
+            distanceKm?: number;
+            /** @description Only with target_time: departure within ±2h of it */
+            nearTarget?: boolean;
+        };
+        PassengerRequest: components["schemas"]["PassengerRequestCardItem"] & {
+            destinationPoint?: components["schemas"]["MeetingPoint"] | null;
+            comment?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            metrics?: {
+                views?: number;
+                likes?: number;
+                contacts?: number;
+            };
         };
         TripListItem: {
             /** Format: uuid */
