@@ -828,7 +828,9 @@
     "nav_history": "История поездок",
     "nav_settings": "Настройки",
     "session_section": "Аккаунт и сессии",
-    "logout_all": "Выйти на всех устройствах"
+    "logout_all": "Выйти на всех устройствах",
+    "bot_connect": "Подключить Telegram-бот",
+    "bot_connect_sub": "Поиск и уведомления в Telegram — поделитесь тем же номером"
   },
   "driver_reg": {
     "back": "← Назад",

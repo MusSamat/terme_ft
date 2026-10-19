@@ -828,7 +828,9 @@
     "nav_history": "Сапарлар тарыхы",
     "nav_settings": "Жөндөөлөр",
     "session_section": "Аккаунт жана сессиялар",
-    "logout_all": "Бардык түзмөктөрдөн чыгуу"
+    "logout_all": "Бардык түзмөктөрдөн чыгуу",
+    "bot_connect": "Telegram-ботту туташтыруу",
+    "bot_connect_sub": "Telegramда издөө жана кабарлар — ошол эле номерди бөлүшүңүз"
   },
   "driver_reg": {
     "back": "← Артка",
