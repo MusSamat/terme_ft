@@ -103,7 +103,7 @@ function RowActions({
         type="button"
         onClick={onDelete}
         disabled={deleting}
-        className="rounded-lg p-1.5 text-ink-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+        className="rounded-lg p-1.5 text-ink-400 hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
       >
         <Trash2 className="h-4 w-4" />
       </button>
@@ -126,7 +126,7 @@ function SaveCancel({
         type="button"
         onClick={onSave}
         disabled={disabled}
-        className="rounded-lg bg-brand-600 p-1.5 text-white hover:bg-brand-700 disabled:opacity-50"
+        className="rounded-lg bg-ink-900 p-1.5 text-white hover:bg-ink-800 disabled:opacity-50"
       >
         <Check className="h-4 w-4" />
       </button>

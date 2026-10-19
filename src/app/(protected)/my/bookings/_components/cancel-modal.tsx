@@ -81,11 +81,11 @@ export function CancelModal({
           </p>
 
           {late && (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl bg-coral-50 p-4">
-              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-coral-600" />
+            <div className="mt-4 flex items-start gap-3 rounded-2xl bg-danger-50 p-4">
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger-600" />
               <div>
-                <p className="text-[14px] font-bold text-coral-800">{t("late_cancel")}</p>
-                <p className="mt-0.5 text-[13px] text-coral-700">
+                <p className="text-[14px] font-bold text-danger-800">{t("late_cancel")}</p>
+                <p className="mt-0.5 text-[13px] text-danger-700">
                   {t("cancel_late_warn", { n: LATE_CANCEL_HOURS })}
                 </p>
               </div>
@@ -109,7 +109,7 @@ export function CancelModal({
               className={cn(
                 "w-full rounded-2xl py-3 text-[16px] font-bold transition-colors",
                 late
-                  ? "bg-coral-600 text-white hover:bg-coral-700 disabled:opacity-50"
+                  ? "bg-danger-600 text-white hover:bg-danger-700 disabled:opacity-50"
                   : "bg-ink-900 text-white hover:bg-ink-800 disabled:opacity-50",
               )}
             >

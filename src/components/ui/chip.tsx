@@ -6,37 +6,29 @@ import { cn } from "@/lib/utils/cn";
 // Tailwind's scanner picks every class up (never interpolate color names).
 
 export type ChipKind = "filter" | "quick" | "time" | "date" | "pref" | "removable" | "add";
-export type ChipAccent = "brand" | "grape" | "sky" | "accent";
+export type ChipAccent = "brand" | "accent";
 
 /** Tinted selected state: border + soft bg (filter / pref chips). */
 const TINT_ON: Record<ChipAccent, string> = {
   brand: "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
-  grape: "border-grape-500 bg-grape-50 text-grape-600 dark:bg-grape-500/15 dark:text-grape-300",
-  sky: "border-sky-500 bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   accent: "border-accent-500 bg-accent-50 text-accent-700 dark:bg-accent-500/15 dark:text-accent-300",
 };
 
 /** Filled selected state (leading «Фильтры» chip, date chips). */
 const FILL_ON: Record<ChipAccent, string> = {
   brand: "bg-brand-600 text-white",
-  grape: "bg-grape-500 text-white",
-  sky: "bg-sky-500 text-white",
   accent: "bg-accent-500 text-accent-ink",
 };
 
 /** Date chip selected — always white text on {acc}-500. */
 const DATE_ON: Record<ChipAccent, string> = {
   brand: "bg-brand-500 text-white",
-  grape: "bg-grape-500 text-white",
-  sky: "bg-sky-500 text-white",
   accent: "bg-accent-500 text-white",
 };
 
 /** Dashed add-chip («+ город» / «+ точка»). */
 const ADD: Record<ChipAccent, string> = {
   brand: "border-brand-300 text-brand-600 dark:border-brand-500/40 dark:text-brand-300",
-  grape: "border-grape-300 text-grape-600 dark:border-grape-500/40 dark:text-grape-300",
-  sky: "border-sky-300 text-sky-600 dark:border-sky-500/40 dark:text-sky-300",
   accent: "border-accent-300 text-accent-600 dark:border-accent-500/40 dark:text-accent-300",
 };
 

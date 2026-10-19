@@ -18,9 +18,9 @@ describe("NotifCard", () => {
     expect(container.firstChild).toHaveClass("bg-brand-50", "border-l-brand-500");
   });
 
-  it("error variant uses coral tokens", () => {
+  it("error variant uses danger tokens", () => {
     const { container } = render(<NotifCard variant="error">Error message</NotifCard>);
-    expect(container.firstChild).toHaveClass("bg-coral-100/40", "border-l-coral-500");
+    expect(container.firstChild).toHaveClass("bg-danger-100/40", "border-l-danger-500");
   });
 
   it("warning variant uses accent tokens", () => {
@@ -28,9 +28,9 @@ describe("NotifCard", () => {
     expect(container.firstChild).toHaveClass("bg-accent-50", "border-l-accent-500");
   });
 
-  it("success variant uses success border on brand background", () => {
+  it("success variant uses teal border on brand background", () => {
     const { container } = render(<NotifCard variant="success">Success message</NotifCard>);
-    expect(container.firstChild).toHaveClass("bg-brand-50", "border-l-success");
+    expect(container.firstChild).toHaveClass("bg-brand-50", "border-l-brand-500");
   });
 
   it("renders custom icon when provided (overrides default icon)", () => {

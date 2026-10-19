@@ -67,7 +67,7 @@ export function PhoneChangeForm() {
         </div>
         {/* Real reason: wrong / expired code, too many attempts, number taken… */}
         {(confirmMutation.error || sendMutation.error) && (
-          <p className="text-caption text-coral-500">
+          <p className="text-caption text-danger-500">
             {fe(extractError(confirmMutation.error ?? sendMutation.error))}
           </p>
         )}
@@ -108,7 +108,7 @@ export function PhoneChangeForm() {
       </div>
       <p className="text-[13px] font-600 text-ink-500">{t("whatsapp_note")}</p>
       {sendMutation.error && (
-        <p className="text-caption text-coral-500">{fe(extractError(sendMutation.error))}</p>
+        <p className="text-caption text-danger-500">{fe(extractError(sendMutation.error))}</p>
       )}
       <Button
         variant="primary"

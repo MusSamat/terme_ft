@@ -30,9 +30,9 @@ describe("Badge", () => {
     expect(screen.getByText("Label")).toBeInTheDocument();
   });
 
-  it("applies danger variant classes (coral tokens)", () => {
+  it("applies danger variant classes (danger tokens)", () => {
     const { container } = render(<Badge variant="danger">Error</Badge>);
-    expect(container.firstChild).toHaveClass("bg-coral-100", "text-coral-600");
+    expect(container.firstChild).toHaveClass("bg-danger-100", "text-danger-600");
   });
 
   it("applies success variant classes (brand tokens)", () => {

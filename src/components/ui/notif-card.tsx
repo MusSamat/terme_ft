@@ -7,9 +7,9 @@ const notifVariants = cva("flex gap-3 rounded-2xl border-l-[4px] p-4", {
   variants: {
     variant: {
       info: "bg-brand-50 border-l-brand-500 text-ink-900",
-      success: "bg-brand-50 border-l-success text-ink-900",
+      success: "bg-brand-50 border-l-brand-500 text-ink-900",
       warning: "bg-accent-50 border-l-accent-500 text-ink-900",
-      error: "bg-coral-100/40 border-l-coral-500 text-ink-900",
+      error: "bg-danger-100/40 border-l-danger-500 text-ink-900",
     },
   },
   defaultVariants: { variant: "info" },
@@ -17,9 +17,9 @@ const notifVariants = cva("flex gap-3 rounded-2xl border-l-[4px] p-4", {
 
 const iconColorMap = {
   info: "text-brand-700",
-  success: "text-success",
+  success: "text-brand-600",
   warning: "text-accent-600",
-  error: "text-coral-500",
+  error: "text-danger-500",
 } as const;
 
 const iconMap = {

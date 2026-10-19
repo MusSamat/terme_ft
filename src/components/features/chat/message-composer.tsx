@@ -75,7 +75,7 @@ export function MessageComposer({ onSend, onTyping, disabled, className }: Props
         type="submit"
         disabled={!text.trim() || disabled}
         aria-label={t("send_aria")}
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-accent-500 text-accent-ink hover:bg-accent-400 disabled:opacity-40"
       >
         <Send className="h-5 w-5" aria-hidden="true" />
       </button>

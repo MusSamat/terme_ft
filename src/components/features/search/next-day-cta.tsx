@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { CalendarCheck, CalendarSearch, ChevronRight } from "lucide-react";
 import { useCalendarCounts } from "@/lib/hooks/use-calendar-counts";
 import { DatePickerModal } from "@/components/ui/date-picker";
-import { cn } from "@/lib/utils/cn";
 import { routeFromParams } from "@/lib/places";
 
 // Inline «next day» jump shown when the selected day is empty or its list ends —
@@ -45,7 +44,7 @@ export function NextDayCta({ kind }: { kind: "trips" | "requests" }) {
     .filter((d) => (counts[d] ?? 0) > 0 && d >= today)
     .sort()
     .find((d) => d > current);
-  const grape = kind === "requests";
+  const isRequests = kind === "requests";
 
   const goDate = (v: string) => {
     const p = new URLSearchParams(sp);
@@ -62,7 +61,7 @@ export function NextDayCta({ kind }: { kind: "trips" | "requests" }) {
         <button
           type="button"
           onClick={() => setPickerOpen(true)}
-          className={cn("mt-3 flex w-full items-center justify-center gap-2 text-[13px] font-800 underline underline-offset-2", grape ? "text-grape-600" : "text-brand-600")}
+          className="mt-3 flex w-full items-center justify-center gap-2 text-[13px] font-800 text-brand-600 underline underline-offset-2"
         >
           <CalendarSearch className="h-4 w-4 shrink-0" aria-hidden="true" />
           {t("next_day_none")}
@@ -79,16 +78,11 @@ export function NextDayCta({ kind }: { kind: "trips" | "requests" }) {
     <button
       type="button"
       onClick={go}
-      className={cn(
-        "mt-3 flex w-full items-center gap-2.5 rounded-2xl border px-4 py-3.5 text-left text-[14px] font-800 transition-colors",
-        grape
-          ? "border-grape-200 bg-grape-50 text-grape-700 hover:bg-grape-100 dark:border-grape-500/30 dark:bg-grape-500/10 dark:text-grape-300"
-          : "border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300",
-      )}
+      className="mt-3 flex w-full items-center gap-2.5 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3.5 text-left text-[14px] font-800 text-brand-700 transition-colors hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300"
     >
       <CalendarCheck className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
       <span className="flex-1">
-        {t(grape ? "next_day_cta_requests" : "next_day_cta_trips", { date: label, n: counts[next] ?? 0 })}
+        {t(isRequests ? "next_day_cta_requests" : "next_day_cta_trips", { date: label, n: counts[next] ?? 0 })}
       </span>
       <ChevronRight className="h-5 w-5 shrink-0" aria-hidden="true" />
     </button>

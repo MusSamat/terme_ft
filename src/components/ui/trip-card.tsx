@@ -109,7 +109,7 @@ function TripCardInner({
         "[--notch:#FAFAF9] [--perf-line:#E7E5E4] dark:bg-[#232322] dark:shadow-none dark:ring-0 dark:[--notch:#0C0A09] dark:[--perf-line:#3C3C3A]",
         (soldOut || inactive) && "opacity-45",
         active && "ring-2 ring-brand-500",
-        booked && "bg-emerald-50/60 ring-emerald-200 dark:bg-emerald-500/[0.07] dark:ring-emerald-500/25",
+        booked && "bg-brand-50/60 ring-brand-200 dark:bg-brand-500/[0.07] dark:ring-brand-500/25",
         className,
       )}
       onClick={onClick}
@@ -195,7 +195,7 @@ function TripCardInner({
 
         <span className="flex shrink-0 items-center gap-2">
           {instant && <Zap className="h-4 w-4 fill-accent-400 text-accent-500" aria-hidden="true" />}
-          {wholeCabin && <Sofa className="h-4 w-4 text-sky-500" aria-hidden="true" />}
+          {wholeCabin && <Sofa className="h-4 w-4 text-brand-500" aria-hidden="true" />}
           {soldOut ? (
             <span className="text-[12px] font-700 text-ink-500 dark:text-ink-400">{t("no_seats")}</span>
           ) : (

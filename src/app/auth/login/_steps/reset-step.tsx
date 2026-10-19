@@ -48,7 +48,7 @@ export function ResetStep({
         <>
           {/* Step 1: the WhatsApp code. reset-password consumes a single-use OTP. */}
           <div className="mb-5 flex flex-col gap-1.5">
-            <p className="flex items-center justify-center gap-1.5 text-center text-[13px] font-700 text-[#128C7E]">
+            <p className="flex items-center justify-center gap-1.5 text-center text-[13px] font-700 text-ink-600 dark:text-ink-300">
               <MessageCircle className="h-4 w-4" />
               {tl("reset_code_hint")}
             </p>
@@ -69,7 +69,7 @@ export function ResetStep({
             type="button"
             disabled={!canContinue}
             onClick={onContinue}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-700 text-[#4A2C00] shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-700 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
           >
             {tl("continue_btn")}
           </button>
@@ -108,12 +108,12 @@ export function ResetStep({
               className={cn(
                 "h-12 w-full rounded-2xl border-2 bg-ink-50 px-4 text-[16px] font-800 outline-none dark:bg-ink-800",
                 confirmPassword && confirmPassword !== newPassword
-                  ? "border-coral-300 text-coral-700"
+                  ? "border-danger-300 text-danger-700"
                   : "border-ink-200 text-ink-900 focus:border-brand-500 dark:border-ink-700 dark:text-white",
               )}
             />
             {confirmPassword && confirmPassword !== newPassword && (
-              <p className="text-[14px] font-600 text-coral-600">{tl("passwords_mismatch")}</p>
+              <p className="text-[14px] font-600 text-danger-600">{tl("passwords_mismatch")}</p>
             )}
           </div>
 
@@ -121,7 +121,7 @@ export function ResetStep({
             type="button"
             disabled={!canReset || resetMutation.isPending}
             onClick={() => resetMutation.mutate()}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-700 text-[#4A2C00] shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[16px] font-700 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 disabled:opacity-40"
           >
             {resetMutation.isPending ? tl("saving") : tl("save_password")}
           </button>

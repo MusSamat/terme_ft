@@ -70,10 +70,7 @@ export type IconName = keyof typeof ICON;
 
 const TONE = {
   brand: "bg-brand-50 text-brand-600",
-  grape: "bg-grape-100 text-grape-600",
   accent: "bg-accent-100 text-accent-600",
-  sky: "bg-sky-100 text-sky-600",
-  coral: "bg-coral-100 text-coral-500",
   ink: "bg-ink-100 text-ink-500 dark:bg-ink-800 dark:text-ink-300",
 } as const;
 

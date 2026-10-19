@@ -18,7 +18,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const selectCls =
-  "h-10 w-full rounded-xl border-2 border-ink-200 bg-ink-50 px-3 text-[15px] font-semibold text-ink-900 outline-none focus:border-sky-400 focus:bg-white transition-colors dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:focus:bg-ink-900";
+  "h-10 w-full rounded-xl border-2 border-ink-200 bg-ink-50 px-3 text-[15px] font-semibold text-ink-900 outline-none focus:border-brand-400 focus:bg-white transition-colors dark:border-ink-700 dark:bg-ink-900 dark:text-white dark:focus:bg-ink-900";
 
 export function RequestFilters() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export function RequestFilters() {
               onClick={() => setRoute(to, from)}
               disabled={!from && !to}
               aria-label={t("swap_aria")}
-              className="flex h-6 w-6 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-400 hover:border-sky-300 hover:text-sky-600 disabled:opacity-30 transition-colors dark:bg-ink-800 dark:border-ink-700"
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-400 hover:border-brand-300 hover:text-brand-600 disabled:opacity-30 transition-colors dark:bg-ink-800 dark:border-ink-700"
             >
               <ArrowLeftRight className="h-2.5 w-2.5" aria-hidden />
             </button>
@@ -113,7 +113,7 @@ export function RequestFilters() {
         <button
           type="button"
           onClick={clear}
-          className="mt-1 text-[13px] font-bold text-ink-400 hover:text-sky-600 transition-colors text-left"
+          className="mt-1 text-[13px] font-bold text-ink-400 hover:text-brand-600 transition-colors text-left"
         >
           {t("reset")}
         </button>

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { listAdminUsers, type AdminUserItem } from "@/lib/api/admin";
 import { normalizeMediaUrl } from "@/lib/utils/media-url";
 import { StatusBadge } from "@/components/ui";
-import { cn } from "@/lib/utils/cn";
 import { Search, ChevronRight, ChevronLeft, Star, Car } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { AdminQueryError } from "@/components/admin/admin-query-error";
@@ -189,12 +188,7 @@ export default function AdminUsersPage() {
                       {u.roles.map((r) => (
                         <span
                           key={r}
-                          className={cn(
-                            "rounded px-1.5 py-0.5 text-[10px] font-bold",
-                            r === "driver"
-                              ? "bg-sky-100 text-sky-700"
-                              : "bg-brand-100 text-brand-700",
-                          )}
+                          className="rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-bold text-ink-700"
                         >
                           {r}
                         </span>

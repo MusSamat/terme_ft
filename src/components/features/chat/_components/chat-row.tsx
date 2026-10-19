@@ -40,7 +40,7 @@ export function ChatRow({ s, isActive }: { s: ChatSummary; isActive: boolean }) 
       <div className="relative flex-shrink-0">
         <DriverAvatar name={s.otherName} src={s.otherAvatarUrl} size="sm" />
         {hasUnread && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-500 px-1 text-[9px] font-900 leading-none text-white ring-2 ring-white dark:ring-ink-900">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[9px] font-900 leading-none text-white ring-2 ring-white dark:ring-ink-900">
             {s.unreadCount > 9 ? "9+" : s.unreadCount}
           </span>
         )}

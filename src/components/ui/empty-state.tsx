@@ -9,10 +9,7 @@ import { useAuth } from "@/store/auth";
 /** Фон 64px круга под иконку — по мотивам словаря §10 (design-system §11 «Пусто»). */
 const CIRCLE_TONE = {
   brand: "bg-brand-100 text-brand-600",
-  grape: "bg-grape-100 text-grape-600",
   accent: "bg-accent-100 text-accent-600",
-  sky: "bg-sky-100 text-sky-600",
-  coral: "bg-coral-100 text-coral-500",
   ink: "bg-ink-100 text-ink-500 dark:bg-ink-800 dark:text-ink-300",
 } as const satisfies Record<IconTone, string>;
 
@@ -61,7 +58,7 @@ export function EmptyState({ icon, iconTone = "brand", title, description, actio
 }
 
 const CTA_CLASS =
-  "mt-1 inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-brand-600 px-5 text-[14px] font-900 text-white shadow-brandcta transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
+  "mt-1 inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-accent-500 px-5 text-[14px] font-900 text-accent-ink shadow-cta transition-colors hover:bg-accent-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2";
 
 function EmptyStateCta({ action }: { action: EmptyStateAction }) {
   if (action.href) {
@@ -115,7 +112,7 @@ export function RoleEmptyState({ context, className }: RoleEmptyStateProps) {
         <EmptyState
           className={className}
           icon="request"
-          iconTone="grape"
+          iconTone="brand"
           title={t("driver_requests.title")}
           description={t("driver_requests.description")}
           action={{ label: t("driver_requests.cta"), href: "/trips/create" }}
@@ -165,7 +162,7 @@ export function RoleEmptyState({ context, className }: RoleEmptyStateProps) {
       <EmptyState
         className={className}
         icon="request"
-        iconTone="grape"
+        iconTone="brand"
         title={t("passenger_requests.title")}
         description={t("passenger_requests.description")}
         action={{ label: t("passenger_requests.cta"), href: "/requests/create" }}

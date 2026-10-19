@@ -78,7 +78,7 @@ export function TermsGate() {
           <Button variant="secondary" size="md" className="flex-1" onClick={later} disabled={isPending}>
             {t("later")}
           </Button>
-          <Button variant="primary" size="md" className="flex-1" onClick={() => accept()} disabled={isPending}>
+          <Button variant="cta" size="md" className="flex-1" onClick={() => accept()} disabled={isPending}>
             {t("accept")}
           </Button>
         </div>

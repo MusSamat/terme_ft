@@ -112,7 +112,7 @@ export function DriverBookingRow({
                 className={cn(
                   "rounded-full border-2 px-2.5 py-1 text-[14px] font-bold",
                   rejectReason === r
-                    ? "border-coral-400 bg-coral-50 text-coral-700"
+                    ? "border-danger-400 bg-danger-50 text-danger-700"
                     : "border-ink-200 text-ink-600 dark:border-ink-700 dark:text-ink-300",
                 )}
               >
@@ -133,7 +133,7 @@ export function DriverBookingRow({
               type="button"
               onClick={onConfirmReject}
               disabled={rejectPending}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-coral-600 py-2 text-[14px] font-bold text-white disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-danger-600 py-2 text-[14px] font-bold text-white disabled:opacity-50"
             >
               {rejectPending && <Spinner size={12} />}
               {t("reject_btn")}
@@ -148,7 +148,7 @@ export function DriverBookingRow({
                 type="button"
                 onClick={onAccept}
                 disabled={acceptPending}
-                className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-[14px] font-bold text-white hover:bg-brand-700 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl bg-ink-900 px-3 py-2 text-[14px] font-bold text-white hover:bg-ink-800 disabled:opacity-50 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
               >
                 {acceptPending ? <Spinner size={12} /> : <CheckCircle className="h-3.5 w-3.5" />}
                 {t("accept_btn")}
@@ -176,7 +176,7 @@ export function DriverBookingRow({
             <button
               type="button"
               onClick={onCancelBooking}
-              className="flex items-center gap-1.5 rounded-xl border border-coral-200 px-3 py-2 text-[14px] font-bold text-coral-600 hover:bg-coral-50"
+              className="flex items-center gap-1.5 rounded-xl border border-danger-200 px-3 py-2 text-[14px] font-bold text-danger-600 hover:bg-danger-50"
             >
               <X className="h-3.5 w-3.5" />
               {t("cancel_btn")}

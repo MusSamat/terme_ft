@@ -248,7 +248,7 @@ export default function NotificationsPage() {
                 <Icon className="h-4 w-4" aria-hidden="true" />
                 <span className="flex-1 text-left">{label}</span>
                 {key === "all" && unreadCount > 0 && (
-                  <span className="rounded-full bg-coral-500 px-1.5 text-[11px] font-900 text-white">{unreadCount}</span>
+                  <span className="rounded-full bg-brand-600 px-1.5 text-[11px] font-900 text-white">{unreadCount}</span>
                 )}
               </button>
             ))}

@@ -5,11 +5,12 @@ import { cn } from "@/lib/utils/cn";
 // Recipes — design-spec §1.7 (common atoms). Every string literal so the
 // Tailwind scanner sees all classes (incl. dark: variants).
 const CTA = "bg-accent-500 text-accent-ink shadow-cta hover:bg-accent-400 focus-visible:ring-accent-500";
-const BRAND = "bg-brand-600 text-white shadow-brandcta hover:bg-brand-700 focus-visible:ring-brand-600";
-const GRAPE = "bg-grape-500 text-white shadow-indigocta hover:bg-grape-600 focus-visible:ring-grape-500";
 const GHOST = "bg-ink-100 text-ink-700 hover:bg-ink-200 focus-visible:ring-ink-400 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700";
 const TEXT_GHOST = "bg-transparent font-800 text-ink-500 hover:text-ink-800 focus-visible:ring-ink-400 dark:text-ink-400 dark:hover:text-ink-100";
 const INVERT = "bg-ink-900 text-white hover:bg-ink-800 focus-visible:ring-ink-700 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100";
+// Non-primary filled buttons are neutral (two-brand palette: amber = the one
+// primary CTA, teal = selection only).
+const BRAND = INVERT;
 const DANGER_SOFT = "bg-danger-50 text-danger-600 hover:bg-danger-100 focus-visible:ring-danger-400 dark:bg-danger-500/10 dark:hover:bg-danger-500/20";
 const OUTLINE = "border-2 border-ink-200 bg-white text-ink-700 hover:border-brand-400 hover:text-brand-700 focus-visible:ring-brand-500 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-200 dark:hover:border-brand-500 dark:hover:text-brand-300";
 const DANGER_SOLID = "bg-danger-500 text-white hover:bg-danger-600 focus-visible:ring-danger-500";
@@ -22,10 +23,8 @@ const buttonVariants = cva(
       variant: {
         /** amber primary CTA */
         cta: CTA,
-        /** teal (driver) CTA */
+        /** neutral filled (non-primary action) */
         brand: BRAND,
-        /** indigo (passenger) CTA */
-        grape: GRAPE,
         /** filled gray secondary */
         ghost: GHOST,
         /** text-only ghost */

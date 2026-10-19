@@ -153,7 +153,7 @@ function EditPanel({ city, onClose }: { city: CityItem; onClose: () => void }) {
           </div>
         </div>
 
-        {err && <p className="mt-3 text-[13px] font-semibold text-coral-600">{err.message}</p>}
+        {err && <p className="mt-3 text-[13px] font-semibold text-danger-600">{err.message}</p>}
         <div className="mt-auto flex gap-2 pt-5">
           <Button
             type="button"
@@ -250,7 +250,7 @@ export default function AdminCitiesPage() {
           ))}
         </div>
       ) : query.isError ? (
-        <p className="rounded-2xl bg-white p-6 text-center text-[14px] text-coral-600 shadow-card">
+        <p className="rounded-2xl bg-white p-6 text-center text-[14px] text-danger-600 shadow-card">
           {extractError(query.error).message}
         </p>
       ) : rows.length === 0 ? (

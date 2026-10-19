@@ -208,7 +208,7 @@ export function SearchLayout({ initial }: Props) {
           header on top → results as a card grid (1 col mobile, 2 cols ≥md) →
           filters & detail open as centered bottom sheets. */}
       <div className="mx-auto w-full max-w-[900px]">
-        <FeedHeader tab="trips" onOpenFilters={() => setMobileFiltersOpen(true)} />
+        <FeedHeader onOpenFilters={() => setMobileFiltersOpen(true)} />
 
         <div className="px-4 pb-6">
           <BecomeDriverBanner />

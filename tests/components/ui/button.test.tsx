@@ -39,15 +39,14 @@ describe("Button", () => {
   });
 
   describe("variants", () => {
-    it("brand is the default variant (teal)", () => {
+    it("brand is the default variant (neutral filled)", () => {
       render(<Button>x</Button>);
-      expect(screen.getByRole("button")).toHaveClass("bg-brand-600");
+      expect(screen.getByRole("button")).toHaveClass("bg-ink-900");
     });
 
     it.each([
       ["cta", "bg-accent-500"],
-      ["brand", "bg-brand-600"],
-      ["grape", "bg-grape-500"],
+      ["brand", "bg-ink-900"],
       ["ghost", "bg-ink-100"],
       ["textGhost", "bg-transparent"],
       ["invert", "bg-ink-900"],
@@ -70,9 +69,9 @@ describe("Button", () => {
       expect(screen.getByRole("button")).toHaveClass("bg-accent-500");
     });
 
-    it("primary aliases brand (teal)", () => {
+    it("primary aliases brand (neutral filled)", () => {
       render(<Button variant="primary">x</Button>);
-      expect(screen.getByRole("button")).toHaveClass("bg-brand-600");
+      expect(screen.getByRole("button")).toHaveClass("bg-ink-900");
     });
 
     it("secondary stays brand-tinted", () => {

@@ -19,8 +19,8 @@ const TIER_COLORS: Record<Tier, {
   borderColor: string;
 }> = {
   novice:   { textColor: "text-ink-600 dark:text-ink-300",     bgColor: "bg-ink-100 dark:bg-ink-800",         ringColor: "ring-ink-400 dark:ring-ink-500",    progressBg: "bg-ink-500",     borderColor: "border-ink-200 dark:border-ink-700"      },
-  traveler: { textColor: "text-sky-700 dark:text-sky-300",     bgColor: "bg-sky-50 dark:bg-sky-500/10",       ringColor: "ring-sky-400",                      progressBg: "bg-sky-600",     borderColor: "border-sky-200 dark:border-sky-500/30"   },
-  expert:   { textColor: "text-grape-700 dark:text-grape-300", bgColor: "bg-grape-50 dark:bg-grape-500/10",   ringColor: "ring-grape-400",                    progressBg: "bg-grape-600",   borderColor: "border-grape-200 dark:border-grape-500/30" },
+  traveler: { textColor: "text-brand-700 dark:text-brand-300", bgColor: "bg-brand-50 dark:bg-brand-500/10",   ringColor: "ring-brand-400",                    progressBg: "bg-brand-500",   borderColor: "border-brand-200 dark:border-brand-500/30" },
+  expert:   { textColor: "text-brand-800 dark:text-brand-200", bgColor: "bg-brand-100 dark:bg-brand-500/20",  ringColor: "ring-brand-600",                    progressBg: "bg-brand-700",   borderColor: "border-brand-300 dark:border-brand-500/40" },
   elite:    { textColor: "text-accent-700 dark:text-accent-300", bgColor: "bg-accent-50 dark:bg-accent-500/10", ringColor: "ring-accent-400",                 progressBg: "bg-accent-500",  borderColor: "border-accent-200 dark:border-accent-500/30" },
 };
 
@@ -232,7 +232,7 @@ export default function LoyaltyPage() {
                     </div>
                     <span className={cn(
                       "ml-3 flex-shrink-0 text-[17px] font-900",
-                      tx.points > 0 ? "text-brand-600 dark:text-brand-400" : "text-coral-500",
+                      tx.points > 0 ? "text-brand-600 dark:text-brand-400" : "text-ink-500 dark:text-ink-400",
                     )}>
                       {tx.points > 0 ? "+" : ""}{tx.points}
                     </span>

@@ -22,7 +22,7 @@ export function TimeSelect24({ value, onChange, className, selectClassName, aria
   // on narrow screens instead of overflowing into a horizontal scroll.
   const base =
     selectClassName ??
-    "h-12 min-w-0 flex-1 rounded-2xl border-2 border-ink-200 bg-ink-50 px-2 text-center text-[15px] font-semibold text-ink-900 outline-none focus:border-sky-400 focus:bg-white dark:focus:bg-ink-900 dark:border-ink-700 dark:bg-ink-900 dark:text-white";
+    "h-12 min-w-0 flex-1 rounded-2xl border-2 border-ink-200 bg-ink-50 px-2 text-center text-[15px] font-semibold text-ink-900 outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-ink-900 dark:border-ink-700 dark:bg-ink-900 dark:text-white";
   return (
     <div className={className ?? "flex w-full items-center gap-1.5"}>
       <select

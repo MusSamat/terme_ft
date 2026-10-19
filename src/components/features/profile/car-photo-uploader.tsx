@@ -138,7 +138,7 @@ export function CarPhotoUploader() {
           <p className="text-[14px] font-semibold text-brand-700">{t("photo_updated")}</p>
         )}
         {error && (
-          <p className="text-[14px] font-semibold text-coral-600">{t("photo_upload_error")}</p>
+          <p className="text-[14px] font-semibold text-danger-600">{t("photo_upload_error")}</p>
         )}
       </div>
 

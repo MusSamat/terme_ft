@@ -55,7 +55,7 @@ export function VerificationCard({ variant = "card" }: { variant?: "card" | "inl
       {!verified && !locked && (!pending || docsRequested) && (
         <Link
           href="/profile/driver"
-          className="shrink-0 rounded-full bg-brand-600 px-4 py-2 text-[14px] font-800 text-white transition-colors hover:bg-brand-700"
+          className="shrink-0 rounded-full bg-ink-900 px-4 py-2 text-[14px] font-800 text-white transition-colors hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
         >
           {t("verif_cta")}
         </Link>

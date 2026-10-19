@@ -176,7 +176,7 @@ export function AvatarUploader({
         onChange={handleFile}
       />
       {error && (
-        <p className="absolute -bottom-6 left-0 whitespace-nowrap text-caption text-coral-500">{t("upload_error")}</p>
+        <p className="absolute -bottom-6 left-0 whitespace-nowrap text-caption text-danger-500">{t("upload_error")}</p>
       )}
     </div>
   );

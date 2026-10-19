@@ -44,7 +44,7 @@ function RequestsEmpty() {
     <div className="flex flex-col gap-5">
       <EmptyState
         icon="request"
-        iconTone="grape"
+        iconTone="brand"
         title={t("empty_requests_title")}
         description={role === "driver" ? t("empty_requests_desc_driver") : t("empty_requests_desc")}
         action={action}
@@ -73,7 +73,7 @@ const FeedRequestRow = memo(function FeedRequestRow({
       <RequestCard
         request={request}
         onClick={() => onSelect(request.id)}
-        className={active ? "ring-2 ring-grape-400 dark:ring-grape-500" : ""}
+        className={active ? "ring-2 ring-brand-400 dark:ring-brand-500" : ""}
       />
     </div>
   );
@@ -175,7 +175,7 @@ export function RequestsFeed() {
       {/* ONE structure for all widths (same concept as the trips feed): header
           on top → results grid (1 col mobile, 2 cols ≥md) → centered sheets. */}
       <div className="mx-auto w-full max-w-[900px]">
-        <FeedHeader tab="requests" onOpenFilters={() => setMobileFiltersOpen(true)} />
+        <FeedHeader onOpenFilters={() => setMobileFiltersOpen(true)} />
 
         <div className="px-4 pb-6">
           {!hasRoute ? (

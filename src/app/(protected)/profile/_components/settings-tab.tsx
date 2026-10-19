@@ -99,7 +99,7 @@ export function SettingsTab({ isDriver, exportMutation, logoutMutation, logoutAl
 
           <Link
             href="/profile/delete"
-            className="flex items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-[14px] font-800 text-coral-600 hover:bg-coral-50 dark:hover:bg-coral-500/10"
+            className="flex items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-[14px] font-800 text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-500/10"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
             {t("delete_btn")}

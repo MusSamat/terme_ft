@@ -200,7 +200,7 @@ export function ChatMessages({
       ) : preBooking ? (
         <div className="shrink-0 border-t border-ink-100 bg-white px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] dark:border-ink-800 dark:bg-ink-900">
           {sendError && (
-            <div className="mb-2 rounded-xl bg-coral-50 px-3 py-2 text-[14px] font-semibold text-coral-700">
+            <div className="mb-2 rounded-xl bg-danger-50 px-3 py-2 text-[14px] font-semibold text-danger-700">
               {sendError}
             </div>
           )}
@@ -212,7 +212,7 @@ export function ChatMessages({
       ) : (
         <div className="shrink-0 border-t border-ink-100 bg-white dark:border-ink-800 dark:bg-ink-900">
           {sendError && (
-            <div className="mx-4 mt-2 rounded-xl bg-coral-50 px-3 py-2 text-[14px] font-semibold text-coral-700">
+            <div className="mx-4 mt-2 rounded-xl bg-danger-50 px-3 py-2 text-[14px] font-semibold text-danger-700">
               {sendError}
             </div>
           )}

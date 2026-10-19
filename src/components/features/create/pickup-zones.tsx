@@ -112,14 +112,14 @@ export function PickupZones({ pickup, dropoff, onPickup, onDropoff }: Props) {
               chipAccent="brand"
             />
             <Zone
-              bg="bg-sky-50 dark:bg-sky-500/10"
-              headerColor="text-sky-600 dark:text-sky-300"
+              bg="bg-brand-50 dark:bg-brand-500/10"
+              headerColor="text-brand-600 dark:text-brand-300"
               headerIcon="flag"
               headerLabel={t("dropoff_driver")}
               addLabel={t("add_city")}
               points={dropoff}
               onChange={onDropoff}
-              chipAccent="sky"
+              chipAccent="brand"
             />
           </div>
         </>

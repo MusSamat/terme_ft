@@ -75,7 +75,7 @@ export function ChatHub() {
           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
             <Bell className="h-5 w-5" aria-hidden="true" />
             {notifUnread > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-500 px-1 text-[9px] font-900 text-white ring-2 ring-white dark:ring-ink-900">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[9px] font-900 text-white ring-2 ring-white dark:ring-ink-900">
                 {notifUnread > 9 ? "9+" : notifUnread}
               </span>
             )}

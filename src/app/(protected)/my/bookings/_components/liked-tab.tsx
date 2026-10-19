@@ -36,7 +36,7 @@ function EmptyLiked() {
   const t = useTranslations("my");
   return (
     <div className="rounded-3xl border border-ink-100 bg-white p-8 text-center dark:border-ink-800 dark:bg-ink-900">
-      <Heart className="mx-auto mb-2 h-8 w-8 text-coral-300" aria-hidden="true" />
+      <Heart className="mx-auto mb-2 h-8 w-8 text-ink-300" aria-hidden="true" />
       <p className="text-[16px] font-900 text-ink-900 dark:text-white">{t("liked_empty_title")}</p>
       <p className="mt-1 text-[15px] font-700 text-ink-500 dark:text-ink-400">{t("liked_empty_hint")}</p>
     </div>
@@ -53,7 +53,7 @@ function FilterChips({ value, onChange }: { value: FilterKey; onChange: (v: Filt
   return (
     <div className="mb-2.5 flex gap-1.5 overflow-x-auto">
       {opts.map((o) => (
-        <Chip key={o.key} kind="filter" accent="accent" selected={value === o.key} onClick={() => onChange(o.key)}>
+        <Chip key={o.key} kind="filter" accent="brand" selected={value === o.key} onClick={() => onChange(o.key)}>
           {o.label}
         </Chip>
       ))}
@@ -145,7 +145,7 @@ export function LikedTab() {
                   destination={rn(tr).to}
                   avatar={<DriverAvatar name={tr.driver?.name ?? ""} src={tr.driver?.avatarUrl} size="md" />}
                   actorName={tr.driver?.name}
-                  trailing={<span className="num text-[15px] font-900 text-sky-600">{tr.pricePerSeat} {tB("som")}</span>}
+                  trailing={<span className="num text-[15px] font-900 text-brand-600">{tr.pricePerSeat} {tB("som")}</span>}
                   href={`/trips/${tr.id}`}
                 />
               ),
@@ -160,7 +160,6 @@ export function LikedTab() {
               node: (
                 <ListCard
                   key={`r-${r.id}`}
-                  grape
                   when={fmtD(r.departureDate)}
                   status={r.status}
                   origin={rn(r).from}

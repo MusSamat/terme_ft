@@ -83,7 +83,7 @@ export function SearchHub() {
             href="/airport"
             className="flex items-center gap-2.5 rounded-2xl bg-white p-3 shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300">
               <Plane className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="min-w-0">
@@ -168,7 +168,7 @@ export function SearchHub() {
           </div>
 
           <div className="mt-2.5 flex items-stretch gap-2">
-            <RideTypeToggle whole={whole} onChange={setWhole} accent={driver ? "grape" : "brand"} />
+            <RideTypeToggle whole={whole} onChange={setWhole} />
             <button
               type="button"
               onClick={() => goRoute(from, to, whole, true)}
@@ -196,9 +196,7 @@ export function SearchHub() {
               className={cn(
                 "flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl text-[15px] font-900 transition-colors",
                 ready
-                  ? driver
-                    ? "bg-grape-600 text-white shadow-indigocta hover:bg-grape-500"
-                    : "bg-accent-500 text-accent-ink shadow-cta hover:bg-accent-400"
+                  ? "bg-accent-500 text-accent-ink shadow-cta hover:bg-accent-400"
                   : "cursor-not-allowed bg-ink-200 text-ink-400 dark:bg-ink-800 dark:text-ink-500",
               )}
             >

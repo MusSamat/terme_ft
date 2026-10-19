@@ -21,7 +21,7 @@ export function ProgressBar({ value, max = 100, label, className }: ProgressBarP
         aria-label={label}
       >
         <div
-          className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400 transition-[width]"
+          className="h-full rounded-full bg-brand-500 transition-[width]"
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -22,11 +22,11 @@ import { cn } from "@/lib/utils/cn";
 
 // Desktop top navbar — design-spec §1.3.
 
-/** Coral unread count badge (spec §1.2 recipe). */
+/** Teal unread count badge (spec §1.2 recipe). */
 function UnreadBadge({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-500 px-1 text-[9px] font-900 text-white ring-2 ring-white dark:ring-ink-900">
+    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[9px] font-900 text-white ring-2 ring-white dark:ring-ink-900">
       {count > 99 ? "99+" : count}
     </span>
   );
@@ -85,9 +85,9 @@ function UserDropdown({ onClose }: { onClose: () => void }) {
           <Link
             href="/profile/driver"
             onClick={onClose}
-            className="flex items-center gap-3 px-4 py-2.5 text-[14px] font-800 text-grape-700 hover:bg-grape-50 dark:text-grape-300 dark:hover:bg-grape-500/10"
+            className="flex items-center gap-3 px-4 py-2.5 text-[14px] font-800 text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
           >
-            <CarFront className="h-4 w-4 text-grape-600 dark:text-grape-400" aria-hidden="true" />
+            <CarFront className="h-4 w-4 text-brand-600 dark:text-brand-400" aria-hidden="true" />
             {t("become_driver")}
           </Link>
         )}

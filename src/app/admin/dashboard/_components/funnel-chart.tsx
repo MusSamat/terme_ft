@@ -32,9 +32,9 @@ export function FunnelChart({ data, loading }: Props) {
           <XAxis type="number" tick={{ fontSize: 10 }} />
           <YAxis type="category" dataKey="label" tick={{ fontSize: 10 }} width={150} />
           <Tooltip formatter={((v: unknown) => [v, "Пользователей"]) as unknown as undefined} />
-          <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]}>
+          <Bar dataKey="count" fill="#0D9488" radius={[0, 4, 4, 0]}>
             {funnelData.map((_, i) => (
-              <Cell key={i} fill={`hsl(243, 75%, ${65 - i * 6}%)`} />
+              <Cell key={i} fill={`hsl(175, 84%, ${32 + i * 7}%)`} />
             ))}
           </Bar>
         </BarChart>

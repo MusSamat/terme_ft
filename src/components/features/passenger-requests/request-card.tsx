@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils/cn";
 import { useRouteNames } from "@/lib/hooks/use-route-names";
 import { placeName } from "@/lib/places";
 
-// Passenger-request card — grape ticket variant of TripCard. A grape-tinted
+// Passenger-request card — ticket variant of TripCard (same teal palette). A
 // tile split by a dashed perforation: top half = the request (date · route ·
 // seats needed), bottom stub = the passenger. One trust signal only (rating OR
 // «Новый»); the whole card is tappable. The form holds the shape — no shadow.
@@ -58,7 +58,7 @@ function RequestCardInner({
         "group relative cursor-pointer overflow-hidden rounded-[18px] bg-white px-3.5 pb-3 pt-3.5 shadow-card ring-1 ring-ink-100 transition hover:-translate-y-0.5 hover:shadow-lift",
         "[--notch:#FAFAF9] [--perf-line:#E7E5E4] dark:bg-[#232322] dark:shadow-none dark:ring-0 dark:[--notch:#0C0A09] dark:[--perf-line:#3C3C3A]",
         !isOpen && "opacity-50",
-        request.myResponse && "bg-emerald-50/60 ring-emerald-200 dark:bg-emerald-500/[0.07] dark:ring-emerald-500/25",
+        request.myResponse && "bg-brand-50/60 ring-brand-200 dark:bg-brand-500/[0.07] dark:ring-brand-500/25",
         className,
       )}
       onClick={onClick}
@@ -70,13 +70,13 @@ function RequestCardInner({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <CalendarClock className="h-4 w-4 shrink-0 text-grape-600 dark:text-grape-300" aria-hidden="true" />
+            <CalendarClock className="h-4 w-4 shrink-0 text-brand-600 dark:text-brand-300" aria-hidden="true" />
             <span className="num truncate text-[17px] font-800 leading-tight text-ink-900 dark:text-ink-50">
               {fmtDate(request.departureDate)}
               {request.flexible && ` · ${t("flexible")}`}
             </span>
             {request.myResponse && (
-              <span className="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-900 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+              <span className="shrink-0 rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-900 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
                 {t("responded")}
               </span>
             )}
@@ -86,7 +86,7 @@ function RequestCardInner({
             {request.originPoint?.area && ` · ${placeName(request.originPoint.area, locale)}`} → {rn(request).to}
           </div>
           {(typeof request.distanceKm === "number" || request.flightNumber) && (
-            <div className="mt-0.5 truncate text-[11.5px] font-800 text-grape-600 dark:text-grape-300">
+            <div className="mt-0.5 truncate text-[11.5px] font-800 text-brand-600 dark:text-brand-300">
               {typeof request.distanceKm === "number" &&
                 tc("distance_from_you", { km: request.distanceKm.toLocaleString(locale === "kg" ? "ky-KG" : "ru-RU") })}
               {typeof request.distanceKm === "number" && request.flightNumber ? " · " : ""}
@@ -95,7 +95,7 @@ function RequestCardInner({
           )}
         </div>
         <div className="shrink-0 text-right">
-          <div className="num text-[19px] font-800 leading-none text-grape-600 dark:text-grape-300">
+          <div className="num text-[19px] font-800 leading-none text-brand-600 dark:text-brand-300">
             {request.seatsNeeded}
           </div>
           <div className="mt-1 text-[11px] font-600 text-ink-500 dark:text-ink-400">{t("needs")}</div>
@@ -117,7 +117,7 @@ function RequestCardInner({
             {passenger.rating!.toFixed(1)}
           </span>
         ) : (
-          <span className="shrink-0 rounded-md bg-grape-50 px-1.5 py-0.5 text-[11px] font-800 text-grape-600 dark:bg-grape-500/25 dark:text-grape-200">
+          <span className="shrink-0 rounded-md bg-brand-50 px-1.5 py-0.5 text-[11px] font-800 text-brand-600 dark:bg-brand-500/25 dark:text-brand-200">
             {t("new")}
           </span>
         )}
@@ -128,7 +128,7 @@ function RequestCardInner({
           {!isOwn && isOpen && (
             <ContactRevealButton variant="icon" target="request" id={request.id} />
           )}
-          <ChevronRight className="h-4 w-4 shrink-0 text-grape-400" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-brand-400" aria-hidden="true" />
         </span>
       </div>
 

@@ -88,12 +88,12 @@ export function LikeButton({ targetType, id, liked, className, size = "md" }: Li
       aria-pressed={optimistic}
       aria-label={optimistic ? t("unlike") : t("like")}
       className={cn(
-        "inline-flex flex-shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-ink-800/80 text-ink-400 dark:text-ink-300 transition-colors hover:bg-coral-100 hover:text-coral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-400 focus-visible:ring-offset-1",
+        "inline-flex flex-shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-ink-800/80 text-ink-400 dark:text-ink-300 transition-colors hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-1",
         boxCls,
         className,
       )}
     >
-      <Heart className={cn(iconCls, optimistic && "fill-coral-500 text-coral-500")} aria-hidden="true" />
+      <Heart className={cn(iconCls, optimistic && "fill-brand-600 text-brand-600")} aria-hidden="true" />
     </button>
   );
 }

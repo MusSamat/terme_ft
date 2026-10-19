@@ -143,21 +143,21 @@ export default function AdminDashboard() {
             <KpiCard label="Активные водители" value={k?.activeDrivers7d ?? 0} sub="за последние 7 дней" icon={UserCheck} />
             <KpiCard label="Активные поездки" value={k?.publishedTripsNow ?? 0} sub="прямо сейчас" icon={Car} />
             <KpiCard label="Завершено поездок" value={k?.completedTrips.last_7d ?? 0} sub={`${k?.completedTrips.last_30d ?? 0} за 30 дней`} icon={CheckCircle2} accent="text-brand-600" />
-            <KpiCard label="Принятие брони, %" value={k?.acceptanceRate7d != null ? `${k.acceptanceRate7d}%` : "—"} sub="за 7 дней" icon={TrendingUp} accent="text-sky-600" />
+            <KpiCard label="Принятие брони, %" value={k?.acceptanceRate7d != null ? `${k.acceptanceRate7d}%` : "—"} sub="за 7 дней" icon={TrendingUp} accent="text-brand-600" />
             <KpiCard label="Верификации" value={k?.pendingVerifications ?? 0} sub="ожидают проверки" icon={ShieldAlert} accent={k?.pendingVerifications ? "text-accent-600" : undefined} href="/admin/verifications" />
             <KpiCard label="Открытые жалобы" value={k?.openComplaints ?? 0} sub="требуют реакции" icon={MessageSquareWarning} accent={k?.openComplaints ? "text-danger-600" : undefined} href="/admin/complaints" />
             <KpiCard label="Рейтинг водителей" value={k?.avgDriverRating != null ? k.avgDriverRating.toFixed(2) : "—"} sub="среднее (≥3 отзывов)" icon={Star} accent="text-accent-500" />
-            <KpiCard label="Онлайн сейчас" value={k?.onlineNow ?? "—"} sub="активны за 60 сек" icon={Radio} accent="text-emerald-600" />
+            <KpiCard label="Онлайн сейчас" value={k?.onlineNow ?? "—"} sub="активны за 60 сек" icon={Radio} accent="text-brand-600" />
             <KpiCard
               label="Актив по платформам"
               value={k ? `${k.activeByPlatform.web} / ${k.activeByPlatform.mobile}` : "—"}
               sub="web / моб · за 24ч"
               icon={MonitorSmartphone}
-              accent="text-sky-600"
+              accent="text-brand-600"
             />
             <KpiCard label="DAU / MAU" value={k ? `${k.dau} / ${k.mau}` : "—"} sub="актив за 24ч / 30 дней" icon={Star} accent="text-brand-500" />
-            <KpiCard label="Отмены поездок" value={k?.cancellationRate7d != null ? `${k.cancellationRate7d}%` : "—"} sub="от исходов за 7 дней" icon={Star} accent="text-coral-500" />
-            <KpiCard label="Открытые запросы" value={k?.openRequests ?? "—"} sub="запросы пассажиров сейчас" icon={Star} accent="text-grape-500" />
+            <KpiCard label="Отмены поездок" value={k?.cancellationRate7d != null ? `${k.cancellationRate7d}%` : "—"} sub="от исходов за 7 дней" icon={Star} accent="text-danger-500" />
+            <KpiCard label="Открытые запросы" value={k?.openRequests ?? "—"} sub="запросы пассажиров сейчас" icon={Star} accent="text-brand-500" />
           </>
         )}
       </div>

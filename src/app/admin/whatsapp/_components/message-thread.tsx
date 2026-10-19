@@ -25,11 +25,11 @@ interface Props {
 function OutboundStatus({ status }: { status: WhatsappMessageItem["status"] }) {
   if (status === "FAILED")
     return (
-      <span className="flex items-center gap-0.5 text-coral-200">
+      <span className="flex items-center gap-0.5 text-danger-200">
         <AlertTriangle className="h-3 w-3" /> не доставлено
       </span>
     );
-  if (status === "READ") return <CheckCheck className="h-3.5 w-3.5 text-sky-200" />;
+  if (status === "READ") return <CheckCheck className="h-3.5 w-3.5 text-brand-200" />;
   if (status === "DELIVERED") return <CheckCheck className="h-3.5 w-3.5 text-brand-100/80" />;
   return <Check className="h-3.5 w-3.5 text-brand-100/70" />; // SENT / null
 }

@@ -206,7 +206,7 @@ export function RateModal({ rating, onClose }: Props) {
                   </div>
 
                   {errMsg && (
-                    <p className="mb-3 rounded-xl bg-coral-50 px-4 py-2 text-[15px] font-semibold text-coral-700">
+                    <p className="mb-3 rounded-xl bg-danger-50 px-4 py-2 text-[15px] font-semibold text-danger-700">
                       {errMsg}
                     </p>
                   )}
@@ -215,7 +215,7 @@ export function RateModal({ rating, onClose }: Props) {
                     type="button"
                     disabled={score === 0 || isPending}
                     onClick={() => mutate()}
-                    className="w-full rounded-2xl bg-accent-500 py-3.5 text-[16px] font-bold text-[#4A2C00] transition-colors hover:bg-accent-600 disabled:opacity-50"
+                    className="w-full rounded-2xl bg-accent-500 py-3.5 text-[16px] font-bold text-accent-ink transition-colors hover:bg-accent-600 disabled:opacity-50"
                   >
                     {isPending ? <Spinner size={18} /> : t("submit")}
                   </button>

@@ -7,7 +7,7 @@ export interface SegmentOption<T extends string> {
   value: T;
   label: string;
   icon?: ReactNode;
-  /** coral unread-count badge inside the segment */
+  /** unread-count badge inside the segment */
   count?: number;
 }
 
@@ -16,16 +16,15 @@ interface SegmentedProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   /** accent for the active segment text */
-  tone?: "brand" | "grape";
+  tone?: "brand";
   /** explicit active-text classes (overrides `tone`), e.g. ROLE_THEME[role].textOn */
   textOn?: string;
   className?: string;
 }
 
 // design-spec §1.7 segmented control — literal maps, no interpolation
-const TONE_ON: Record<"brand" | "grape", string> = {
+const TONE_ON: Record<"brand", string> = {
   brand: "text-brand-700 dark:text-brand-300",
-  grape: "text-grape-600 dark:text-grape-300",
 };
 
 /** Segmented control (feed tabs, «Мои» tabs, role switch). Active = white card. */
@@ -62,7 +61,7 @@ export function Segmented<T extends string>({
             {opt.icon}
             {opt.label}
             {typeof opt.count === "number" && opt.count > 0 && (
-              <span className="rounded-full bg-coral-500 px-1.5 text-[11px] font-900 text-white">
+              <span className="rounded-full bg-brand-600 px-1.5 text-[11px] font-900 text-white">
                 {opt.count}
               </span>
             )}

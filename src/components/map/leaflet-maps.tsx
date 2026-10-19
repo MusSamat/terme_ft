@@ -91,7 +91,7 @@ export function RouteMapInner({
           {origin.label && <Tooltip direction="top" offset={[0, -40]}>{origin.label}</Tooltip>}
         </Marker>
         {stops.map((s, i) => (
-          <Marker key={i} position={[s.lat, s.lng]} icon={dot("#64748B", 12)}>
+          <Marker key={i} position={[s.lat, s.lng]} icon={dot("#78716C", 12)}>
             {s.label && <Tooltip direction="top">{s.label}</Tooltip>}
           </Marker>
         ))}
@@ -229,7 +229,7 @@ export function ListingsMapInner({
 }) {
   const exactIcon = useMemo(() => pin(color), [color]);
   const cityIcon = useMemo(() => dot(color, 18), [color]);
-  const meIcon = useMemo(() => dot("#2563EB", 16), []);
+  const meIcon = useMemo(() => dot("#1C1917", 16), []);
   return (
     <div className={className ?? "isolate h-full w-full"}>
       <MapContainer center={KG_CENTER} zoom={7} style={{ height: "100%", width: "100%" }}>

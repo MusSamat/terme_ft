@@ -165,7 +165,7 @@ export function FiltersBody() {
           ))}
         </div>
         {geoDenied && (
-          <p className="mt-1.5 text-[12.5px] font-700 text-coral-500">{t("geo_denied")}</p>
+          <p className="mt-1.5 text-[12.5px] font-700 text-danger-500">{t("geo_denied")}</p>
         )}
       </div>
 

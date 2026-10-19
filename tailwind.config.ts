@@ -1,9 +1,11 @@
 import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
 
-// Design tokens — mirror the Terme Prototype (claude.ai/design, terme-proto.js).
-// brand = teal (passenger accent), grape = indigo (driver accent), ink = warm stone
-// neutrals, accent = amber CTA (text on amber uses accent-ink #4A2C00).
+// Design tokens — two-brand palette (Uber/Yandex-style minimal):
+// ink = warm stone neutrals (text, surfaces, borders, secondary buttons),
+// brand = teal (brand + selection: nav, chips, links, focus, map, progress),
+// accent = amber (the ONE primary CTA per screen + pending; text on amber uses
+// accent-ink #4A2C00), danger = red (errors and destructive actions only).
 const brand = {
   50: "#ECFDF8",
   100: "#D0FBEF",
@@ -25,6 +27,7 @@ const accent = {
   500: "#F59E0B",
   600: "#D97706",
   700: "#B45309",
+  800: "#92400E",
   // Text color on amber-filled surfaces (buttons, badges)
   ink: "#4A2C00",
 };
@@ -50,19 +53,20 @@ const config: Config = {
   content: ["./src/app/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}", "./src/lib/**/*.{ts,tsx}"],
   darkMode: "class",
   theme: {
+    // Full override (not extend): Tailwind's default hues (sky, emerald, blue,
+    // red, …) don't exist, so a stray off-palette class can't compile.
+    colors: {
+      transparent: "transparent",
+      current: "currentColor",
+      inherit: "inherit",
+      white: "#FFFFFF",
+      black: "#000000",
+      brand,
+      accent,
+      ink,
+      danger: { 50: "#FEF2F2", 100: "#FEE2E2", 200: "#FECACA", 300: "#FCA5A5", 400: "#F87171", 500: "#EF4444", 600: "#DC2626", 700: "#B91C1C", 800: "#991B1B" },
+    },
     extend: {
-      colors: {
-        brand,
-        accent,
-        ink,
-        coral: { 50: "#FFF1F2", 100: "#FFE4E6", 200: "#FECDD3", 300: "#FDA4AF", 400: "#FB7185", 500: "#F43F5E", 600: "#E11D48", 700: "#BE123C" },
-        danger: { 50: "#FEF2F2", 100: "#FEE2E2", 200: "#FECACA", 300: "#FCA5A5", 400: "#F87171", 500: "#EF4444", 600: "#DC2626", 700: "#B91C1C" },
-        sky: { 50: "#F0F9FF", 100: "#E0F2FE", 200: "#BAE6FD", 300: "#7DD3FC", 400: "#38BDF8", 500: "#0EA5E9", 600: "#0284C7", 700: "#0369A1" },
-        grape: { 50: "#EEF2FF", 100: "#E0E7FF", 200: "#C7D2FE", 300: "#A5B4FC", 400: "#818CF8", 500: "#6366F1", 600: "#4F46E5", 700: "#4338CA" },
-        success: "#14B8A6",
-        error: "#F43F5E",
-        warning: "#F59E0B",
-      },
       fontFamily: {
         sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
         disp: ["var(--font-manrope)", "system-ui", "sans-serif"],
@@ -109,7 +113,6 @@ const config: Config = {
         lift: "0 2px 6px rgba(28,25,23,0.06), 0 26px 50px -20px rgba(28,25,23,0.26)",
         cta: "0 10px 24px -8px rgba(245,158,11,0.5)",
         brandcta: "0 10px 24px -8px rgba(13,148,136,0.5)",
-        indigocta: "0 10px 24px -8px rgba(79,70,229,0.45)",
       },
       screens: {
         sm: "640px",

@@ -56,7 +56,7 @@ export default function GlobalError({
         <button
           type="button"
           onClick={reset}
-          className="mt-6 flex h-12 items-center gap-2 rounded-2xl bg-brand-600 px-6 text-[15px] font-900 text-white shadow-brandcta transition-colors hover:bg-brand-700"
+          className="mt-6 flex h-12 items-center gap-2 rounded-2xl bg-ink-900 px-6 text-[15px] font-900 text-white transition-colors hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
           {msg.retry}

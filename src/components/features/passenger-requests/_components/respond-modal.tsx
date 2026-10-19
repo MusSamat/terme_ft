@@ -20,7 +20,7 @@ interface Props {
   onClose: () => void;
 }
 
-const FIELD_LABEL = "mb-1.5 text-[11px] font-bold uppercase tracking-widest text-sky-600";
+const FIELD_LABEL = "mb-1.5 text-[11px] font-bold uppercase tracking-widest text-ink-500";
 
 export function RespondModal({ request, onClose }: Props) {
   const rn = useRouteNames();
@@ -84,10 +84,10 @@ export function RespondModal({ request, onClose }: Props) {
                 value={price}
                 onChange={(e) => setPrice(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder={t("price_placeholder")}
-                className="h-12 w-full rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 text-[17px] font-bold text-ink-900 outline-none focus:border-sky-400 focus:bg-white dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+                className="h-12 w-full rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 text-[17px] font-bold text-ink-900 outline-none focus:border-brand-400 focus:bg-white dark:border-ink-700 dark:bg-ink-800 dark:text-white"
               />
               {priceError && (
-                <p className="mt-1.5 text-[13px] font-700 text-coral-600 dark:text-coral-400">{priceError}</p>
+                <p className="mt-1.5 text-[13px] font-700 text-danger-600 dark:text-danger-400">{priceError}</p>
               )}
             </div>
 
@@ -120,19 +120,19 @@ export function RespondModal({ request, onClose }: Props) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={t("message_placeholder")}
-                className="w-full resize-none rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 py-3 text-[14px] text-ink-900 outline-none focus:border-sky-400 focus:bg-white placeholder:text-ink-400 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+                className="w-full resize-none rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 py-3 text-[14px] text-ink-900 outline-none focus:border-brand-400 focus:bg-white placeholder:text-ink-400 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
               />
             </div>
 
             {error && (
-              <div className="rounded-2xl bg-coral-50 px-4 py-3 text-[15px] font-semibold text-coral-700 dark:bg-coral-500/10 dark:text-coral-300">
+              <div className="rounded-2xl bg-danger-50 px-4 py-3 text-[15px] font-semibold text-danger-700 dark:bg-danger-500/10 dark:text-danger-300">
                 {error}
               </div>
             )}
 
             <Button
               type="button"
-              variant="primary"
+              variant="cta"
               size="lg"
               className="w-full"
               disabled={!canSubmit || isPending}

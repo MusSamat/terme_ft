@@ -243,7 +243,7 @@ export function CityAutocomplete({
             "w-full bg-transparent font-semibold text-ink-900 outline-none dark:text-white",
             compact ? "py-1.5 text-[14px]" : "py-2 text-[17px]",
             borderless ? "pr-3" : "rounded-2xl border border-ink-200 bg-white pl-9 pr-3 focus:border-brand-500 dark:border-ink-700 dark:bg-ink-900",
-            noMatch && !borderless && "border-coral-400 focus:border-coral-400",
+            noMatch && !borderless && "border-danger-400 focus:border-danger-400",
             "placeholder:text-ink-400",
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}
@@ -305,7 +305,7 @@ export function CityAutocomplete({
       </div>
 
       {noMatch && (
-        <p className="mt-1 text-[13px] font-semibold text-coral-500" role="alert">
+        <p className="mt-1 text-[13px] font-semibold text-danger-500" role="alert">
           {query.trim() && results.length === 0 ? t("no_matches") : t("pick_from_list")}
         </p>
       )}

@@ -14,7 +14,7 @@ import { toastError } from "@/components/layout/quick-toast";
 
 type ActionResult = "accepted" | "rejected" | "error" | null;
 
-const chatLinkClass = "inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-brand-700";
+const chatLinkClass = "inline-flex items-center gap-1.5 rounded-xl bg-ink-900 px-3 py-1.5 text-[13px] font-bold text-white dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100 hover:bg-ink-800";
 const softLinkClass = "inline-flex items-center gap-1 text-[14px] font-semibold text-brand-700 hover:underline";
 
 export function NotificationActions({ notification }: { notification: AppNotification }) {
@@ -99,7 +99,7 @@ export function NotificationActions({ notification }: { notification: AppNotific
             type="button"
             onClick={() => accept()}
             disabled={accepting || declining}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-brand-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-ink-900 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-ink-800 disabled:opacity-50 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
           >
             {accepting ? <Spinner size={12} /> : <Check className="h-3.5 w-3.5" aria-hidden="true" />}
             {t("accept")}
@@ -108,7 +108,7 @@ export function NotificationActions({ notification }: { notification: AppNotific
             type="button"
             onClick={() => decline()}
             disabled={accepting || declining}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-coral-200 px-3 py-1.5 text-[13px] font-bold text-coral-600 hover:bg-coral-50 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-danger-200 px-3 py-1.5 text-[13px] font-bold text-danger-600 hover:bg-danger-50 disabled:opacity-50"
           >
             {declining ? <Spinner size={12} /> : <X className="h-3.5 w-3.5" aria-hidden="true" />}
             {t("decline")}

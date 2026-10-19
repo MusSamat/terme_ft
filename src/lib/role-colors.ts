@@ -1,13 +1,9 @@
-// Role colour language:
-//   guest = ink (warm gray), passenger = brand (teal), driver = grape (indigo).
-// Passengers are the majority and browse teal trips, so passenger mode wears
-// teal; drivers browse indigo requests, so driver mode wears indigo.
-// Primary CTAs stay amber everywhere; role accents drive nav, headers, chips.
+// Role colour language (two-brand palette: teal + amber over warm neutrals):
+//   guest = ink (warm gray); passenger and driver share ONE teal recipe —
+// the roles are told apart by icon + label, never by colour. Primary CTAs are
+// amber everywhere; teal drives nav, headers, chips and selection.
 //
-// Shade rule (prototype `aN`): "on" text uses brand-700 for driver but
-// grape-600 for passenger; dark-mode "on" text is always {acc}-300.
-// Recipes are shade-asymmetric, hence an explicit class map (not CSS vars) —
-// every string is a literal so Tailwind's scanner picks them up (no safelist).
+// Every string is a literal so Tailwind's scanner picks them up (no safelist).
 
 export type UiRole = "guest" | "passenger" | "driver";
 
@@ -24,11 +20,11 @@ export interface RoleTheme {
   navTextOn: string;
   /** accent "on" text (tabs, links) */
   textOn: string;
-  /** screen hero header gradient (create, profile) */
+  /** screen hero header surface (create, profile) — flat */
   headerGrad: string;
-  /** wide banner gradient (profile hero, promos) */
+  /** wide banner surface (profile hero, promos) — flat */
   bannerGrad: string;
-  /** filled role CTA (publish/find buttons) */
+  /** primary CTA (publish/find buttons) — amber */
   ctaFilled: string;
   /** selected date-chip */
   chipSelected: string;
@@ -44,6 +40,24 @@ export interface RoleTheme {
   tabUnderline: string;
 }
 
+type RoleColorRecipe = Omit<RoleTheme, "labelKey" | "icon">;
+
+const TEAL: RoleColorRecipe = {
+  badge: "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
+  navPillOn: "bg-brand-50 dark:bg-brand-500/15",
+  navTextOn: "text-brand-700 dark:text-brand-300",
+  textOn: "text-brand-700 dark:text-brand-300",
+  headerGrad: "bg-brand-600",
+  bannerGrad: "bg-brand-600",
+  ctaFilled: "bg-accent-500 text-accent-ink shadow-cta",
+  chipSelected: "bg-brand-600 text-white",
+  flexChip: "bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
+  iconAccent: "text-brand-600",
+  counterText: "text-brand-600 dark:text-brand-300",
+  avatarTint: "bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200",
+  tabUnderline: "bg-brand-600",
+};
+
 export const ROLE_THEME: Record<UiRole, RoleTheme> = {
   guest: {
     labelKey: "guest",
@@ -52,9 +66,9 @@ export const ROLE_THEME: Record<UiRole, RoleTheme> = {
     navPillOn: "bg-ink-100 dark:bg-ink-800",
     navTextOn: "text-ink-700 dark:text-ink-200",
     textOn: "text-ink-700 dark:text-ink-200",
-    headerGrad: "bg-gradient-to-b from-ink-500 to-ink-600",
-    bannerGrad: "bg-gradient-to-r from-ink-500 to-ink-600",
-    ctaFilled: "bg-ink-700 text-white",
+    headerGrad: "bg-ink-600",
+    bannerGrad: "bg-ink-600",
+    ctaFilled: "bg-accent-500 text-accent-ink shadow-cta",
     chipSelected: "bg-ink-700 text-white",
     flexChip: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
     iconAccent: "text-ink-500",
@@ -62,64 +76,26 @@ export const ROLE_THEME: Record<UiRole, RoleTheme> = {
     avatarTint: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
     tabUnderline: "bg-ink-500",
   },
-  passenger: {
-    labelKey: "passenger",
-    icon: "user",
-    badge: "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
-    navPillOn: "bg-brand-50 dark:bg-brand-500/15",
-    navTextOn: "text-brand-700 dark:text-brand-300",
-    textOn: "text-brand-700 dark:text-brand-300",
-    headerGrad: "bg-gradient-to-b from-brand-600 to-brand-500",
-    bannerGrad: "bg-gradient-to-r from-brand-600 to-brand-500",
-    ctaFilled: "bg-brand-600 text-white shadow-brandcta",
-    chipSelected: "bg-brand-500 text-white",
-    flexChip: "bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300",
-    iconAccent: "text-brand-500",
-    counterText: "text-brand-600 dark:text-brand-300",
-    avatarTint: "bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-200",
-    tabUnderline: "bg-brand-500",
-  },
-  driver: {
-    labelKey: "driver",
-    icon: "car-front",
-    badge: "bg-grape-100 text-grape-600 dark:bg-grape-500/15 dark:text-grape-300",
-    navPillOn: "bg-grape-50 dark:bg-grape-500/15",
-    navTextOn: "text-grape-600 dark:text-grape-300",
-    textOn: "text-grape-600 dark:text-grape-300",
-    headerGrad: "bg-gradient-to-b from-grape-500 to-grape-400",
-    bannerGrad: "bg-gradient-to-r from-grape-600 to-grape-500",
-    ctaFilled: "bg-grape-500 text-white shadow-indigocta",
-    chipSelected: "bg-grape-500 text-white",
-    flexChip: "bg-grape-100 text-grape-600 dark:bg-grape-500/15 dark:text-grape-300",
-    iconAccent: "text-grape-500",
-    counterText: "text-grape-600 dark:text-grape-300",
-    avatarTint: "bg-grape-100 text-grape-600 dark:bg-grape-500/20 dark:text-grape-200",
-    tabUnderline: "bg-grape-500",
-  },
+  passenger: { labelKey: "passenger", icon: "user", ...TEAL },
+  driver: { labelKey: "driver", icon: "car-front", ...TEAL },
 } as const;
 
 // ---------------------------------------------------------------------------
 // Deprecated: pre-redesign map, kept so untouched screens compile during the
 // screen-by-screen migration. Remove once Phase C lands everywhere.
+const LEGACY_TEAL = {
+  navActive:     "text-brand-600",
+  navActivePill: "bg-brand-50 text-brand-700",
+  avatarRingOn:  "ring-brand-600",
+  avatarRingOff: "ring-brand-200 hover:ring-brand-400",
+  avatarBgOn:    "bg-brand-600 text-white",
+  avatarBgOff:   "bg-brand-100 text-brand-700",
+  profileRing:   "ring-brand-500",
+} as const;
+
 export const ROLE_COLORS = {
-  passenger: {
-    navActive:     "text-brand-600",
-    navActivePill: "bg-brand-50 text-brand-700",
-    avatarRingOn:  "ring-brand-600",
-    avatarRingOff: "ring-brand-200 hover:ring-brand-400",
-    avatarBgOn:    "bg-brand-600 text-white",
-    avatarBgOff:   "bg-brand-100 text-brand-700",
-    profileRing:   "ring-brand-500",
-  },
-  driver: {
-    navActive:     "text-grape-600",
-    navActivePill: "bg-grape-100 text-grape-600",
-    avatarRingOn:  "ring-grape-500",
-    avatarRingOff: "ring-grape-200 hover:ring-grape-400",
-    avatarBgOn:    "bg-grape-500 text-white",
-    avatarBgOff:   "bg-grape-100 text-grape-600",
-    profileRing:   "ring-grape-500",
-  },
+  passenger: LEGACY_TEAL,
+  driver: LEGACY_TEAL,
 } as const;
 
 export type RoleColors = (typeof ROLE_COLORS)[keyof typeof ROLE_COLORS];

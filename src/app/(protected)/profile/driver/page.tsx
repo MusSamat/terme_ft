@@ -268,7 +268,7 @@ export default function DriverVerifyPage() {
       </button>
 
       {driverStatus?.status === "rejected" && (
-        <div className="mb-4 rounded-2xl bg-coral-50 px-4 py-3 text-[15px] font-700 text-coral-700 dark:bg-coral-500/10 dark:text-coral-300">
+        <div className="mb-4 rounded-2xl bg-danger-50 px-4 py-3 text-[15px] font-700 text-danger-700 dark:bg-danger-500/10 dark:text-danger-300">
           {t("rejected_banner", { reason: driverStatus.rejectionReason ?? "—" })}
         </div>
       )}
@@ -436,7 +436,7 @@ export default function DriverVerifyPage() {
                 <CheckCircle className="h-3.5 w-3.5" /> {t("change_btn")}
               </p>
             )}
-            {docError && <p className="mt-2 text-[13px] font-bold text-coral-600">{docError}</p>}
+            {docError && <p className="mt-2 text-[13px] font-bold text-danger-600">{docError}</p>}
           </div>
 
           {currentDoc.key === "selfie" && (

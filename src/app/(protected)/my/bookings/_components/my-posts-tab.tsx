@@ -28,7 +28,7 @@ function fmtD(iso?: string): string {
 }
 
 // «Мои объявления» — trips AND ride requests in one feed (Phase 1: no roles).
-// Cards keep their identity colors (teal trip / grape request), every card
+// Trip vs request is told apart by the role chip (one teal palette), every card
 // carries its text status badge, and tapping opens the OWN page: the trip page
 // (with the management panel) or the request page (with driver offers).
 
@@ -140,7 +140,7 @@ export function MyPostsTab({ show = "both" }: { show?: "trips" | "requests" | "b
               {t("verify_nudge_text")}
             </span>
           </span>
-          <span className="shrink-0 rounded-full bg-brand-600 px-4 py-2 text-[14px] font-800 text-white">
+          <span className="shrink-0 rounded-full bg-ink-900 px-4 py-2 text-[14px] font-800 text-white dark:bg-white dark:text-ink-900">
             {t("verify_nudge_cta")}
           </span>
         </Link>
@@ -157,13 +157,12 @@ export function MyPostsTab({ show = "both" }: { show?: "trips" | "requests" | "b
             avatar={<DriverAvatar name={p.trip.driver?.car?.make ?? p.trip.driver?.name ?? ""} src={p.trip.driver?.avatarUrl} size="md" />}
             actorName={p.trip.driver?.car ? `${p.trip.driver.car.make ?? ""} ${p.trip.driver.car.model ?? ""}`.trim() : p.trip.driver?.name}
             actorSub={<span className="text-[11.5px] font-700 text-ink-500">{p.trip.seatsAvailable} {tSeats("seats_word")}</span>}
-            trailing={<span className="num text-[15px] font-900 text-sky-600">{p.trip.pricePerSeat} {tB("som")}</span>}
+            trailing={<span className="num text-[15px] font-900 text-brand-600">{p.trip.pricePerSeat} {tB("som")}</span>}
             href={`/trips/${p.trip.id}`}
           />
         ) : (
           <ListCard
             key={`r-${p.request.id}`}
-            grape
             when={fmtD(p.request.departureDate)}
             role={t("role_request")}
             status={p.request.status}

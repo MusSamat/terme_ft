@@ -389,7 +389,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
   );
 
   const header = (
-    <div className={cn("bg-gradient-to-b from-brand-600 to-brand-500 px-5 pb-6 text-white", variant === "page" ? "pt-11" : "pt-5")}>
+    <div className={cn("bg-brand-600 px-5 pb-6 text-white", variant === "page" ? "pt-11" : "pt-5")}>
       <div className="mb-4 flex items-center justify-between">
         {variant === "page" ? (
           <button
@@ -550,7 +550,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
             <div className="flex items-start gap-3">
               <div className="flex flex-col items-center self-stretch pt-1" aria-hidden="true">
                 <span className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-brand-600" />
-                <div className="my-1 w-0.5 flex-1 rounded bg-gradient-to-b from-brand-500 to-accent-400" />
+                <div className="my-1 w-0.5 flex-1 rounded bg-brand-500" />
                 <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-accent-500" />
               </div>
               <div className="min-w-0 flex-1 space-y-6">

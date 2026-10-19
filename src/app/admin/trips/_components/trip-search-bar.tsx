@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils/cn";
 
 const STATUS_TABS = [
   { value: "active",    label: "Активные",     dot: "bg-brand-500" },
-  { value: "completed", label: "Завершённые",   dot: "bg-sky-500" },
+  { value: "completed", label: "Завершённые",   dot: "bg-ink-500" },
   { value: "cancelled", label: "Отменённые",    dot: "bg-ink-400" },
   { value: "all",       label: "Все",           dot: "bg-ink-300" },
 ] as const;

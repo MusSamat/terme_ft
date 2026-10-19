@@ -92,7 +92,7 @@ function OfferCard({
             )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-            <span className="text-[20px] font-extrabold text-sky-600">{response.price} {t("som")}</span>
+            <span className="text-[20px] font-extrabold text-brand-600">{response.price} {t("som")}</span>
             <span className="text-[13px] text-ink-500">
               {new Date(response.departureTime).toLocaleString("ru-RU", {
                 weekday: "short",
@@ -114,7 +114,7 @@ function OfferCard({
               type="button"
               disabled={acceptMut.isPending || declineMut.isPending}
               onClick={() => acceptMut.mutate()}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-40 transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-white hover:bg-ink-800 disabled:opacity-40 transition-colors dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
               aria-label={t("accept_aria")}
             >
               {acceptMut.isPending ? <Spinner size={14} /> : <Check className="h-4 w-4" />}
@@ -123,7 +123,7 @@ function OfferCard({
               type="button"
               disabled={acceptMut.isPending || declineMut.isPending}
               onClick={() => declineMut.mutate()}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-500 hover:border-coral-300 hover:text-coral-600 disabled:opacity-40 transition-colors dark:bg-ink-900 dark:border-ink-700"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-500 hover:border-danger-300 hover:text-danger-600 disabled:opacity-40 transition-colors dark:bg-ink-900 dark:border-ink-700"
               aria-label={t("reject_aria")}
             >
               {declineMut.isPending ? <Spinner size={14} /> : <X className="h-4 w-4" />}
@@ -243,7 +243,7 @@ function RequestEditModal({
               value={date}
               min={today}
               onChange={(e) => setDate(e.target.value)}
-              className="h-11 w-full rounded-xl border-2 border-ink-200 bg-ink-50 px-3 text-[15px] font-700 text-ink-900 outline-none focus:border-sky-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+              className="h-11 w-full rounded-xl border-2 border-ink-200 bg-ink-50 px-3 text-[15px] font-700 text-ink-900 outline-none focus:border-brand-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
             />
           </div>
           <div>
@@ -253,7 +253,7 @@ function RequestEditModal({
               onChange={(e) => setComment(e.target.value)}
               maxLength={500}
               rows={2}
-              className="w-full rounded-xl border-2 border-ink-200 bg-ink-50 px-3 py-2 text-[15px] font-600 text-ink-900 outline-none focus:border-sky-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+              className="w-full rounded-xl border-2 border-ink-200 bg-ink-50 px-3 py-2 text-[15px] font-600 text-ink-900 outline-none focus:border-brand-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
             />
           </div>
           {confirming ? (
@@ -263,7 +263,7 @@ function RequestEditModal({
                 <button type="button" onClick={() => setConfirming(false)} aria-label={tCard("cancel")} className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
                   <X className="h-5 w-5" />
                 </button>
-                <button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="h-11 flex-[2] rounded-xl bg-sky-600 text-[15px] font-900 text-white hover:bg-sky-700 disabled:opacity-50">
+                <button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="h-11 flex-[2] rounded-xl bg-accent-500 text-[15px] font-900 text-accent-ink hover:bg-accent-400 disabled:opacity-50">
                   {saveMut.isPending ? "…" : t("save")}
                 </button>
               </div>
@@ -272,7 +272,7 @@ function RequestEditModal({
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="rounded-xl bg-sky-600 py-2.5 text-[15px] font-900 text-white hover:bg-sky-700"
+              className="rounded-xl bg-accent-500 py-2.5 text-[15px] font-900 text-accent-ink hover:bg-accent-400"
             >
               {t("save")}
             </button>
@@ -315,7 +315,6 @@ export function RequestWithOffers({
   return (
     <div className="flex flex-col gap-2">
       <ListCard
-        grape
         when={fmtD(request.departureDate)}
         status={request.status}
         origin={rn(request).from}
@@ -326,7 +325,7 @@ export function RequestWithOffers({
         actions={
           isOpen ? (
             <>
-              <ListCardButton grape label={tCard("edit")} icon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)} />
+              <ListCardButton label={tCard("edit")} icon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)} />
               <ListCardButton kind="danger" label={cancelLoading ? "…" : tCard("cancel")} icon={<X className="h-4 w-4" />} onClick={onCancel} disabled={cancelLoading} />
             </>
           ) : undefined
@@ -338,16 +337,16 @@ export function RequestWithOffers({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="flex items-center justify-between rounded-2xl border border-dashed border-sky-200 bg-sky-50 px-4 py-2.5 text-left hover:border-sky-300 hover:bg-sky-100 transition-colors"
+          className="flex items-center justify-between rounded-2xl border border-dashed border-brand-200 bg-brand-50 px-4 py-2.5 text-left hover:border-brand-300 hover:bg-brand-100 transition-colors"
         >
-          <span className="text-[13px] font-bold text-sky-700">
+          <span className="text-[13px] font-bold text-brand-700">
             {expanded
               ? t("hide_offers")
               : pending.length > 0
               ? t("offers_count", { n: pending.length })
               : t("offers_title")}
           </span>
-          <ChevronDown className={`h-4 w-4 text-sky-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <ChevronDown className={`h-4 w-4 text-brand-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </button>
       )}
 
@@ -412,16 +411,16 @@ export function MyRequestsTab() {
 
   if (open.length === 0) {
     return (
-      <div className="flex flex-col items-center rounded-2xl border border-dashed border-sky-300 bg-sky-50 py-16 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100">
-          <Users className="h-8 w-8 text-sky-400" />
+      <div className="flex flex-col items-center rounded-2xl border border-dashed border-ink-300 bg-ink-50 py-16 text-center dark:border-ink-700 dark:bg-ink-900">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
+          <Users className="h-8 w-8 text-brand-600" />
         </div>
         <p className="text-[17px] font-bold text-ink-700 dark:text-ink-300">{t("empty_title")}</p>
         <p className="mt-1 mb-5 text-[16px] font-600 text-ink-500">{t("empty_hint")}</p>
         <Link href="/requests/create">
           <button
             type="button"
-            className="flex items-center gap-2 rounded-2xl bg-sky-600 px-6 py-2.5 text-[15px] font-bold text-white hover:bg-sky-700"
+            className="flex items-center gap-2 rounded-2xl bg-accent-500 px-6 py-2.5 text-[15px] font-bold text-accent-ink shadow-cta hover:bg-accent-400"
           >
             <Plus className="h-4 w-4" />
             {t("create_label")}
@@ -435,7 +434,7 @@ export function MyRequestsTab() {
     <div className="space-y-8">
       {open.length > 0 && (
         <section>
-          <h2 className="mb-3 text-[14px] font-bold uppercase tracking-widest text-sky-600">
+          <h2 className="mb-3 text-[14px] font-bold uppercase tracking-widest text-ink-500">
             {t("open_count", { n: open.length })}
           </h2>
           <div className="flex flex-col gap-4">

@@ -140,7 +140,7 @@ export function DatePickerModal({
               key={d}
               className={cn(
                 "text-center text-[13px] font-700",
-                i >= 5 ? "text-coral-400" : "text-ink-400",
+                i >= 5 ? "text-ink-500" : "text-ink-400",
               )}
             >
               {d}
@@ -171,7 +171,7 @@ export function DatePickerModal({
                   selected && "bg-brand-600 font-800 text-white",
                   !selected && !disabled && "hover:bg-ink-100 dark:hover:bg-ink-800",
                   !selected && isToday && "font-800 text-brand-600 ring-1 ring-brand-500 dark:text-brand-300",
-                  !selected && !isToday && !disabled && weekend && "text-coral-500",
+                  !selected && !isToday && !disabled && weekend && "text-ink-500",
                   !selected && !isToday && !disabled && !weekend && "text-ink-800 dark:text-ink-100",
                 )}
               >

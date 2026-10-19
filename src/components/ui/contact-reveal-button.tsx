@@ -150,7 +150,7 @@ export function ContactRevealButton({ target, id, className, variant = "full" }:
           type="button"
           onClick={() => run("call")}
           disabled={isPending}
-          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[15px] font-900 text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-ink-900 text-[15px] font-900 text-white transition-colors hover:bg-ink-800 disabled:opacity-60 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
         >
           {isPending && variables === "call" ? (
             <Spinner size={16} />
@@ -182,7 +182,7 @@ export function ContactRevealButton({ target, id, className, variant = "full" }:
           {authed ? t("hint") : t("hint_guest")}
         </p>
       ) : null}
-      {error && <p className="mt-1.5 text-center text-[13px] font-700 text-coral-600">{error}</p>}
+      {error && <p className="mt-1.5 text-center text-[13px] font-700 text-danger-600">{error}</p>}
     </div>
   );
 }

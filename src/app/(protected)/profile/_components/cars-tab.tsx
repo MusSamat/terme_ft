@@ -104,7 +104,7 @@ export function CarsTab() {
                     // Confirm — a destructive soft-delete shouldn't fire on a mis-tap.
                     if (window.confirm(t("delete_confirm"))) delMut.mutate(c.id);
                   }}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-coral-50 hover:text-coral-600 disabled:opacity-40"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>

@@ -49,7 +49,7 @@ export function BecomeDriverBanner() {
   };
 
   return (
-    <div className="relative mb-5 flex items-center gap-3 rounded-3xl bg-grape-600 px-4 py-3.5 text-white shadow-indigocta">
+    <div className="relative mb-5 flex items-center gap-3 rounded-3xl bg-brand-600 px-4 py-3.5 text-white shadow-brandcta">
       <Link href="/profile/driver" className="flex min-w-0 flex-1 items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20">
           <CarFront className="h-5 w-5" aria-hidden="true" />

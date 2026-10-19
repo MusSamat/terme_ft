@@ -26,8 +26,8 @@ function RoleIcon({ role, className }: { role: Intent; className?: string }) {
   );
 }
 
-// Role / intent switch — a segmented control with one sliding thumb in the
-// active role colour (teal = passenger, grape = driver). Reads as a single
+// Role / intent switch — a segmented control with one teal sliding thumb
+// (roles differ by icon + label, not colour). Reads as a single
 // control with a clear current state, not two rival cards. Optional `showHint`
 // adds a one-line caption spelling out what the mode shows (used on the feed).
 // Same public API as before. Used on the home/gate search and the create form.
@@ -55,9 +55,8 @@ export function IntentToggle({ value, onChange, className, showHint, compact }: 
           aria-hidden="true"
           className={cn(
             "pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-xl transition-transform duration-200 ease-out",
-            driver
-              ? "translate-x-full bg-grape-500 shadow-[0_4px_10px_-3px_rgba(99,102,241,.5)]"
-              : "translate-x-0 bg-brand-600 shadow-[0_4px_10px_-3px_rgba(13,148,136,.5)]",
+            "bg-brand-600 shadow-[0_4px_10px_-3px_rgba(13,148,136,.5)]",
+            driver ? "translate-x-full" : "translate-x-0",
           )}
         />
         <button
@@ -89,7 +88,7 @@ export function IntentToggle({ value, onChange, className, showHint, compact }: 
       {showHint && (
         <div className="mt-2 flex items-center gap-1.5 px-1">
           {driver ? (
-            <CarFront className="h-3.5 w-3.5 shrink-0 text-grape-600" aria-hidden="true" />
+            <CarFront className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
           ) : (
             <Search className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
           )}

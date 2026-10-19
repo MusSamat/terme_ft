@@ -164,10 +164,7 @@ export default function AdminUserDetailPage() {
               <p className="text-[20px] font-extrabold text-ink-900">{user.name}</p>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {user.roles.map((r) => (
-                  <span key={r} className={cn(
-                    "rounded px-1.5 py-0.5 text-[10px] font-bold",
-                    r === "driver" ? "bg-sky-100 text-sky-700" : "bg-brand-100 text-brand-700",
-                  )}>
+                  <span key={r} className="rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-bold text-ink-700">
                     {r}
                   </span>
                 ))}
@@ -463,7 +460,7 @@ export default function AdminUserDetailPage() {
                     {reqQuery.data.offers.map((o) => (
                       <div key={o.id} className="flex items-center justify-between rounded-xl bg-ink-50 px-3 py-2 text-[13px]">
                         <span className="font-semibold text-ink-800">{o.driverName}</span>
-                        <span className="font-bold text-sky-600">{o.price} сом</span>
+                        <span className="font-bold text-brand-600">{o.price} сом</span>
                       </div>
                     ))}
                   </div>

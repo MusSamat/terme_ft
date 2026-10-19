@@ -12,15 +12,12 @@ import { cn } from "@/lib/utils/cn";
 export function RideTypeToggle({
   whole,
   onChange,
-  accent = "brand",
 }: {
   whole: boolean;
   onChange: (whole: boolean) => void;
-  accent?: "brand" | "grape";
 }) {
   const t = useTranslations("feed");
-  const onTone =
-    accent === "grape" ? "text-grape-600 dark:text-grape-300" : "text-brand-600 dark:text-brand-300";
+  const onTone = "text-brand-600 dark:text-brand-300";
 
   const seg = (active: boolean, label: string, icon: React.ReactNode, onClick: () => void) => (
     <button

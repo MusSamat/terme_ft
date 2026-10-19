@@ -66,7 +66,7 @@ export function PassengerTab({
                   <Link href="/trips">
                     <button
                       type="button"
-                      className="mt-4 rounded-2xl bg-brand-600 px-6 py-2.5 text-[14px] font-bold text-white hover:bg-brand-700"
+                      className="mt-4 rounded-2xl bg-accent-500 px-6 py-2.5 text-[14px] font-bold text-accent-ink hover:bg-accent-400"
                     >
                       {t("find_trip_btn")}
                     </button>

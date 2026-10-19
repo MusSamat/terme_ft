@@ -133,7 +133,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
   };
   const theme = ROLE_THEME[intent];
   const draftKey = isDriver ? "terme_trip_draft_v2" : "terme_req_draft_v2";
-  const chipAccent: ChipAccent = isDriver ? "brand" : "grape";
+  const chipAccent: ChipAccent = "brand";
 
   const [draft, setDraft] = useState<Draft>(() => defaults(isDriver));
   const [createError, setCreateError] = useState<string | null>(null);
@@ -362,7 +362,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
   const submitLabel = isDriver ? t("submit_driver") : t("submit_passenger");
   const submitBtn = (
     <Button
-      variant={isDriver ? "brand" : "grape"}
+      variant="cta"
       size="lg"
       className="w-full"
       disabled={!canSubmit || isPending}
@@ -409,7 +409,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
         </button>
       )}
       {sameCity && (
-        <p className="-mt-1 text-[13px] font-700 text-coral-600">{t("err_same_city")}</p>
+        <p className="-mt-1 text-[13px] font-700 text-danger-600">{t("err_same_city")}</p>
       )}
       <MeetingPointField
         place={draft.origin}
@@ -417,10 +417,10 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
         onChange={(p) => patch({ originPoint: p })}
         label={isDriver ? t("pickup_point_driver") : t("pickup_point_passenger")}
         hint={t("pickup_point_hint")}
-        color={isDriver ? "#0D9488" : "#6366F1"}
+        color="#0D9488"
       />
       {isAirport && isDriver && (
-        <p className="flex items-start gap-2 rounded-2xl bg-sky-50 px-4 py-3 text-[13.5px] font-700 text-sky-800 dark:bg-sky-500/10 dark:text-sky-200">
+        <p className="flex items-start gap-2 rounded-2xl bg-brand-50 px-4 py-3 text-[13.5px] font-700 text-brand-800 dark:bg-brand-500/10 dark:text-brand-200">
           <Plane className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {t("airport_note_driver")}
         </p>
@@ -428,7 +428,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
       {isAirport && !isDriver && (
         <div className="rounded-2xl bg-white p-4 shadow-xs ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
           <label htmlFor="flight" className="flex items-center gap-2 text-[15px] font-800 text-ink-900 dark:text-white">
-            <Plane className="h-4 w-4 text-sky-600" aria-hidden="true" />
+            <Plane className="h-4 w-4 text-brand-600" aria-hidden="true" />
             {t("flight_label")}
           </label>
           <input
@@ -436,9 +436,9 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
             value={draft.flightNumber}
             onChange={(e) => patch({ flightNumber: e.target.value.toUpperCase().slice(0, 10) })}
             placeholder={t("flight_placeholder")}
-            className="mt-2 h-11 w-full rounded-xl border border-ink-200 bg-ink-50 px-3.5 text-[16px] font-800 uppercase tracking-wide text-ink-900 outline-none focus:border-sky-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
+            className="mt-2 h-11 w-full rounded-xl border border-ink-200 bg-ink-50 px-3.5 text-[16px] font-800 uppercase tracking-wide text-ink-900 outline-none focus:border-brand-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
           />
-          <p className={cn("mt-1.5 text-[12.5px] font-600", flightInvalid ? "text-coral-600" : "text-ink-500")}>
+          <p className={cn("mt-1.5 text-[12.5px] font-600", flightInvalid ? "text-danger-600" : "text-ink-500")}>
             {t("flight_hint")}
           </p>
         </div>
@@ -461,7 +461,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
               onClick={() => setCarSheetOpen(true)}
               className="flex w-full items-center gap-2.5 rounded-2xl bg-white p-4 text-left shadow-xs ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800"
             >
-              <CarFront className="h-5 w-5 shrink-0 text-grape-600" aria-hidden="true" />
+              <CarFront className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
               <span className="flex-1 truncate text-[16px] font-800 text-ink-900 dark:text-white">
                 {selectedCar ? `${selectedCar.make} ${selectedCar.model}` : t("car_choose")}
               </span>
@@ -483,23 +483,23 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
                       className={cn(
                         "flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-colors",
                         selectedCar?.id === c.id
-                          ? "border-grape-500 bg-grape-50 dark:bg-grape-500/10"
+                          ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10"
                           : "border-ink-200 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-800",
                       )}
                     >
-                      <CarFront className="h-5 w-5 shrink-0 text-grape-600" aria-hidden="true" />
+                      <CarFront className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-800 text-ink-900 dark:text-white">{c.make} {c.model}</span>
                         <span className="block text-[13px] font-600 text-ink-500">{c.plate}</span>
                       </span>
-                      {selectedCar?.id === c.id && <Check className="h-5 w-5 shrink-0 text-grape-600" aria-hidden="true" />}
+                      {selectedCar?.id === c.id && <Check className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />}
                     </button>
                   ))}
                   {cars.length < 3 && (
                     <button
                       type="button"
                       onClick={() => setAddingCar((v) => !v)}
-                      className="w-full rounded-2xl border border-dashed border-grape-400 p-3 text-[14px] font-800 text-grape-600"
+                      className="w-full rounded-2xl border border-dashed border-brand-400 p-3 text-[14px] font-800 text-brand-600"
                     >
                       + {tCars("add_another")}
                     </button>
@@ -529,7 +529,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
         {...(isDriver ? { timeEnd: draft.timeEnd, onTimeEnd: (v: string) => patch({ timeEnd: v }) } : {})}
       />
       {departureTooSoon && (
-        <p className="-mt-1 text-[13px] font-700 text-coral-600">{t("err_departure_soon")}</p>
+        <p className="-mt-1 text-[13px] font-700 text-danger-600">{t("err_departure_soon")}</p>
       )}
       <SeatsStepper
         value={draft.seats}
@@ -553,7 +553,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
             onChange={(v) => patch({ price: v })}
           />
           {priceOutOfRange && (
-            <p className="-mt-1 text-[13px] font-700 text-coral-600">{t("err_price_range")}</p>
+            <p className="-mt-1 text-[13px] font-700 text-danger-600">{t("err_price_range")}</p>
           )}
         </>
       )}
@@ -642,7 +642,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
             <p className="mb-1.5 text-center text-[14px] font-700 text-ink-500 dark:text-ink-400">{isDriver ? t("note_driver") : t("note_passenger")}</p>
             {/* Consent: publishing exposes the phone to logged-in users. */}
             <p className="mb-3 text-center text-[13px] font-600 text-ink-400">{t("consent_phone")}</p>
-            {createError && <p className="mb-3 rounded-xl bg-coral-50 px-4 py-2 text-[15px] font-700 text-coral-700 dark:bg-coral-500/10">{createError}</p>}
+            {createError && <p className="mb-3 rounded-xl bg-danger-50 px-4 py-2 text-[15px] font-700 text-danger-700 dark:bg-danger-500/10">{createError}</p>}
             {submitBtn}
           </div>
         </div>
@@ -664,7 +664,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
           <div className="space-y-3.5">
             {form}
             {moreBlock}
-            {createError && <p className="rounded-xl bg-coral-50 px-4 py-2 text-[15px] font-700 text-coral-700 dark:bg-coral-500/10">{createError}</p>}
+            {createError && <p className="rounded-xl bg-danger-50 px-4 py-2 text-[15px] font-700 text-danger-700 dark:bg-danger-500/10">{createError}</p>}
             {/* Consent: publishing exposes the phone to logged-in users. */}
             <p className="text-center text-[13px] font-600 text-ink-400">{t("consent_phone")}</p>
             {submitBtn}

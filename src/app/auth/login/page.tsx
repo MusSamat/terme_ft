@@ -222,9 +222,9 @@ export default function LoginPage() {
 
         {/* Error banner */}
         {serverError && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-2xl bg-coral-50 px-4 py-3 dark:bg-coral-500/10">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-coral-500" aria-hidden />
-            <p className="text-[14px] font-800 text-coral-600">{serverError}</p>
+          <div className="mb-5 flex items-start gap-2.5 rounded-2xl bg-danger-50 px-4 py-3 dark:bg-danger-500/10">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger-500" aria-hidden />
+            <p className="text-[14px] font-800 text-danger-600">{serverError}</p>
           </div>
         )}
 
@@ -283,7 +283,7 @@ export default function LoginPage() {
                   className={cn(
                     "h-12 w-full rounded-2xl border-2 bg-ink-50 px-4 pr-10 text-[16px] font-800 outline-none transition-colors dark:bg-ink-800 dark:text-white",
                     serverError
-                      ? "border-coral-300 text-coral-700"
+                      ? "border-danger-300 text-danger-700"
                       : "border-ink-200 text-ink-900 focus:border-brand-500 dark:border-ink-700",
                   )}
                 />

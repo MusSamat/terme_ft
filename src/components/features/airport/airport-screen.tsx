@@ -97,7 +97,7 @@ export function AirportScreen() {
   return (
     <div className="mx-auto w-full max-w-[720px] px-4 pb-10 pt-4">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-300">
           <Plane className="h-6 w-6" aria-hidden="true" />
         </span>
         <div>
@@ -116,7 +116,7 @@ export function AirportScreen() {
               aria-pressed={toAirport === dir}
               className={cn(
                 "flex h-10 items-center justify-center gap-1.5 rounded-xl text-[14px] font-900 transition-colors",
-                toAirport === dir ? "bg-sky-600 text-white" : "text-ink-500 dark:text-ink-400",
+                toAirport === dir ? "bg-brand-600 text-white" : "text-ink-500 dark:text-ink-400",
               )}
             >
               {dir ? (
@@ -179,13 +179,13 @@ export function AirportScreen() {
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <Link
           href={`/trips/create?${routeQs}`}
-          className="flex items-center justify-center gap-1.5 rounded-2xl bg-brand-600 px-3 py-3 text-[14px] font-900 text-white hover:bg-brand-500"
+          className="flex items-center justify-center gap-1.5 rounded-2xl bg-ink-900 px-3 py-3 text-[14px] font-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
         >
           <Plus className="h-4 w-4" aria-hidden="true" /> {t("publish_transfer")}
         </Link>
         <Link
           href={`/requests/create?${routeQs}`}
-          className="flex items-center justify-center gap-1.5 rounded-2xl bg-grape-500 px-3 py-3 text-[14px] font-900 text-white hover:bg-grape-600"
+          className="flex items-center justify-center gap-1.5 rounded-2xl bg-ink-900 px-3 py-3 text-[14px] font-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
         >
           <Plus className="h-4 w-4" aria-hidden="true" /> {t("need_transfer")}
         </Link>

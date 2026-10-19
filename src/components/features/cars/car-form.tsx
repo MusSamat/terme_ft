@@ -201,16 +201,16 @@ export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, re
         autoCorrect="off"
         spellCheck={false}
         maxLength={10}
-        className={cn(FIELD, "uppercase tracking-wider", plate && !plateOk && "border-coral-400 dark:border-coral-400")}
+        className={cn(FIELD, "uppercase tracking-wider", plate && !plateOk && "border-danger-400 dark:border-danger-400")}
       />
       {plate && !plateOk && (
-        <p className="text-[13px] font-700 text-coral-500">{t("plate_hint")}</p>
+        <p className="text-[13px] font-700 text-danger-500">{t("plate_hint")}</p>
       )}
       {showYear && (
         <select
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className={cn(FIELD, requireYear && !year && "border-coral-400 dark:border-coral-400")}
+          className={cn(FIELD, requireYear && !year && "border-danger-400 dark:border-danger-400")}
         >
           <option value="">{tReg("year_placeholder")}</option>
           {YEAR_OPTIONS.map((y) => (
@@ -259,7 +259,7 @@ export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, re
               seatsCount: seats,
             })
           }
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-800 text-white transition-colors hover:bg-brand-700 disabled:opacity-40"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent-500 text-[15px] font-800 text-accent-ink transition-colors hover:bg-accent-400 disabled:opacity-40"
         >
           {pending ? <Spinner size={16} /> : <CarIcon className="h-4 w-4" aria-hidden="true" />}
           {submitLabel}

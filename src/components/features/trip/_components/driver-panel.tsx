@@ -120,7 +120,7 @@ function TripEditModal({ trip, tripId, onClose }: { trip: TripDetail; tripId: st
               <button type="button" onClick={() => setConfirming(false)} aria-label={t("back_btn")} className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
                 <X className="h-5 w-5" />
               </button>
-              <button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="h-11 flex-[2] rounded-xl bg-brand-600 text-[15px] font-900 text-white hover:bg-brand-700 disabled:opacity-50">
+              <button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="h-11 flex-[2] rounded-xl bg-accent-500 text-[15px] font-900 text-accent-ink hover:bg-accent-400 disabled:opacity-50">
                 {saveMut.isPending ? "…" : t("save")}
               </button>
             </div>
@@ -130,7 +130,7 @@ function TripEditModal({ trip, tripId, onClose }: { trip: TripDetail; tripId: st
             type="button"
             disabled={!priceOk}
             onClick={() => setConfirming(true)}
-            className="mt-1 h-11 rounded-xl bg-brand-600 text-[15px] font-900 text-white hover:bg-brand-700 disabled:opacity-40"
+            className="mt-1 h-11 rounded-xl bg-accent-500 text-[15px] font-900 text-accent-ink hover:bg-accent-400 disabled:opacity-40"
           >
             {t("save")}
           </button>
@@ -339,7 +339,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
               type="button"
               disabled={completeTripMut.isPending}
               onClick={() => completeTripMut.mutate()}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-brand-600 text-[13px] font-800 text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-ink-900 text-[13px] font-800 text-white transition-colors hover:bg-ink-800 disabled:opacity-50 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
             >
               {completeTripMut.isPending ? <Spinner size={14} /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
               {t("complete_trip_btn")}
@@ -347,7 +347,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
             <button
               type="button"
               onClick={() => setCancelTripOpen(true)}
-              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-coral-200 text-[13px] font-800 text-coral-600 transition-colors hover:bg-coral-50"
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-danger-200 text-[13px] font-800 text-danger-600 transition-colors hover:bg-danger-50"
             >
               <X className="h-4 w-4" aria-hidden="true" />
               {t("cancel_trip_btn")}
@@ -415,8 +415,8 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
       {cancelBookingTarget && (
         <Overlay onClose={() => setCancelBookingTarget(null)}>
           <h2 className="mb-2 text-[20px] font-extrabold text-ink-900 dark:text-white">{t("cancel_booking_title")}</h2>
-          <div className="mt-2 rounded-2xl border border-coral-200 bg-coral-50 p-4">
-            <p className="text-[14px] font-bold text-coral-700">
+          <div className="mt-2 rounded-2xl border border-danger-200 bg-danger-50 p-4">
+            <p className="text-[14px] font-bold text-danger-700">
               {t("cancel_booking_warn")}
             </p>
           </div>
@@ -432,7 +432,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
               type="button"
               onClick={() => cancelBookingMut.mutate(cancelBookingTarget)}
               disabled={cancelBookingMut.isPending}
-              className="flex-1 rounded-xl bg-coral-600 py-2.5 text-[14px] font-bold text-white disabled:opacity-50"
+              className="flex-1 rounded-xl bg-danger-600 py-2.5 text-[14px] font-bold text-white disabled:opacity-50"
             >
               {cancelBookingMut.isPending ? t("cancelling") : t("confirm_btn")}
             </button>
@@ -443,8 +443,8 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
       {cancelTripOpen && (
         <Overlay onClose={() => setCancelTripOpen(false)}>
           <h2 className="mb-2 text-[20px] font-extrabold text-ink-900 dark:text-white">{t("cancel_trip_title")}</h2>
-          <div className="mt-2 rounded-2xl border border-coral-200 bg-coral-50 p-4">
-            <p className="text-[14px] font-bold text-coral-700">
+          <div className="mt-2 rounded-2xl border border-danger-200 bg-danger-50 p-4">
+            <p className="text-[14px] font-bold text-danger-700">
               {t("cancel_trip_warn")}
               {acceptedCount > 0 && ` ${t("cancel_trip_rating_warn")}`}
             </p>
@@ -461,7 +461,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
               type="button"
               onClick={() => cancelTripMut.mutate()}
               disabled={cancelTripMut.isPending}
-              className="flex-1 rounded-xl bg-coral-600 py-2.5 text-[14px] font-bold text-white disabled:opacity-50"
+              className="flex-1 rounded-xl bg-danger-600 py-2.5 text-[14px] font-bold text-white disabled:opacity-50"
             >
               {cancelTripMut.isPending ? t("cancelling") : t("confirm_btn")}
             </button>

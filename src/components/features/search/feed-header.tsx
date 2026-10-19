@@ -13,8 +13,6 @@ import { placeName, routeFromParams, setRouteParams } from "@/lib/places";
 // (Сегодня · Завтра · …) and the filters icon. The full route (Откуда/Куда) is
 // edited inside the filters sheet, so the header stays tidy.
 
-type FeedTab = "trips" | "requests";
-
 const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
 
 function ymdKg(offsetDays = 0): string {
@@ -22,11 +20,10 @@ function ymdKg(offsetDays = 0): string {
 }
 
 interface FeedHeaderProps {
-  tab: FeedTab;
   onOpenFilters: () => void;
 }
 
-export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
+export function FeedHeader({ onOpenFilters }: FeedHeaderProps) {
   const t = useTranslations("feed");
   const router = useRouter();
   const pathname = usePathname();
@@ -37,7 +34,6 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
   const route = routeFromParams((k) => params.get(k));
   const from = placeName(route.from, locale);
   const to = placeName(route.to, locale);
-  const grape = tab === "requests";
 
   const today = ymdKg(0);
   const tomorrow = ymdKg(1);
@@ -79,9 +75,7 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
     cn(
       "flex h-9 shrink-0 items-center rounded-full px-4 text-[13.5px] font-800 transition-colors",
       sel
-        ? grape
-          ? "bg-grape-600 text-white"
-          : "bg-brand-600 text-white"
+        ? "bg-brand-600 text-white"
         : "border border-ink-200 bg-white text-ink-700 hover:border-ink-300 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-200",
     );
 
@@ -126,7 +120,7 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
             !days.includes(current)
-              ? grape ? "bg-grape-600 text-white" : "bg-brand-600 text-white"
+              ? "bg-brand-600 text-white"
               : "border border-ink-200 bg-white text-ink-600 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-300",
           )}
         >

@@ -115,7 +115,7 @@ export function ReuploadDocs({ requestedDocs, onDone }: {
         })}
       </div>
 
-      {error && <p className="mt-3 text-[14px] font-700 text-coral-500">{error}</p>}
+      {error && <p className="mt-3 text-[14px] font-700 text-danger-500">{error}</p>}
 
       {docs.every((d) => uploaded.has(d)) && (
         <Button variant="primary" size="md" className="mt-5 w-full" onClick={onDone}>

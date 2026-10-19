@@ -14,7 +14,7 @@ const badgeVariants = cva(
         seats: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
         neutral: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
         success: "bg-brand-50 text-brand-700",
-        danger: "bg-coral-100 text-coral-600",
+        danger: "bg-danger-100 text-danger-600",
       },
     },
     defaultVariants: { variant: "neutral" },

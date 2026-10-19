@@ -94,13 +94,13 @@ export function RequestDetailPane({ request }: Props) {
         {/* Passenger header */}
         <Link
           href={`/drivers/${passenger.id}`}
-          className="flex items-center gap-3 rounded-2xl border border-grape-100 bg-grape-50 p-4 transition-colors hover:border-grape-200 hover:bg-grape-100"
+          className="flex items-center gap-3 rounded-2xl border border-brand-100 bg-brand-50 p-4 transition-colors hover:border-brand-200 hover:bg-brand-100"
         >
           <DriverAvatar
             name={passenger.name}
             src={passenger.avatarUrl}
             size="lg"
-            className="ring-2 ring-grape-200"
+            className="ring-2 ring-brand-200"
           />
           <div className="flex min-w-0 flex-1 flex-col">
             <p className="text-[20px] font-extrabold text-ink-900">{passenger.name}</p>
@@ -128,7 +128,7 @@ export function RequestDetailPane({ request }: Props) {
               </span>
             )}
           </div>
-          <Shield className="h-4 w-4 flex-shrink-0 text-grape-400" aria-hidden />
+          <Shield className="h-4 w-4 flex-shrink-0 text-brand-400" aria-hidden />
         </Link>
 
         {/* Route */}
@@ -140,14 +140,14 @@ export function RequestDetailPane({ request }: Props) {
             <div className="flex items-start gap-3">
               <div className="flex flex-col items-center pt-1">
                 <span
-                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-grape-500"
-                  style={{ boxShadow: "0 0 0 3px #EDE9FE" }}
+                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-brand-600"
+                  style={{ boxShadow: "0 0 0 3px #D0FBEF" }}
                   aria-hidden
                 />
                 <div className="my-1.5 h-10 w-0.5 bg-ink-200 dark:bg-ink-700" aria-hidden />
                 <span
-                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-grape-400"
-                  style={{ boxShadow: "0 0 0 3px #EDE9FE" }}
+                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-brand-400"
+                  style={{ boxShadow: "0 0 0 3px #D0FBEF" }}
                   aria-hidden
                 />
               </div>
@@ -182,9 +182,9 @@ export function RequestDetailPane({ request }: Props) {
         />
 
         {request.flightNumber && (
-          <div className="flex items-center gap-2.5 rounded-2xl bg-sky-50 px-4 py-3 dark:bg-sky-500/10">
-            <Plane className="h-5 w-5 shrink-0 text-sky-600" aria-hidden="true" />
-            <p className="text-[15px] font-800 text-sky-900 dark:text-sky-100">
+          <div className="flex items-center gap-2.5 rounded-2xl bg-brand-50 px-4 py-3 dark:bg-brand-500/10">
+            <Plane className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+            <p className="text-[15px] font-800 text-brand-900 dark:text-brand-100">
               {t("flight")}: {request.flightNumber}
             </p>
           </div>
@@ -211,7 +211,7 @@ export function RequestDetailPane({ request }: Props) {
               <Users className="h-3 w-3" aria-hidden />
               {t("seats_needed")}
             </div>
-            <p className="text-[28px] font-extrabold text-grape-600">{request.seatsNeeded}</p>
+            <p className="text-[28px] font-extrabold text-brand-600">{request.seatsNeeded}</p>
             <SeatStack needed={Math.min(request.seatsNeeded, 4)} size={20} className="mt-0.5" />
           </div>
         </div>
@@ -222,7 +222,7 @@ export function RequestDetailPane({ request }: Props) {
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-500">
               {t("passenger_comment")}
             </p>
-            <div className="rounded-2xl bg-grape-50 px-4 py-3 text-[14px] leading-relaxed text-ink-700">
+            <div className="rounded-2xl bg-brand-50 px-4 py-3 text-[14px] leading-relaxed text-ink-700">
               «{request.comment}»
             </div>
           </div>
@@ -246,7 +246,7 @@ export function RequestDetailPane({ request }: Props) {
                   onClick={() => (confirmCancel ? cancelMut.mutate() : setConfirmCancel(true))}
                   onBlur={() => setConfirmCancel(false)}
                   disabled={cancelMut.isPending}
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-coral-200 bg-white text-[15px] font-bold text-coral-600 transition-colors hover:bg-coral-50 disabled:opacity-50 dark:border-coral-500/40 dark:bg-ink-900"
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-danger-200 bg-white text-[15px] font-bold text-danger-600 transition-colors hover:bg-danger-50 disabled:opacity-50 dark:border-danger-500/40 dark:bg-ink-900"
                 >
                   <X className="h-4 w-4" aria-hidden />
                   {cancelMut.isPending ? "…" : confirmCancel ? t("cancel_confirm") : tCard("cancel")}
@@ -261,13 +261,13 @@ export function RequestDetailPane({ request }: Props) {
             <Link
               href="/auth/login"
               onClick={() => saveDeferredAction({ action: "view_request", id: request.id })}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-grape-600 text-[15px] font-bold text-white hover:bg-grape-700"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[15px] font-bold text-accent-ink shadow-cta hover:bg-accent-400"
             >
               {t("login_to_respond")}
             </Link>
           ) : isDriver && isOpen && myPending ? (
             // Offer already sent and awaiting the passenger — read-only state.
-            <div className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-grape-300 bg-grape-50 text-[15px] font-bold text-grape-700">
+            <div className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-accent-300 bg-accent-50 text-[15px] font-bold text-accent-700 dark:border-accent-500/40 dark:bg-accent-500/10 dark:text-accent-300">
               <CheckCircle className="h-4 w-4" aria-hidden />
               {t("responded_pending")}
             </div>
@@ -275,7 +275,7 @@ export function RequestDetailPane({ request }: Props) {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-grape-500 text-[15px] font-bold text-white transition-colors hover:bg-grape-600"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 text-[15px] font-bold text-accent-ink shadow-cta transition-colors hover:bg-accent-400"
             >
               <CheckCircle className="h-4 w-4" aria-hidden />
               {t("respond_btn")}

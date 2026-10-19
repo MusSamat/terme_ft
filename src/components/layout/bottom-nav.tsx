@@ -59,7 +59,7 @@ function NavTab({
         {label}
       </span>
       {typeof badge === "number" && badge > 0 && (
-        <span className="absolute right-1.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral-500 px-1 text-[9px] font-900 text-white ring-2 ring-white dark:ring-ink-900">
+        <span className="absolute right-1.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[9px] font-900 text-white ring-2 ring-white dark:ring-ink-900">
           {badge > 9 ? "9+" : badge}
         </span>
       )}
@@ -148,7 +148,7 @@ export function BottomNav() {
               aria-label={isDriver ? t("publish_trip_aria") : t("create_request_aria")}
               className="relative -mt-8 flex shrink-0 touch-manipulation flex-col items-center gap-1 transition-transform duration-100 active:scale-95"
             >
-              <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-gradient-to-br from-accent-400 to-accent-600 text-accent-ink shadow-cta ring-4 ring-white dark:ring-ink-900">
+              <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-accent-500 text-accent-ink shadow-cta ring-4 ring-white dark:ring-ink-900">
                 <Plus className="h-7 w-7" strokeWidth={2.6} aria-hidden="true" />
               </span>
               <span className="text-[12px] font-900 text-accent-600">{t("publish")}</span>

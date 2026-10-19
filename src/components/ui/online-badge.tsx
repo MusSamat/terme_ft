@@ -28,7 +28,7 @@ export function OnlineBadge({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[13px] font-700 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300",
+        "inline-flex items-center gap-1.5 rounded-full border border-brand-500/20 bg-brand-500/10 px-2.5 py-1 text-[13px] font-700 text-brand-700 dark:border-brand-400/20 dark:bg-brand-400/10 dark:text-brand-300",
         className,
       )}
       role="status"
@@ -36,11 +36,11 @@ export function OnlineBadge({ className }: { className?: string }) {
       title={t("online_title", { count: online })}
     >
       <span className="relative flex h-2 w-2" aria-hidden="true">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
       </span>
       <span className="tabular-nums">{online.toLocaleString("ru-RU")}</span>
-      <span className="hidden text-emerald-600/90 dark:text-emerald-300/90 sm:inline">
+      <span className="hidden text-brand-600/90 dark:text-brand-300/90 sm:inline">
         {t("online")}
       </span>
     </div>

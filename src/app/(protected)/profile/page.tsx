@@ -42,7 +42,7 @@ type Tab = "about" | "cars" | "reviews" | "history" | "settings";
 
 const FAB_TINT: Record<string, string> = {
   driver: "bg-brand-600",
-  passenger: "bg-grape-600",
+  passenger: "bg-brand-600",
   guest: "bg-ink-600",
 };
 
@@ -134,7 +134,7 @@ export default function ProfilePage() {
       {!isDriver && (
         <Link
           href="/profile/driver"
-          className="flex w-full items-center gap-3 rounded-3xl bg-grape-600 px-4 py-3.5 text-white shadow-indigocta"
+          className="flex w-full items-center gap-3 rounded-3xl bg-brand-600 px-4 py-3.5 text-white shadow-brandcta"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20">
             <CarFront className="h-5 w-5" aria-hidden="true" />
@@ -291,7 +291,7 @@ export default function ProfilePage() {
             {!isDriver && (
               <Link
                 href="/profile/driver"
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3.5 text-[15px] font-900 text-white shadow-brandcta"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-ink-900 px-4 py-3.5 text-[15px] font-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
               >
                 <CarFront className="h-5 w-5" aria-hidden="true" />
                 {t("become_driver_title")}
@@ -304,7 +304,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
-                className="w-full px-4 py-3.5 text-left text-[15px] font-800 text-coral-600"
+                className="w-full px-4 py-3.5 text-left text-[15px] font-800 text-danger-600"
               >
                 {t("logout_btn")}
               </button>

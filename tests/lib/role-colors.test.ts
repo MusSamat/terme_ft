@@ -11,17 +11,18 @@ describe("ROLE_THEME", () => {
     expect(ROLE_THEME.guest.tabUnderline).toBe("bg-ink-500");
   });
 
-  // Current assignment (role-colors.ts): passenger = brand (teal), driver = grape.
-  it("passenger accents are brand (teal)", () => {
+  // Two-brand palette: passenger and driver share one teal recipe; the
+  // primary CTA is amber; roles differ by icon + label only.
+  it("passenger accents are brand (teal) with an amber CTA", () => {
     expect(ROLE_THEME.passenger.textOn).toContain("text-brand-");
-    expect(ROLE_THEME.passenger.ctaFilled).toContain("bg-brand-600");
-    expect(ROLE_THEME.passenger.tabUnderline).toBe("bg-brand-500");
+    expect(ROLE_THEME.passenger.ctaFilled).toContain("bg-accent-500");
+    expect(ROLE_THEME.passenger.tabUnderline).toBe("bg-brand-600");
   });
 
-  it("driver accents are grape (indigo)", () => {
-    expect(ROLE_THEME.driver.textOn).toContain("text-grape-");
-    expect(ROLE_THEME.driver.ctaFilled).toContain("bg-grape-500");
-    expect(ROLE_THEME.driver.tabUnderline).toBe("bg-grape-500");
+  it("driver uses the same colour recipe as passenger", () => {
+    const { labelKey: _pl, icon: _pi, ...passenger } = ROLE_THEME.passenger;
+    const { labelKey: _dl, icon: _di, ...driver } = ROLE_THEME.driver;
+    expect(driver).toEqual(passenger);
   });
 
   it("labelKey and icon match the role", () => {
@@ -41,8 +42,7 @@ describe("ROLE_THEME", () => {
     }
   });
 
-  it("roles produce distinct accent recipes", () => {
-    expect(ROLE_THEME.passenger.badge).not.toBe(ROLE_THEME.driver.badge);
+  it("guest is neutral, distinct from the signed-in teal recipe", () => {
     expect(ROLE_THEME.guest.badge).not.toBe(ROLE_THEME.passenger.badge);
   });
 });
@@ -52,12 +52,8 @@ describe("ROLE_COLORS (deprecated pre-redesign map)", () => {
     expect(ROLE_COLORS.passenger.navActive).toBe("text-brand-600");
   });
 
-  it("driver has navActive: text-grape-600", () => {
-    expect(ROLE_COLORS.driver.navActive).toBe("text-grape-600");
-  });
-
-  it("passenger and driver produce different avatarBgOn values", () => {
-    expect(ROLE_COLORS.passenger.avatarBgOn).not.toBe(ROLE_COLORS.driver.avatarBgOn);
+  it("driver has the same teal navActive as passenger", () => {
+    expect(ROLE_COLORS.driver.navActive).toBe("text-brand-600");
   });
 
   it("all ROLE_COLORS keys have the same property names", () => {

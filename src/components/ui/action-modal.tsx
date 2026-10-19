@@ -9,15 +9,13 @@ import { Modal, ModalContent, ModalDescription, ModalTitle, ModalTrigger } from 
 // offline / error): centered card, tinted icon medallion, title, body,
 // stacked action buttons.
 
-export type ActionModalTone = "brand" | "grape" | "accent" | "danger" | "sky" | "ink";
+export type ActionModalTone = "brand" | "accent" | "danger" | "ink";
 
 // Literal medallion tint map — never interpolate color names into classes.
 const MEDALLION: Record<ActionModalTone, string> = {
   brand: "bg-brand-100 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300",
-  grape: "bg-grape-100 text-grape-600 dark:bg-grape-500/15 dark:text-grape-300",
   accent: "bg-accent-100 text-accent-600 dark:bg-accent-500/15 dark:text-accent-300",
   danger: "bg-danger-100 text-danger-600 dark:bg-danger-500/10 dark:text-danger-400",
-  sky: "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   ink: "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300",
 };
 

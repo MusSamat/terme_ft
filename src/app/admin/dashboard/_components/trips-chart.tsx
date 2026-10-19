@@ -24,9 +24,9 @@ export function TripsChart({ data, loading, days }: Props) {
           <XAxis dataKey="date" tickFormatter={fmtShortDate} tick={{ fontSize: 10 }} />
           <YAxis tick={{ fontSize: 10 }} />
           <Tooltip labelFormatter={fmtShortDate as unknown as undefined} />
-          <Area type="monotone" dataKey="completed" stackId="1" stroke="#0D9488" fill="#ccfbf1" strokeWidth={2} name="Завершены" />
-          <Area type="monotone" dataKey="active" stackId="1" stroke="#3b82f6" fill="#dbeafe" strokeWidth={2} name="Активны" />
-          <Area type="monotone" dataKey="cancelled" stackId="1" stroke="#ef4444" fill="#fee2e2" strokeWidth={2} name="Отменены" />
+          <Area type="monotone" dataKey="completed" stackId="1" stroke="#78716C" fill="#E7E5E4" strokeWidth={2} name="Завершены" />
+          <Area type="monotone" dataKey="active" stackId="1" stroke="#0D9488" fill="#D0FBEF" strokeWidth={2} name="Активны" />
+          <Area type="monotone" dataKey="cancelled" stackId="1" stroke="#EF4444" fill="#FEE2E2" strokeWidth={2} name="Отменены" />
         </AreaChart>
       </ResponsiveContainer>
     </ChartCard>

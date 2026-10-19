@@ -49,7 +49,7 @@ export function ProfileForm() {
       <div>
         <Label htmlFor="name">{t("name_label")}</Label>
         <Input id="name" {...register("name")} className="mt-1" />
-        {errors.name && <p className="mt-1 text-caption text-coral-500">{errors.name.message}</p>}
+        {errors.name && <p className="mt-1 text-caption text-danger-500">{errors.name.message}</p>}
       </div>
 
       <div>
@@ -65,7 +65,7 @@ export function ProfileForm() {
       </div>
 
       {error && (
-        <p className="text-caption text-coral-500">{t("save_error")}</p>
+        <p className="text-caption text-danger-500">{t("save_error")}</p>
       )}
 
       <Button type="submit" variant="primary" size="md" disabled={!isDirty || isPending}>

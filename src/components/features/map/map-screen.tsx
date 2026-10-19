@@ -101,8 +101,7 @@ export function MapScreen() {
     [items],
   );
   const total = items.length + (data?.clusters ?? []).reduce((a, c) => a + c.count, 0);
-  const grape = kind === "requests";
-  const color = grape ? "#6366F1" : "#0D9488";
+  const isRequests = kind === "requests";
 
   return (
     <div className="relative h-[100dvh] w-full md:h-[calc(100dvh-64px)]">
@@ -113,7 +112,7 @@ export function MapScreen() {
         onSelect={(id) => setSelected(items.find((i) => i.id === id) ?? null)}
         me={me}
         recenter={recenter}
-        color={color}
+        color="#0D9488"
       />
 
       {/* Controls */}
@@ -129,9 +128,7 @@ export function MapScreen() {
                 className={cn(
                   "h-9 rounded-xl text-[13.5px] font-900 transition-colors",
                   kind === k
-                    ? k === "requests"
-                      ? "bg-grape-500 text-white"
-                      : "bg-brand-600 text-white"
+                    ? "bg-brand-600 text-white"
                     : "text-ink-500 dark:text-ink-400",
                 )}
               >
@@ -184,7 +181,7 @@ export function MapScreen() {
           <button
             type="button"
             onClick={() => void refetch()}
-            className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-coral-600 shadow-card dark:bg-ink-900/95"
+            className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-danger-600 shadow-card dark:bg-ink-900/95"
           >
             {tErr("page_title")} · {tErr("retry")}
           </button>
@@ -203,7 +200,7 @@ export function MapScreen() {
           <Crosshair className={cn("h-5 w-5", locating && "animate-pulse")} aria-hidden="true" />
         </button>
         {geoDenied && (
-          <span className="max-w-[220px] rounded-xl bg-white/95 px-3 py-2 text-[12px] font-700 text-coral-600 shadow-card dark:bg-ink-900/95">
+          <span className="max-w-[220px] rounded-xl bg-white/95 px-3 py-2 text-[12px] font-700 text-danger-600 shadow-card dark:bg-ink-900/95">
             {t("geo_denied")}
           </span>
         )}
@@ -235,11 +232,8 @@ export function MapScreen() {
               )}
             </div>
             <Link
-              href={grape ? `/requests/${selected.id}` : `/trips/${selected.id}`}
-              className={cn(
-                "shrink-0 rounded-2xl px-4 py-2.5 text-[14px] font-900 text-white",
-                grape ? "bg-grape-500 hover:bg-grape-600" : "bg-brand-600 hover:bg-brand-500",
-              )}
+              href={isRequests ? `/requests/${selected.id}` : `/trips/${selected.id}`}
+              className="shrink-0 rounded-2xl bg-ink-900 px-4 py-2.5 text-[14px] font-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
             >
               {t("open")}
             </Link>

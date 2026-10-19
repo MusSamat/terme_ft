@@ -171,7 +171,7 @@ export default function AdminRequestsPage() {
                     <p className="truncate font-bold text-ink-900">{r.originCity} → {r.destinationCity}</p>
                     <p className="text-[12px] text-ink-500">
                       {fmtDate(r.departureDate)} · <span className="font-semibold text-ink-700">{r.passenger.name}</span> · {r.seatsNeeded} мест
-                      {r.offersCount > 0 && <span className="ml-1.5 rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">{r.offersCount} предл.</span>}
+                      {r.offersCount > 0 && <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">{r.offersCount} предл.</span>}
                     </p>
                   </div>
                   <div className="ml-3 flex flex-shrink-0 items-center gap-2">
@@ -258,7 +258,7 @@ function RequestDetailBody({ detail }: { detail: AdminRequestDetail }) {
               <div key={o.id} className="flex items-center justify-between rounded-xl bg-ink-50 px-3 py-2 text-[13px]">
                 <span className="font-semibold text-ink-800">{o.driverName}</span>
                 <span className="flex items-center gap-3 text-ink-500">
-                  <span className="font-bold text-sky-600">{o.price} сом</span>
+                  <span className="font-bold text-brand-600">{o.price} сом</span>
                   <span>{fmtDateTime(o.departureTime)}</span>
                   <StatusBadge status={o.status === "accepted" ? "active" : o.status === "declined" ? "rejected" : "pending"} label={o.status} />
                 </span>

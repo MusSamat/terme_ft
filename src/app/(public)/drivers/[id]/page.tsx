@@ -49,8 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const TIER_COLORS: Record<string, string> = {
-  traveler: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30",
-  expert: "bg-grape-50 text-grape-700 border-grape-200 dark:bg-grape-500/10 dark:text-grape-300 dark:border-grape-500/30",
+  traveler: "bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/30",
+  expert: "bg-brand-100 text-brand-800 border-brand-300 dark:bg-brand-500/20 dark:text-brand-200 dark:border-brand-500/40",
   elite: "bg-accent-50 text-accent-700 border-accent-200 dark:bg-accent-500/10 dark:text-accent-300 dark:border-accent-500/30",
 };
 

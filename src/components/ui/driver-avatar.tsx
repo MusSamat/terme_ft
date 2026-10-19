@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils/cn";
 import { normalizeMediaUrl } from "@/lib/utils/media-url";
 
-// Letter avatar — design-spec §1.7: grape tint, font-900; optional verified
+// Letter avatar — design-spec §1.7: teal tint, font-900; optional verified
 // overlay dot (brand-600 circle + white check).
 
 interface DriverAvatarProps {
@@ -53,7 +53,7 @@ export function DriverAvatar({
   useEffect(() => { setFailed(false); }, [src]);
 
   const base = cn(
-    "inline-flex h-full w-full items-center justify-center bg-grape-100 font-900 text-grape-600 dark:bg-grape-500/20 dark:text-grape-300",
+    "inline-flex h-full w-full items-center justify-center bg-brand-100 font-900 text-brand-600 dark:bg-brand-500/20 dark:text-brand-300",
     shapeClasses[shape],
   );
 

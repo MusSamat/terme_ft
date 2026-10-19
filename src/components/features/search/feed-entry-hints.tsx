@@ -46,7 +46,7 @@ export function FeedEntryHints({
 }) {
   const t = useTranslations("feed");
   const locale = useLocale();
-  const grape = tab === "requests";
+  const isRequests = tab === "requests";
   const [recent, setRecent] = useState<RecentRoute[]>([]);
   useEffect(() => setRecent(getRecentRoutes()), []);
 
@@ -99,10 +99,8 @@ export function FeedEntryHints({
     if (destinations.length >= 8) break;
   }
 
-  const countTone = grape
-    ? "text-grape-600 dark:text-grape-300"
-    : "text-brand-600 dark:text-brand-300";
-  const goTone = grape ? "text-grape-500" : "text-brand-500";
+  const countTone = "text-brand-600 dark:text-brand-300";
+  const goTone = "text-brand-500";
 
   return (
     <div className="pt-2">
@@ -121,7 +119,7 @@ export function FeedEntryHints({
                 {r.to}
               </span>
               <span className={cn("text-[11px] font-800", countTone)}>
-                {!grape && r.tripCount > 0
+                {!isRequests && r.tripCount > 0
                   ? t("trips_count", { n: r.tripCount })
                   : r.minPrice != null
                     ? t("from_price", { n: r.minPrice })
@@ -138,10 +136,7 @@ export function FeedEntryHints({
           className="mb-5 flex items-center gap-3 rounded-2xl bg-white p-2.5 shadow-card ring-1 ring-ink-100 transition-colors hover:ring-ink-200 dark:bg-ink-900 dark:ring-ink-800"
         >
           <span
-            className={cn(
-              "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-              mineIsTrip ? "bg-brand-600/10 text-brand-600 dark:text-brand-300" : "bg-grape-600/10 text-grape-600 dark:text-grape-300",
-            )}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-600/10 text-brand-600 dark:text-brand-300"
           >
             {mineIsTrip ? <CarFront className="h-5 w-5" aria-hidden="true" /> : <User className="h-5 w-5" aria-hidden="true" />}
           </span>
@@ -188,7 +183,7 @@ export function FeedEntryHints({
       )}
 
       {showDests && destinations.length > 0 && (
-        <Rail title={grape ? t("destinations_requests") : t("destinations_trips")}>
+        <Rail title={isRequests ? t("destinations_requests") : t("destinations_trips")}>
           {destinations.map((r) => (
             <button
               key={`d-${r.to}`}
@@ -202,10 +197,10 @@ export function FeedEntryHints({
             >
               <div className="min-w-0">
                 <div className="whitespace-nowrap text-[14px] font-900 text-ink-900 dark:text-white">{r.to}</div>
-                {!grape && r.tripCount > 0 && (
+                {!isRequests && r.tripCount > 0 && (
                   <div className={cn("text-[11px] font-800", countTone)}>{t("trips_count", { n: r.tripCount })}</div>
                 )}
-                {grape && r.minPrice != null && (
+                {isRequests && r.minPrice != null && (
                   <div className={cn("text-[11px] font-800", countTone)}>{t("from_price", { n: r.minPrice })}</div>
                 )}
               </div>

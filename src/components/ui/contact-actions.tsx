@@ -58,7 +58,7 @@ export function ContactActions({
     <div className={cn("grid grid-cols-2 gap-2", className)}>
       <a
         href={`tel:${phone}`}
-        className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[15px] font-900 text-white hover:bg-brand-700"
+        className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-ink-900 text-[15px] font-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
       >
         <Phone className="h-4 w-4" aria-hidden="true" />
         {t("call")}

@@ -153,9 +153,9 @@ export default function VerificationDetailPage() {
           </div>
         )}
         {item.requestedDocs.length > 0 && (
-          <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3">
-            <p className="text-[12px] font-bold text-sky-700">Запрошены документы:</p>
-            <p className="text-[12px] text-sky-700">
+          <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3">
+            <p className="text-[12px] font-bold text-brand-700">Запрошены документы:</p>
+            <p className="text-[12px] text-brand-700">
               {item.requestedDocs.map((d) => REQUESTABLE_DOCS.find((r) => r.id === d)?.label ?? d).join(", ")}
             </p>
           </div>

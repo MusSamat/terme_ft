@@ -82,25 +82,25 @@ export function PasswordForm() {
         <Label htmlFor="currentPassword">{t("current_label")}</Label>
         <PasswordInput id="currentPassword" {...register("currentPassword")} className="mt-1" />
         {errors.currentPassword && (
-          <p className="mt-1 text-caption text-coral-500">{errors.currentPassword.message}</p>
+          <p className="mt-1 text-caption text-danger-500">{errors.currentPassword.message}</p>
         )}
       </div>
       <div>
         <Label htmlFor="newPassword">{t("new_label")}</Label>
         <PasswordInput id="newPassword" {...register("newPassword")} className="mt-1" />
         {errors.newPassword && (
-          <p className="mt-1 text-caption text-coral-500">{errors.newPassword.message}</p>
+          <p className="mt-1 text-caption text-danger-500">{errors.newPassword.message}</p>
         )}
       </div>
       <div>
         <Label htmlFor="confirmPassword">{t("repeat_label")}</Label>
         <PasswordInput id="confirmPassword" {...register("confirmPassword")} className="mt-1" />
         {errors.confirmPassword && (
-          <p className="mt-1 text-caption text-coral-500">{errors.confirmPassword.message}</p>
+          <p className="mt-1 text-caption text-danger-500">{errors.confirmPassword.message}</p>
         )}
       </div>
 
-      {serverError && <p className="text-caption text-coral-500">{serverError}</p>}
+      {serverError && <p className="text-caption text-danger-500">{serverError}</p>}
       <Link href={setViaWhatsapp} className="block text-[13px] font-800 text-brand-700 dark:text-brand-300">
         {t("forgot_current")}
       </Link>

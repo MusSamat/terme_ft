@@ -29,7 +29,7 @@ export function TopCarsChart({ data, loading }: { data: Array<{ make: string; co
             <Tooltip formatter={((v: unknown) => [v, "Авто"]) as unknown as undefined} />
             <Bar dataKey="count" radius={[0, 4, 4, 0]}>
               {data.map((_, i) => (
-                <Cell key={i} fill={`hsl(${210 + i * 6}, 65%, ${52 + i * 2}%)`} />
+                <Cell key={i} fill={`hsl(175, 84%, ${32 + i * 4}%)`} />
               ))}
             </Bar>
           </BarChart>
@@ -50,7 +50,7 @@ export function RoutesChart({ data, loading, days }: RoutesProps) {
           <Tooltip formatter={((v: unknown) => [v, "Поездок"]) as unknown as undefined} />
           <Bar dataKey="count" radius={[0, 4, 4, 0]}>
             {data.map((_, i) => (
-              <Cell key={i} fill={`hsl(${170 + i * 8}, 60%, ${45 + i * 2}%)`} />
+              <Cell key={i} fill={`hsl(175, 70%, ${32 + i * 4}%)`} />
             ))}
           </Bar>
         </BarChart>
@@ -77,7 +77,7 @@ export function RatingChart({ data, loading, days }: RatingProps) {
             labelFormatter={fmtShortDate as unknown as undefined}
             formatter={((v: unknown) => [v, "Средний рейтинг"]) as unknown as undefined}
           />
-          <Line type="monotone" dataKey="avg" stroke="#f59e0b" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="avg" stroke="#F59E0B" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </ChartCard>

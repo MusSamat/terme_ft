@@ -177,9 +177,9 @@ export default function RegisterPage() {
         </div>
 
         {serverError && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-2xl bg-coral-50 px-4 py-3 dark:bg-coral-500/10">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-coral-500" aria-hidden />
-            <p className="text-[14px] font-800 text-coral-600">{serverError}</p>
+          <div className="mb-5 flex items-start gap-2.5 rounded-2xl bg-danger-50 px-4 py-3 dark:bg-danger-500/10">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger-500" aria-hidden />
+            <p className="text-[14px] font-800 text-danger-600">{serverError}</p>
           </div>
         )}
 
@@ -249,7 +249,7 @@ export default function RegisterPage() {
         {/* ── Step 2: OTP code only ── */}
         {step === "otp" && (
           <>
-            <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-[15px] font-700 text-[#128C7E]">
+            <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-[15px] font-700 text-ink-600 dark:text-ink-300">
               <MessageCircle className="h-4 w-4" />
               {t("otp_dm_hint")}
             </p>
@@ -338,7 +338,7 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <p className={cn("mt-1.5 text-[12px] font-600", password.length > 0 && password.length < 8 ? "text-coral-500" : "text-ink-400")}>
+              <p className={cn("mt-1.5 text-[12px] font-600", password.length > 0 && password.length < 8 ? "text-danger-500" : "text-ink-400")}>
                 {t("password_rule")}
               </p>
             </LabeledField>

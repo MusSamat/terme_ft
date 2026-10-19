@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils/cn";
 // then an optional action row. Only the info region navigates (href/onClick) —
 // action buttons sit OUTSIDE it, so there are never nested interactive elements.
 export interface ListCardProps {
-  grape?: boolean; // false = trip (teal dot), true = request (indigo dot)
   when: string;
   role?: string;
   status?: StatusBadgeStatus | (string & {});
@@ -28,7 +27,6 @@ export interface ListCardProps {
 }
 
 export function ListCard({
-  grape = false,
   when,
   role,
   status,
@@ -51,7 +49,7 @@ export function ListCard({
       {/* Head: type dot · date · role chip · status pill. The left group
           truncates so a long status label never overflows the row on mobile. */}
       <div className="flex items-center gap-2">
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", grape ? "bg-grape-600" : "bg-brand-600")} />
+        <span className="h-2 w-2 shrink-0 rounded-full bg-brand-600" />
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
           <span className="num shrink-0 text-[12px] font-800 text-ink-600 dark:text-ink-300">{when}</span>
           {role && (
@@ -143,28 +141,24 @@ export function ListCard({
 
 type ListBtnKind = "primary" | "ghost" | "danger";
 
-// Full-width action button for ListCard. Primary follows the card accent.
+// Full-width action button for ListCard. Primary = neutral filled.
 export function ListCardButton({
   label,
   onClick,
   icon,
   kind = "ghost",
-  grape = false,
   disabled,
 }: {
   label: string;
   onClick?: () => void;
   icon?: ReactNode;
   kind?: ListBtnKind;
-  grape?: boolean;
   disabled?: boolean;
 }) {
   const styles: Record<ListBtnKind, string> = {
-    primary: grape
-      ? "bg-grape-600 text-white hover:bg-grape-700"
-      : "bg-brand-600 text-white hover:bg-brand-700",
+    primary: "bg-ink-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100",
     ghost: "border border-ink-200 bg-white text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100",
-    danger: "border border-coral-200 bg-white text-coral-600 hover:bg-coral-50 dark:border-coral-500/40 dark:bg-ink-900",
+    danger: "border border-danger-200 bg-white text-danger-600 hover:bg-danger-50 dark:border-danger-500/40 dark:bg-ink-900",
   };
   return (
     <button
