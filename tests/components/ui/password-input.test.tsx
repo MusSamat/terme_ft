@@ -1,7 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createRef } from "react";
 import { PasswordInput } from "@/components/ui/password-input";
+
+vi.mock("next-intl", async () => {
+  const messages = (await import("@/messages/ru.json")).default as unknown as Record<string, unknown>;
+  const lookup = (path: string): string | undefined => {
+    let node: unknown = messages;
+    for (const part of path.split(".")) node = (node as Record<string, unknown> | undefined)?.[part];
+    return typeof node === "string" ? node : undefined;
+  };
+  return { useTranslations: (ns: string) => (key: string) => lookup(`${ns}.${key}`) ?? `${ns}.${key}` };
+});
 
 describe("PasswordInput", () => {
   it("renders an input of type password initially", () => {

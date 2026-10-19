@@ -152,7 +152,10 @@ export default function RegisterPage() {
         <button
           type="button"
           onClick={() => {
-            if (step === "details") setStep("otp");
+            if (step === "details") {
+              setOtp(""); // the OTP boxes remount empty — keep state in sync
+              setStep("otp");
+            }
             else if (step === "otp") setStep("phone");
             else router.back();
           }}
@@ -199,6 +202,13 @@ export default function RegisterPage() {
                 >
                   {t("sign_in")}
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => { setExisting(false); setPhone(""); }}
+                  className="mt-2 block w-full text-[14px] font-700 text-ink-500 hover:text-ink-700 dark:text-ink-400"
+                >
+                  {t("other_number")}
+                </button>
               </div>
             ) : (
               <>
@@ -314,7 +324,7 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setServerError(null); }}
-                  onKeyDown={(e) => { if (e.key === "Enter" && canSubmit) registerMutation.mutate(); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && canSubmit && !registerMutation.isPending) registerMutation.mutate(); }}
                   autoComplete="new-password"
                   className="h-12 w-full rounded-2xl border-2 border-ink-200 bg-ink-50 px-4 pr-10 text-[16px] font-800 text-ink-900 outline-none transition-colors focus:border-brand-500 dark:border-ink-700 dark:bg-ink-800 dark:text-white"
                 />

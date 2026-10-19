@@ -2,6 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import { getAccessToken, refreshAccessToken } from "@/lib/api/client";
 
 let socket: Socket | null = null;
+let refreshingSocket = false;
 
 export function getSocket(): Socket {
   if (!socket) {
@@ -16,19 +17,27 @@ export function getSocket(): Socket {
       autoConnect: false,
     });
 
-    // Backend restart or expired token causes auth_required/auth_failed.
-    // Refresh the access token silently and let the next reconnect use it.
+    // Handshake rejected by the auth middleware: no token (auth_required),
+    // unknown user (auth_failed) or an expired / invalid access token (the
+    // AppError message, e.g. "Access token has expired"). socket.io does NOT
+    // auto-reconnect after a middleware rejection — refresh, then reconnect.
     socket.on("connect_error", (err) => {
       const msg = (err as Error).message;
-      if (msg === "auth_required" || msg === "auth_failed") {
-        refreshAccessToken()
-          .then(() => {
-            if (socket) socket.auth = { token: getAccessToken() };
-          })
-          .catch(() => {
-            // refresh failed — API interceptor will redirect to login
-          });
-      }
+      const authError = msg === "auth_required" || msg === "auth_failed" || /token|unauthori/i.test(msg);
+      if (!authError || refreshingSocket) return;
+      refreshingSocket = true;
+      refreshAccessToken()
+        .then(() => {
+          if (!socket) return;
+          socket.auth = { token: getAccessToken() };
+          if (!socket.connected) socket.connect();
+        })
+        .catch(() => {
+          // refresh failed — the API layer logs the user out on its next 401
+        })
+        .finally(() => {
+          refreshingSocket = false;
+        });
     });
   }
   // Always stamp the current token — covers the case where the socket was
@@ -49,6 +58,7 @@ export function disconnectSocket() {
 export function refreshSocketAuth() {
   if (!socket) return;
   socket.auth = { token: getAccessToken() };
-  // Disconnect unconditionally — the reconnect will use the new token.
-  socket.disconnect().connect();
+  // The token is checked only at handshake: a live connection stays valid, so
+  // reconnect only when down (a forced bounce would drop events in the gap).
+  if (!socket.connected) socket.connect();
 }

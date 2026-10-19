@@ -2,6 +2,17 @@ import { create } from "zustand";
 import { setAccessToken, markSessionHint, clearSessionHint } from "@/lib/api/client";
 import { getMe, updateProfile } from "@/lib/api/auth";
 import type { AuthResult, SelfUser } from "@/lib/api/types";
+import { disconnectSocket } from "@/lib/socket/client";
+
+// Per-session caches that must not leak into the next account in this tab
+// (revealed phones — ContactRevealButton).
+function clearSessionCaches() {
+  try {
+    for (const key of Object.keys(sessionStorage)) {
+      if (key.startsWith("terme_contact:")) sessionStorage.removeItem(key);
+    }
+  } catch {}
+}
 
 type Status = "idle" | "loading" | "authenticated" | "anonymous";
 export type ActiveMode = "driver" | "passenger";
@@ -80,6 +91,8 @@ export const useAuth = create<AuthState>((set, get) => ({
   clearSession: () => {
     setAccessToken(null);
     clearSessionHint();
+    disconnectSocket();
+    clearSessionCaches();
     set({ user: null, status: "anonymous", activeMode: readGuestMode() });
   },
   updateUser: (patch) => set((s) => (s.user ? { user: { ...s.user, ...patch } } : s)),

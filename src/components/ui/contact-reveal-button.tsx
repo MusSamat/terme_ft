@@ -8,6 +8,7 @@ import { Phone } from "lucide-react";
 import { revealTripContact, revealRequestContact, type RevealedContact } from "@/lib/api/contacts";
 import { extractError } from "@/lib/api/client";
 import { useAuth } from "@/store/auth";
+import { saveDeferredAction } from "@/lib/auth/deferred-action";
 import { Spinner } from "@/components/ui";
 import { toastError } from "@/components/layout/quick-toast";
 import { whatsappUrl } from "@/lib/places";
@@ -78,7 +79,9 @@ export function ContactRevealButton({ target, id, className, variant = "full" }:
           ? t("limit_reached")
           : err.details?.reason === "no_phone"
             ? t("no_phone")
-            : t("error");
+            : err.code === "TRIP_NOT_ACTIVE" || err.code === "CONFLICT" || err.code === "NOT_FOUND"
+              ? t("not_active")
+              : t("error");
       if (variant === "icon") toastError(msg);
       else setError(msg);
     },
@@ -86,6 +89,8 @@ export function ContactRevealButton({ target, id, className, variant = "full" }:
 
   const run = (action: Action) => {
     if (!authed) {
+      // Come back to this listing after login (not the home feed).
+      saveDeferredAction(target === "trip" ? { action: "view_trip", id } : { action: "view_request", id });
       router.push("/auth/login");
       return;
     }

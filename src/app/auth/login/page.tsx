@@ -59,8 +59,19 @@ export default function LoginPage() {
   const newPasswordRef = useRef<HTMLInputElement>(null);
 
   const canSubmitLogin = isValidPhone(phone) && password.length > 0;
+  // Same rule as the backend PasswordSchema: 8+ chars with at least one digit.
   const canReset =
-    newPassword.length >= 8 && newPassword === confirmPassword && resetOtp.length === 6;
+    newPassword.length >= 8 && /\d/.test(newPassword) && newPassword === confirmPassword && resetOtp.length === 6;
+  // URL params applied (?step=forgot must win over the «already signed in» redirect).
+  const [urlReady, setUrlReady] = useState(false);
+  // One navigation per successful sign-in — the status effect must not race it.
+  const navigatedRef = useRef(false);
+  const goAfterAuth = () => {
+    if (navigatedRef.current) return;
+    navigatedRef.current = true;
+    const intent = consumeDeferredAction();
+    router.replace(intent ? routeForIntent(intent) : "/");
+  };
 
   useEffect(() => {
     if (resendSeconds <= 0) return;
@@ -83,24 +94,22 @@ export default function LoginPage() {
     // ?step=forgot opens «set / restore the password» directly (profile link,
     // register «already registered» card).
     if (params.get("step") === "forgot") setStep("forgot");
+    setUrlReady(true);
   }, []);
 
   // Already authenticated → nothing to do here.
   // Only fires on the untouched login step, never mid password-reset flow.
   useEffect(() => {
-    if (status === "authenticated" && step === "login") {
-      const intent = consumeDeferredAction();
-      router.replace(intent ? routeForIntent(intent) : "/");
-    }
-  }, [status, step, router]);
+    if (urlReady && status === "authenticated" && step === "login") goAfterAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, step, urlReady]);
 
   // ── Login with password ────────────────────────────────────────────────
   const loginMutation = useMutation({
     mutationFn: () => loginWithPassword(phone, password),
     onSuccess: (result) => {
       setSession(result);
-      const intent = consumeDeferredAction();
-      router.replace(intent ? routeForIntent(intent) : "/");
+      goAfterAuth();
     },
     onError: async (e) => {
       const err = extractError(e);
@@ -153,17 +162,27 @@ export default function LoginPage() {
   // reset-password returns 204 (no session) and revokes all existing sessions,
   // so we immediately log in with the just-set password to grant a fresh one.
   // Both steps live in the mutationFn so a failure in either surfaces via onError.
+  // If the reset succeeds but the follow-up login fails, the code is already
+  // spent — fall back to the login step (password filled) instead of retrying it.
+  const resetDoneRef = useRef(false);
   const resetMutation = useMutation({
     mutationFn: async () => {
+      resetDoneRef.current = false;
       await resetPassword(phone, resetOtp, newPassword);
+      resetDoneRef.current = true;
       return loginWithPassword(phone, newPassword);
     },
     onSuccess: (result) => {
       setSession(result);
-      const intent = consumeDeferredAction();
-      router.replace(intent ? routeForIntent(intent) : "/");
+      goAfterAuth();
     },
-    onError: (e) => setServerError(fe(extractError(e))),
+    onError: (e) => {
+      setServerError(fe(extractError(e)));
+      if (resetDoneRef.current) {
+        setPassword(newPassword);
+        setStep("login");
+      }
+    },
   });
 
   return (
@@ -259,7 +278,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setServerError(null); }}
-                  onKeyDown={(e) => { if (e.key === "Enter" && canSubmitLogin) loginMutation.mutate(); }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && canSubmitLogin && !loginMutation.isPending) loginMutation.mutate(); }}
                   placeholder={tl("password_placeholder")}
                   className={cn(
                     "h-12 w-full rounded-2xl border-2 bg-ink-50 px-4 pr-10 text-[16px] font-800 outline-none transition-colors dark:bg-ink-800 dark:text-white",

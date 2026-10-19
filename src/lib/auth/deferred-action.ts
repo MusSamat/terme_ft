@@ -6,6 +6,7 @@ export type DeferredAction =
   | { action: "create_trip" }
   | { action: "create_request" }
   | { action: "view_request"; id: string }
+  | { action: "view_trip"; id: string }
   | { action: "like"; target_type: "trip" | "passenger_request"; id: string }
   | { action: "open_chat"; booking_id: string }
   | { action: "rate_user"; trip_id: string; ratee_id: string }
@@ -50,6 +51,8 @@ export function routeForIntent(intent: DeferredAction): string {
       return "/trips/create";
     case "create_request":
       return "/requests/create";
+    case "view_trip":
+      return `/trips/${intent.id}`;
     case "view_request":
       return `/requests/${intent.id}`;
     case "like":
@@ -61,7 +64,7 @@ export function routeForIntent(intent: DeferredAction): string {
     case "rate_user":
       return `/trips/${intent.trip_id}/rate/${intent.ratee_id}`;
     case "view_contacts":
-      return `/my/bookings/${intent.booking_id}?tab=contacts`;
+      return `/my/bookings/${intent.booking_id}/chat`; // no standalone booking page
     case "file_complaint":
       return intent.target_trip_id
         ? `/complaint?user=${intent.target_user_id}&trip=${intent.target_trip_id}`

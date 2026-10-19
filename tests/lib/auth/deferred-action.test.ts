@@ -107,10 +107,16 @@ describe("routeForIntent", () => {
     );
   });
 
-  it("view_contacts — adds ?tab=contacts query", () => {
+  it("view_contacts — opens the booking chat (no standalone booking page)", () => {
     expect(routeForIntent({ action: "view_contacts", booking_id: "bk2" })).toBe(
-      "/my/bookings/bk2?tab=contacts",
+      "/my/bookings/bk2/chat",
     );
+  });
+
+  it("create_request / view_trip / view_request return to the right page", () => {
+    expect(routeForIntent({ action: "create_request" })).toBe("/requests/create");
+    expect(routeForIntent({ action: "view_trip", id: "t1" })).toBe("/trips/t1");
+    expect(routeForIntent({ action: "view_request", id: "r1" })).toBe("/requests/r1");
   });
 
   it("file_complaint without trip — only user param", () => {

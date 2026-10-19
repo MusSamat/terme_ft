@@ -39,9 +39,9 @@ export function ResetStep({
           <CheckCircle className="h-6 w-6 text-brand-600" aria-hidden="true" />
         </div>
         <p className="text-[17px] font-800 text-ink-900 dark:text-white">{tl("reset_title")}</p>
-        <p className="mt-1 text-[14px] font-600 text-ink-500">
-          {phase === "code" ? tl("reset_code_hint") : tl("reset_min_chars")}
-        </p>
+        {phase === "password" && (
+          <p className="mt-1 text-[14px] font-600 text-ink-500">{tl("reset_min_chars")}</p>
+        )}
       </div>
 
       {phase === "code" ? (
@@ -103,7 +103,7 @@ export function ResetStep({
               type="password"
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.target.value); setServerError(null); }}
-              onKeyDown={(e) => { if (e.key === "Enter" && canReset) resetMutation.mutate(); }}
+              onKeyDown={(e) => { if (e.key === "Enter" && canReset && !resetMutation.isPending) resetMutation.mutate(); }}
               placeholder={tl("confirm_password_placeholder")}
               className={cn(
                 "h-12 w-full rounded-2xl border-2 bg-ink-50 px-4 text-[16px] font-800 outline-none dark:bg-ink-800",

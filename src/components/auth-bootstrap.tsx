@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import axios from "axios";
 import { hasSessionHint, refreshAccessToken, onTokenRefreshed } from "@/lib/api/client";
 import { getMe } from "@/lib/api/auth";
 import { useAuth } from "@/store/auth";
@@ -28,7 +29,13 @@ export function AuthBootstrap() {
         hydrate(user);
         refreshSocketAuth();
       })
-      .catch(() => clearSession());
+      .catch((e: unknown) => {
+        // Only a server rejection ends the session. Offline / 5xx / timeout keep
+        // the session hint so the next load retries the (still valid) cookie.
+        const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+        if (status === 401 || status === 403) clearSession();
+        else setStatus("anonymous");
+      });
   }, [hydrate, setStatus, clearSession]);
 
   return null;
