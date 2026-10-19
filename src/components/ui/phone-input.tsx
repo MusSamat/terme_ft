@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { forwardRef, useEffect, useRef, useState, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/utils/cn";
 import { DEFAULT_DIAL, sanitizePhone, formatPhoneDisplay } from "@/lib/phone";
@@ -20,6 +21,7 @@ export interface PhoneInputProps extends BaseProps {
  */
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ value, onValueChange, invalid, hint, className, disabled, ...rest }, ref) => {
+    const t = useTranslations("common");
     const [e164, setE164] = useState<string>(() => {
       const s = sanitizePhone(value ?? "");
       return s === "+" ? DEFAULT_DIAL : s; // seed +996 only when starting empty
@@ -72,11 +74,9 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
             {...rest}
           />
         </div>
-        {hint && (
-          <span className={cn("text-caption", invalid ? "text-danger-500" : "text-ink-500 dark:text-ink-400")}>
-            {hint}
-          </span>
-        )}
+        <span className={cn("text-caption", invalid && hint ? "text-danger-500" : "text-ink-500 dark:text-ink-400")}>
+          {hint ?? t("phone_country_hint")}
+        </span>
       </div>
     );
   },

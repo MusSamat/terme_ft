@@ -2,12 +2,27 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PhoneInput } from "@/components/ui/phone-input";
 
+vi.mock("next-intl", async () => {
+  const messages = (await import("@/messages/ru.json")).default as unknown as Record<string, unknown>;
+  const lookup = (path: string): string | undefined => {
+    let node: unknown = messages;
+    for (const part of path.split(".")) node = (node as Record<string, unknown> | undefined)?.[part];
+    return typeof node === "string" ? node : undefined;
+  };
+  return { useTranslations: (ns: string) => (key: string) => lookup(`${ns}.${key}`) ?? `${ns}.${key}` };
+});
+
 // Post-redesign contract (commit "reg: changed input"): a single international
 // input seeded with +996 (Kyrgyzstan). The whole E.164 value is editable — the
 // user may delete +996 and type another country code. +996 caps at 9 national
 // digits; the value is displayed grouped as "+996 700 123 456".
 
 const PLACEHOLDER = "+996 700 123 456";
+
+it("shows the country-code hint by default", () => {
+  render(<PhoneInput />);
+  expect(screen.getByText(/Сотрите \+996/)).toBeInTheDocument();
+});
 
 describe("PhoneInput", () => {
   it("renders the placeholder", () => {
