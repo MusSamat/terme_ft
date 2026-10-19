@@ -6,7 +6,7 @@ import {
   type DeferredAction,
 } from "@/lib/auth/deferred-action";
 
-const KEY = "terme_deferred_action";
+const KEY = "kosho_deferred_action";
 
 beforeEach(() => {
   sessionStorage.clear();

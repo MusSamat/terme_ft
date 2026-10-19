@@ -1,4 +1,4 @@
-const KEY = "terme_deferred_action";
+const KEY = "kosho_deferred_action";
 const TTL_MS = 15 * 60 * 1000;
 
 export type DeferredAction =
@@ -18,14 +18,19 @@ interface StoredIntent {
 export function saveDeferredAction(intent: DeferredAction) {
   if (typeof window === "undefined") return;
   const payload: StoredIntent = { saved_at: Date.now(), intent };
-  sessionStorage.setItem(KEY, JSON.stringify(payload));
+  try {
+    sessionStorage.setItem(KEY, JSON.stringify(payload));
+  } catch {}
 }
 
 export function consumeDeferredAction(): DeferredAction | null {
   if (typeof window === "undefined") return null;
-  const raw = sessionStorage.getItem(KEY);
+  let raw: string | null = null;
+  try {
+    raw = sessionStorage.getItem(KEY);
+    if (raw) sessionStorage.removeItem(KEY);
+  } catch {}
   if (!raw) return null;
-  sessionStorage.removeItem(KEY);
   try {
     const parsed = JSON.parse(raw) as StoredIntent;
     if (Date.now() - parsed.saved_at > TTL_MS) return null;
