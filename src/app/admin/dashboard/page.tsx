@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils/cn";
 import { KpiCard, KpiSkeleton } from "./_components/kpi-card";
 import { ActivityHeatmap } from "./_components/activity-heatmap";
 import { ChartCard } from "./_components/chart-card";
+import { AdminQueryError } from "@/components/admin/admin-query-error";
 
 // recharts is heavy (~200KB) and only ever needed on this admin route — pull
 // it out of the shared bundle via next/dynamic (ssr:false) so it never ships
@@ -132,6 +133,10 @@ export default function AdminDashboard() {
       <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
         {kpi.isLoading ? (
           Array.from({ length: 10 }).map((_, i) => <KpiSkeleton key={i} />)
+        ) : kpi.isError ? (
+          <div className="col-span-full">
+            <AdminQueryError error={kpi.error} onRetry={() => void kpi.refetch()} />
+          </div>
         ) : (
           <>
             <KpiCard label="Пользователи" value={k?.users.total ?? 0} sub={`+${k?.users.last_7d ?? 0} за 7 дней`} icon={Users} />

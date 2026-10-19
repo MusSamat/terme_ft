@@ -27,7 +27,11 @@ export default function AdminWhatsappPage() {
   const [replyError, setReplyError] = useState<ReplyError | null>(null);
 
   // Left panel — refreshed every 10s so new inbound conversations surface.
-  const { data: conversations = [], isLoading: loadingConversations } = useQuery({
+  const {
+    data: conversations = [],
+    isLoading: loadingConversations,
+    isError: conversationsError,
+  } = useQuery({
     queryKey: CONVERSATIONS_KEY,
     queryFn: listWhatsappConversations,
     refetchInterval: 10_000,
@@ -86,6 +90,7 @@ export default function AdminWhatsappPage() {
         selectedId={selectedId}
         onSelect={setSelectedId}
         isLoading={loadingConversations}
+        isError={conversationsError}
       />
       <MessageThread
         conversation={selected}
@@ -93,7 +98,7 @@ export default function AdminWhatsappPage() {
         isLoading={loadingMessages}
         sending={replyMut.isPending}
         replyError={replyError}
-        onSend={(text) => replyMut.mutate(text)}
+        onSend={(text) => replyMut.mutateAsync(text)}
         onClearError={() => setReplyError(null)}
       />
     </div>

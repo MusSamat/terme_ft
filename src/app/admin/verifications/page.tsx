@@ -7,6 +7,7 @@ import { listVerifications, type VerificationQueueItem } from "@/lib/api/admin";
 import { cn } from "@/lib/utils/cn";
 import { Button, StatusBadge as UiStatusBadge, type StatusBadgeStatus } from "@/components/ui";
 import { ChevronRight, ChevronLeft, Clock, AlertTriangle } from "lucide-react";
+import { AdminQueryError } from "@/components/admin/admin-query-error";
 
 type StatusFilter = "all" | "pending" | "verified" | "rejected" | "docs_requested";
 
@@ -49,7 +50,7 @@ export default function AdminVerificationsPage() {
     setCursors([]); // reset pagination when the filter changes
   };
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin", "verifications", status, cursor],
     queryFn: () =>
       listVerifications({ status: status === "all" ? undefined : status, cursor, limit: 20 }),
@@ -91,6 +92,8 @@ export default function AdminVerificationsPage() {
             <div key={i} className="h-16 animate-pulse rounded-2xl bg-white" />
           ))}
         </div>
+      ) : isError ? (
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center">
           <Clock className="mx-auto mb-3 h-10 w-10 text-ink-300" />

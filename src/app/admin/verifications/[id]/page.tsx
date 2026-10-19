@@ -17,7 +17,9 @@ import { normalizeMediaUrl } from "@/lib/utils/media-url";
 // to the API origin the admin actually uses (tunnel), like the avatar path.
 const norm = (u: string): string => normalizeMediaUrl(u) ?? u;
 import { RejectModal } from "./_components/reject-modal";
-import { RequestDocsModal } from "./_components/request-docs-modal";
+import { RequestDocsModal, REQUESTABLE_DOCS } from "./_components/request-docs-modal";
+import { AdminQueryError, toastAdminError } from "@/components/admin/admin-query-error";
+import { toastSuccess } from "@/components/layout/quick-toast";
 
 function fmt(iso?: string | null): string {
   if (!iso) return "—";
@@ -45,7 +47,7 @@ export default function VerificationDetailPage() {
   const router = useRouter();
   const qc = useQueryClient();
 
-  const { data: item, isLoading } = useQuery<VerificationDetail>({
+  const { data: item, isLoading, error, refetch } = useQuery<VerificationDetail>({
     queryKey: ["admin", "verification", id],
     queryFn: () => getVerification(id),
     staleTime: 30_000,
@@ -59,7 +61,8 @@ export default function VerificationDetailPage() {
 
   const approveMut = useMutation({
     mutationFn: () => approveVerification(id),
-    onSuccess: () => { invalidate(); router.push("/admin/verifications"); },
+    onSuccess: () => { invalidate(); toastSuccess("Водитель одобрен"); router.push("/admin/verifications"); },
+    onError: toastAdminError,
   });
 
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -71,6 +74,9 @@ export default function VerificationDetailPage() {
     const canAct = item?.verificationStatus === "pending" || item?.verificationStatus === "docs_requested";
     const onKey = (e: KeyboardEvent) => {
       if (!canAct || rejectOpen || docsOpen) return;
+      // Ctrl/Cmd+A (select all) etc. must never approve a driver.
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      if (e.target instanceof HTMLElement && e.target.closest("input, textarea, select, [contenteditable]")) return;
       if (document.querySelector('[role="dialog"]')) return;
       const k = e.key.toLowerCase();
       if (k === "a") { e.preventDefault(); if (!approveMut.isPending) approveMut.mutate(); }
@@ -91,7 +97,13 @@ export default function VerificationDetailPage() {
     );
   }
 
-  if (!item) return null;
+  if (!item) {
+    return (
+      <div className="p-6">
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
+      </div>
+    );
+  }
 
   const isPending =
     item.verificationStatus === "pending" || item.verificationStatus === "docs_requested";
@@ -143,7 +155,9 @@ export default function VerificationDetailPage() {
         {item.requestedDocs.length > 0 && (
           <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3">
             <p className="text-[12px] font-bold text-sky-700">Запрошены документы:</p>
-            <p className="text-[12px] text-sky-700">{item.requestedDocs.join(", ")}</p>
+            <p className="text-[12px] text-sky-700">
+              {item.requestedDocs.map((d) => REQUESTABLE_DOCS.find((r) => r.id === d)?.label ?? d).join(", ")}
+            </p>
           </div>
         )}
       </div>
@@ -220,14 +234,14 @@ export default function VerificationDetailPage() {
         id={id}
         open={rejectOpen}
         onClose={() => setRejectOpen(false)}
-        onSuccess={() => { invalidate(); router.push("/admin/verifications"); }}
+        onSuccess={() => { invalidate(); toastSuccess("Верификация отклонена"); router.push("/admin/verifications"); }}
       />
 
       <RequestDocsModal
         id={id}
         open={docsOpen}
         onClose={() => setDocsOpen(false)}
-        onSuccess={() => { invalidate(); router.push("/admin/verifications"); }}
+        onSuccess={() => { invalidate(); toastSuccess("Документы запрошены"); router.push("/admin/verifications"); }}
       />
     </div>
   );

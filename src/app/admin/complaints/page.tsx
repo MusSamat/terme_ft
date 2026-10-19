@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { listAdminComplaints, type ComplaintItem } from "@/lib/api/admin";
-import { StatusBadge as UiStatusBadge, type StatusBadgeStatus } from "@/components/ui";
+import { Button, StatusBadge as UiStatusBadge, type StatusBadgeStatus } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
-import { ChevronRight, MessageSquareWarning, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquareWarning, AlertTriangle } from "lucide-react";
+import { AdminQueryError } from "@/components/admin/admin-query-error";
+import { CATEGORY_LABEL } from "./_lib/labels";
 
 type StatusFilter = "all" | "new" | "in_review" | "resolved" | "dismissed";
 
@@ -46,20 +48,26 @@ export default function AdminComplaintsPage() {
   const [status, setStatus] = useState<StatusFilter>("new");
   const [category, setCategory] = useState("");
   const [priority, setPriority] = useState("");
+  // Cursor stack — each "Вперёд" pushes the next cursor, "Назад" pops it.
+  const [cursors, setCursors] = useState<string[]>([]);
+  const cursor = cursors[cursors.length - 1];
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "complaints", status, category, priority],
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["admin", "complaints", status, category, priority, cursor],
     queryFn: () =>
       listAdminComplaints({
         status: status === "all" ? undefined : status,
         category: category || undefined,
         priority: priority || undefined,
+        cursor,
         limit: 50,
       }),
     staleTime: 30_000,
   });
 
   const items: ComplaintItem[] = data?.data ?? [];
+  const hasNext = !!data?.nextCursor;
+  const hasPrev = cursors.length > 0;
 
   return (
     <div className="p-6">
@@ -73,7 +81,7 @@ export default function AdminComplaintsPage() {
           <button
             key={t.id}
             type="button"
-            onClick={() => setStatus(t.id)}
+            onClick={() => { setStatus(t.id); setCursors([]); }}
             className={cn(
               "rounded-full px-4 py-1.5 text-[12px] font-bold transition-colors",
               status === t.id ? "bg-ink-900 text-white" : "bg-white text-ink-600 hover:bg-ink-100",
@@ -84,7 +92,7 @@ export default function AdminComplaintsPage() {
         ))}
         <select
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => { setCategory(e.target.value); setCursors([]); }}
           className="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-[12px] font-bold text-ink-600"
         >
           <option value="">Все категории</option>
@@ -96,7 +104,7 @@ export default function AdminComplaintsPage() {
         </select>
         <select
           value={priority}
-          onChange={(e) => setPriority(e.target.value)}
+          onChange={(e) => { setPriority(e.target.value); setCursors([]); }}
           className="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-[12px] font-bold text-ink-600"
         >
           <option value="">Любой приоритет</option>
@@ -113,6 +121,8 @@ export default function AdminComplaintsPage() {
             <div key={i} className="h-20 animate-pulse rounded-2xl bg-white" />
           ))}
         </div>
+      ) : isError ? (
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center">
           <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-ink-300" />
@@ -129,7 +139,7 @@ export default function AdminComplaintsPage() {
                       {c.priority}
                     </span>
                     <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-bold text-ink-600">
-                      {c.category}
+                      {CATEGORY_LABEL[c.category] ?? c.category}
                     </span>
                     {c.slaBreach && (
                       <span className="flex items-center gap-1 rounded-full bg-danger-100 px-2 py-0.5 text-[10px] font-bold text-danger-700">
@@ -153,6 +163,25 @@ export default function AdminComplaintsPage() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {(hasPrev || hasNext) && (
+        <div className="mt-4 flex items-center justify-between">
+          <Button variant="outline" size="sm" type="button" disabled={!hasPrev} onClick={() => setCursors((p) => p.slice(0, -1))}>
+            <ChevronLeft className="h-4 w-4" /> Назад
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            disabled={!hasNext}
+            onClick={() => {
+              if (data?.nextCursor) setCursors((p) => [...p, data.nextCursor!]);
+            }}
+          >
+            Вперёд <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

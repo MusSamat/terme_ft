@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils/cn";
 import {
   ArrowLeft, Star, ShieldOff, ShieldCheck, Phone, Car, Calendar, X,
 } from "lucide-react";
+import { normalizeMediaUrl } from "@/lib/utils/media-url";
+import { AdminQueryError, toastAdminError } from "@/components/admin/admin-query-error";
+import { toastSuccess } from "@/components/layout/quick-toast";
 
 function fmt(iso?: string | null): string {
   if (!iso) return "—";
@@ -52,7 +55,7 @@ export default function AdminUserDetailPage() {
   const router = useRouter();
   const qc = useQueryClient();
 
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, error, refetch } = useQuery({
     queryKey: ["admin", "user", id],
     queryFn: () => getAdminUser(id),
     staleTime: 30_000,
@@ -68,13 +71,15 @@ export default function AdminUserDetailPage() {
   const [customReason, setCustomReason] = useState("");
 
   const blockMut = useMutation({
-    mutationFn: () => blockUser(id, blockReason === "Другое" ? customReason : blockReason),
-    onSuccess: () => { invalidate(); setBlockOpen(false); },
+    mutationFn: () => blockUser(id, (blockReason === "Другое" ? customReason : blockReason).trim()),
+    onSuccess: () => { invalidate(); setBlockOpen(false); toastSuccess("Пользователь заблокирован"); },
+    onError: toastAdminError,
   });
 
   const unblockMut = useMutation({
     mutationFn: () => unblockUser(id),
-    onSuccess: () => invalidate(),
+    onSuccess: () => { invalidate(); toastSuccess("Блокировка снята"); },
+    onError: toastAdminError,
   });
 
   // In-page viewers: open a trip/request detail in a modal (no navigation).
@@ -96,8 +101,13 @@ export default function AdminUserDetailPage() {
       setCancelTarget(null); setCxReason(""); setCxCustom("");
       invalidate();
       void qc.invalidateQueries({ queryKey: ["admin", "trip"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "trips"] });
       void qc.invalidateQueries({ queryKey: ["admin", "request"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "requests"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "kpi"] });
+      toastSuccess("Отменено, пользователь уведомлён");
     },
+    onError: toastAdminError,
   });
 
   if (isLoading) {
@@ -112,7 +122,14 @@ export default function AdminUserDetailPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="p-6">
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
+      </div>
+    );
+  }
+  const avatarSrc = user.avatarUrl ? (normalizeMediaUrl(user.avatarUrl) ?? user.avatarUrl) : null;
 
   const effectiveReason = blockReason === "Другое" ? customReason : blockReason;
 
@@ -133,10 +150,10 @@ export default function AdminUserDetailPage() {
       <div className="mb-4 rounded-2xl bg-white p-5 shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            {user.avatarUrl ? (
+            {avatarSrc ? (
               <button type="button" onClick={() => setAvatarOpen(true)} className="rounded-full ring-offset-2 transition hover:ring-2 hover:ring-ink-300" aria-label="Открыть фото крупнее">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={user.avatarUrl} alt={user.name} className="h-16 w-16 rounded-full object-cover" />
+                <img src={avatarSrc} alt={user.name} className="h-16 w-16 rounded-full object-cover" />
               </button>
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ink-200 text-[22px] font-bold text-ink-600">
@@ -168,7 +185,9 @@ export default function AdminUserDetailPage() {
             <Button
               type="button"
               variant="brand"
-              onClick={() => unblockMut.mutate()}
+              onClick={() => {
+                if (confirm(`Снять блокировку с ${user.name}?`)) unblockMut.mutate();
+              }}
               disabled={unblockMut.isPending}
             >
               <ShieldCheck className="h-4 w-4" />
@@ -355,6 +374,7 @@ export default function AdminUserDetailPage() {
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 rows={2}
+                maxLength={500}
                 placeholder="Укажите причину…"
                 className="mb-3 w-full rounded-xl border border-ink-200 p-3 text-[13px] outline-none focus:border-ink-400"
               />
@@ -374,7 +394,7 @@ export default function AdminUserDetailPage() {
                 variant="danger"
                 size="lg"
                 onClick={() => blockMut.mutate()}
-                disabled={!effectiveReason.trim() || blockMut.isPending}
+                disabled={effectiveReason.trim().length < 3 || blockMut.isPending}
                 className="flex-1"
               >
                 {blockMut.isPending ? "Блокируем…" : "Заблокировать"}
@@ -385,11 +405,11 @@ export default function AdminUserDetailPage() {
       )}
 
       {/* Avatar lightbox — bigger photo */}
-      {avatarOpen && user.avatarUrl && (
+      {avatarOpen && avatarSrc && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-6" onClick={() => setAvatarOpen(false)}>
           <button type="button" onClick={() => setAvatarOpen(false)} className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"><X className="h-6 w-6" /></button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={user.avatarUrl} alt={user.name} onClick={(e) => e.stopPropagation()} className="max-h-[85vh] max-w-[85vw] rounded-2xl object-contain" />
+          <img src={avatarSrc} alt={user.name} onClick={(e) => e.stopPropagation()} className="max-h-[85vh] max-w-[85vw] rounded-2xl object-contain" />
         </div>
       )}
 
@@ -404,6 +424,8 @@ export default function AdminUserDetailPage() {
                 onClose={() => setViewTrip(null)}
                 onForceCancel={(t) => setCancelTarget({ kind: "trip", id: t.id, title: `${t.originCity} → ${t.destinationCity}` })}
               />
+            ) : tripQuery.isError ? (
+              <div className="w-[440px] p-6 text-center text-[13px] text-ink-500">Не удалось загрузить поездку</div>
             ) : (
               <div className="flex h-64 w-[440px] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-200 border-t-ink-700" /></div>
             )}
@@ -452,6 +474,8 @@ export default function AdminUserDetailPage() {
                   </Button>
                 )}
               </>
+            ) : reqQuery.isError ? (
+              <p className="py-10 text-center text-[13px] text-ink-500">Не удалось загрузить заявку</p>
             ) : (
               <div className="flex h-40 items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-200 border-t-ink-700" /></div>
             )}

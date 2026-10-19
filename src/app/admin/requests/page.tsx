@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   adminForceCancelRequest,
@@ -13,6 +14,8 @@ import {
 import { Button, StatusBadge, type StatusBadgeStatus } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 import { Inbox, ChevronLeft, ChevronRight, X, Link2 } from "lucide-react";
+import { AdminQueryError, adminErrorMessage } from "@/components/admin/admin-query-error";
+import { toastSuccess } from "@/components/layout/quick-toast";
 
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
@@ -81,6 +84,9 @@ export default function AdminRequestsPage() {
       setCancelTarget(null); setReason(""); setCustom("");
       void qc.invalidateQueries({ queryKey: ["admin", "requests"] });
       void qc.invalidateQueries({ queryKey: ["admin", "request"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "user"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "kpi"] });
+      toastSuccess("Заявка отменена, пассажир уведомлён");
     },
   });
 
@@ -147,6 +153,8 @@ export default function AdminRequestsPage() {
 
       {listQuery.isLoading ? (
         <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-white" />)}</div>
+      ) : listQuery.isError ? (
+        <AdminQueryError error={listQuery.error} onRetry={() => void listQuery.refetch()} />
       ) : requests.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center">
           <Inbox className="mx-auto mb-3 h-10 w-10 text-ink-300" />
@@ -200,7 +208,7 @@ export default function AdminRequestsPage() {
 
       {/* Cancel-with-message modal */}
       {cancelTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4" onClick={() => setCancelTarget(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4" onClick={() => { cancelMut.reset(); setCancelTarget(null); }}>
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-lift" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-[19px] font-extrabold text-ink-900">Отменить заявку</h2>
@@ -217,7 +225,7 @@ export default function AdminRequestsPage() {
             {reason === "Другое" && (
               <textarea value={custom} onChange={(e) => setCustom(e.target.value)} rows={3} maxLength={500} placeholder="Сообщение пассажиру…" className="mb-3 w-full rounded-xl border-2 border-ink-200 px-3 py-2 text-[14px] outline-none focus:border-danger-400" />
             )}
-            {cancelMut.isError && <p className="mb-2 text-[13px] font-semibold text-danger-600">Не удалось отменить</p>}
+            {cancelMut.isError && <p className="mb-2 text-[13px] font-semibold text-danger-600">{adminErrorMessage(cancelMut.error)}</p>}
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setCancelTarget(null)}>Отмена</Button>
               <Button variant="danger" className="flex-[2]" disabled={effectiveReason.length < 3 || cancelMut.isPending} onClick={() => cancelMut.mutate({ id: cancelTarget.id, reason: effectiveReason })}>
@@ -235,6 +243,7 @@ function RequestDetailBody({ detail }: { detail: AdminRequestDetail }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
+        <Link href={`/admin/users/${detail.passenger.id}`} className="font-semibold text-ink-800 hover:underline">{detail.passenger.name} →</Link>
         <span className="text-ink-500">Телефон: <span className="font-semibold text-ink-800">{detail.passenger.phone}</span></span>
         {detail.flexible && <span className="text-ink-500">± гибкая дата</span>}
         {detail.comment && <span className="text-ink-500">«{detail.comment}»</span>}

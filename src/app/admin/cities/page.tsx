@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listAdminCities, updateCity, type CityItem, type PlaceType } from "@/lib/api/admin";
 import { extractError } from "@/lib/api/client";
 import { useAdminAuth } from "@/store/admin-auth";
+import { useDebounce } from "@/lib/hooks/use-debounce";
+import { toastSuccess } from "@/components/layout/quick-toast";
 import { Button } from "@/components/ui";
 import { PointPickerMap, type MapPoint } from "@/components/map";
 import { cn } from "@/lib/utils/cn";
@@ -23,15 +25,6 @@ const TYPE_LABELS: Record<PlaceType, string> = {
 };
 
 const KG_CENTER: MapPoint = { lat: 41.4, lng: 74.6 };
-
-function useDebounced<T>(value: T, ms = 300): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(id);
-  }, [value, ms]);
-  return v;
-}
 
 function area(c: CityItem): string {
   return [c.raion?.nameRu, c.oblast?.nameRu].filter(Boolean).join(", ");
@@ -62,6 +55,7 @@ function EditPanel({ city, onClose }: { city: CityItem; onClose: () => void }) {
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["admin", "cities"] });
+      toastSuccess("Сохранено");
       onClose();
     },
   });
@@ -185,7 +179,7 @@ export default function AdminCitiesPage() {
   const [type, setType] = useState<PlaceType | "">("");
   const [approx, setApprox] = useState(false);
   const [editing, setEditing] = useState<CityItem | null>(null);
-  const dq = useDebounced(q.trim());
+  const dq = useDebounce(q.trim(), 300);
 
   const query = useInfiniteQuery({
     queryKey: ["admin", "cities", dq, type, approx],

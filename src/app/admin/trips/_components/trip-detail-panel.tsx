@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AlertTriangle, Phone, ShieldCheck, User, X } from "lucide-react";
 import { Button, StatusBadge, type StatusBadgeStatus } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
-import type { AdminTripItem } from "@/lib/api/admin";
+import type { AdminTripDetail, AdminTripItem } from "@/lib/api/admin";
 
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", {
@@ -43,42 +43,14 @@ function verifStatus(s: string) {
   return VERIF_STATUS[s] ?? VERIF_STATUS.pending!;
 }
 
-type DetailData = {
-  originCity: string;
-  destinationCity: string;
-  departureAt: string;
-  status: string;
-  pricePerSeat: number;
-  seatsAvailable: number;
-  seatsTotal: number;
-  cancelledReason?: string | null;
-  originAddress?: string | null;
-  driver: {
-    id: string;
-    name: string;
-    phone?: string | null;
-  };
-  driverProfile?: {
-    verificationStatus: string;
-    carPlate: string;
-    carMake: string;
-    carModel: string;
-    carYear: number;
-    carColor: string;
-  } | null;
-  bookings: Array<{
-    id: string;
-    passengerId: string;
-    passengerName: string;
-    passengerPhone?: string | null;
-    status: string;
-    seatsCount: number;
-    createdAt: string;
-  }>;
+const TRIP_STATUS_LABEL: Record<string, string> = {
+  active: "Активна",
+  completed: "Завершена",
+  cancelled: "Отменена",
 };
 
 interface TripDetailPanelProps {
-  detail: DetailData;
+  detail: AdminTripDetail;
   isLoading: boolean;
   onClose: () => void;
   onForceCancel: (trip: AdminTripItem) => void;
@@ -111,7 +83,7 @@ export function TripDetailPanel({ detail, isLoading, onClose, onForceCancel }: T
 
           <div className="mb-4 grid grid-cols-3 gap-2">
             {[
-              { label: "Статус", value: detail.status },
+              { label: "Статус", value: TRIP_STATUS_LABEL[detail.status] ?? detail.status },
               { label: "Цена", value: `${detail.pricePerSeat} сом` },
               { label: "Места", value: `${detail.seatsAvailable}/${detail.seatsTotal}` },
             ].map((f) => (
@@ -189,7 +161,7 @@ export function TripDetailPanel({ detail, isLoading, onClose, onForceCancel }: T
           {detail.status === "active" && (
             <Button
               variant="danger"
-              onClick={() => onForceCancel(detail as unknown as AdminTripItem)}
+              onClick={() => onForceCancel(detail)}
               className="mb-4 w-full"
             >
               Принудительно отменить поездку

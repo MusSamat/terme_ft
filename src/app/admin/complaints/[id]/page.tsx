@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAdminComplaint, resolveComplaint, type ComplaintItem } from "@/lib/api/admin";
 import { normalizeMediaUrl } from "@/lib/utils/media-url";
 import { Button, StatusBadge } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { AdminQueryError, toastAdminError } from "@/components/admin/admin-query-error";
+import { toastSuccess } from "@/components/layout/quick-toast";
+import { CATEGORY_LABEL } from "../_lib/labels";
 
 const PRIORITY_CFG: Record<string, string> = {
   P0: "bg-danger-600 text-white",
@@ -28,7 +32,7 @@ export default function ComplaintDetailPage() {
   const router = useRouter();
   const qc = useQueryClient();
 
-  const { data: complaint, isLoading } = useQuery<ComplaintItem>({
+  const { data: complaint, isLoading, error, refetch } = useQuery<ComplaintItem>({
     queryKey: ["admin", "complaint", id],
     queryFn: () => getAdminComplaint(id),
     staleTime: 30_000,
@@ -43,8 +47,10 @@ export default function ComplaintDetailPage() {
       void qc.invalidateQueries({ queryKey: ["admin", "complaints"] });
       void qc.invalidateQueries({ queryKey: ["admin", "complaint", id] });
       void qc.invalidateQueries({ queryKey: ["admin", "kpi"] });
+      toastSuccess("Решение сохранено");
       router.push("/admin/complaints");
     },
+    onError: toastAdminError,
   });
 
   if (isLoading) {
@@ -57,7 +63,13 @@ export default function ComplaintDetailPage() {
     );
   }
 
-  if (!complaint) return null;
+  if (!complaint) {
+    return (
+      <div className="p-6">
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
+      </div>
+    );
+  }
 
   const isOpen = complaint.status === "new" || complaint.status === "in_review";
 
@@ -109,14 +121,20 @@ export default function ComplaintDetailPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-ink-400">Подал жалобу</p>
-            <p className="mt-1 font-bold text-ink-900">{complaint.reporterName}</p>
+            <Link href={`/admin/users/${complaint.reporterId}`} className="mt-1 block font-bold text-ink-900 hover:underline">
+              {complaint.reporterName}
+            </Link>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-ink-400">Объект жалобы</p>
             {complaint.targetUserId ? (
-              <p className="mt-1 font-mono text-[12px] text-ink-600">{complaint.targetUserId.slice(0, 12)}…</p>
+              <Link href={`/admin/users/${complaint.targetUserId}`} className="mt-1 block text-[13px] font-bold text-ink-900 hover:underline">
+                Открыть профиль пользователя →
+              </Link>
             ) : complaint.targetTripId ? (
-              <p className="mt-1 font-mono text-[12px] text-ink-600">Поездка: {complaint.targetTripId.slice(0, 12)}…</p>
+              <Link href={`/admin/trips?focus=${complaint.targetTripId}`} className="mt-1 block text-[13px] font-bold text-ink-900 hover:underline">
+                Открыть поездку →
+              </Link>
             ) : (
               <p className="mt-1 text-[13px] text-ink-400">—</p>
             )}
@@ -128,14 +146,14 @@ export default function ComplaintDetailPage() {
       <div className="mb-4 rounded-2xl bg-white p-5 shadow-card">
         <div className="mb-3 flex items-center gap-2">
           <span className="rounded-full bg-ink-100 px-3 py-1 text-[12px] font-bold text-ink-600">
-            {complaint.category}
+            {CATEGORY_LABEL[complaint.category] ?? complaint.category}
           </span>
         </div>
         <p className="text-[14px] leading-relaxed text-ink-800">{complaint.description}</p>
         {complaint.attachments.length > 0 && (
           <div className="mt-3 grid grid-cols-3 gap-2">
             {complaint.attachments.map((url, i) => (
-              <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+              <a key={i} href={normalizeMediaUrl(url) ?? url} target="_blank" rel="noopener noreferrer">
                 <img src={normalizeMediaUrl(url) ?? url} alt="" className="h-20 w-full rounded-xl object-cover hover:opacity-90" />
               </a>
             ))}
@@ -189,7 +207,7 @@ export default function ComplaintDetailPage() {
             variant={resolveStatus === "resolved" ? "brand" : "invert"}
             size="lg"
             onClick={() => resolveMut.mutate()}
-            disabled={!resolution.trim() || resolveMut.isPending}
+            disabled={resolution.trim().length < 3 || resolveMut.isPending}
           >
             {resolveMut.isPending ? "Сохраняем…" : "Сохранить решение"}
           </Button>

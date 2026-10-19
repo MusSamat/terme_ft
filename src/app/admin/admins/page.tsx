@@ -7,11 +7,8 @@ import { useAdminAuth } from "@/store/admin-auth";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 import { Plus, X, UserCog, Calendar } from "lucide-react";
-import type { AxiosError } from "axios";
-
-interface ApiErr {
-  error?: { code?: string; message?: string };
-}
+import { AdminQueryError, adminErrorMessage } from "@/components/admin/admin-query-error";
+import { toastSuccess } from "@/components/layout/quick-toast";
 
 function fmt(iso?: string | null): string {
   if (!iso) return "Никогда";
@@ -37,7 +34,7 @@ export default function AdminAdminsPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "superadmin">("admin");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin", "admins"],
     queryFn: listAdmins,
     staleTime: 60_000,
@@ -55,11 +52,9 @@ export default function AdminAdminsPage() {
       setPassword("");
       setRole("admin");
       setFormError("");
+      toastSuccess("Администратор создан");
     },
-    onError: (err: AxiosError<ApiErr>) => {
-      const msg = err.response?.data?.error?.message ?? "Ошибка создания";
-      setFormError(msg);
-    },
+    onError: (err) => setFormError(adminErrorMessage(err)),
   });
 
   return (
@@ -90,6 +85,8 @@ export default function AdminAdminsPage() {
             <div key={i} className="h-16 animate-pulse rounded-2xl bg-white" />
           ))}
         </div>
+      ) : isError ? (
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
       ) : admins.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center">
           <UserCog className="mx-auto mb-3 h-10 w-10 text-ink-300" />
@@ -183,7 +180,7 @@ export default function AdminAdminsPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-ink-200 px-4 py-3 text-[13px] outline-none focus:border-ink-400"
-                  placeholder="Минимум 8 символов"
+                  placeholder="Минимум 12 символов"
                 />
               </div>
               <div>
@@ -212,6 +209,10 @@ export default function AdminAdminsPage() {
               </div>
             </div>
 
+            <p className="mt-3 text-[12px] text-ink-400">
+              Это временный пароль: при первом входе администратор обязан его сменить.
+            </p>
+
             {formError && (
               <p className="mt-3 rounded-xl bg-danger-50 px-4 py-3 text-[13px] text-danger-700">
                 {formError}
@@ -233,7 +234,7 @@ export default function AdminAdminsPage() {
                 variant="invert"
                 size="lg"
                 onClick={() => createMut.mutate()}
-                disabled={!email.trim() || !name.trim() || !password.trim() || createMut.isPending}
+                disabled={!email.trim() || name.trim().length < 2 || password.length < 12 || createMut.isPending}
                 className="flex-1"
               >
                 {createMut.isPending ? "Создаём…" : "Создать"}

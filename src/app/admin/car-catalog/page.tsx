@@ -23,6 +23,7 @@ import { useAdminAuth } from "@/store/admin-auth";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 import { Plus, Pencil, Check, X, Trash2 } from "lucide-react";
+import { AdminQueryError, toastAdminError } from "@/components/admin/admin-query-error";
 
 type Tab = "brands" | "models" | "colors";
 
@@ -221,24 +222,31 @@ function BrandsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "car-brands"], queryFn: listAdminCarBrands });
-  const invalidate = () => void qc.invalidateQueries({ queryKey: ["admin", "car-brands"] });
+  const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ["admin", "car-brands"], queryFn: listAdminCarBrands });
+  // Models cascade on brand delete and show the brand name — refresh both.
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["admin", "car-brands"] });
+    void qc.invalidateQueries({ queryKey: ["admin", "car-models"] });
+  };
 
   const createMut = useMutation({
     mutationFn: (input: { name: string; sortPosition: number; isActive: boolean }) => createCarBrand(input),
     onSuccess: () => { invalidate(); setAdding(false); },
+    onError: toastAdminError,
   });
   const updateMut = useMutation({
     mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateCarBrand>[1] }) =>
       updateCarBrand(id, input),
     onSuccess: () => { invalidate(); setEditingId(null); },
+    onError: toastAdminError,
   });
-  const deleteMut = useMutation({ mutationFn: deleteCarBrand, onSuccess: invalidate });
+  const deleteMut = useMutation({ mutationFn: deleteCarBrand, onSuccess: invalidate, onError: toastAdminError });
 
   const brands = data?.data ?? [];
   const headers = ["Марка", "№", "Активна", isSuperAdmin ? "Действия" : ""];
 
   if (isLoading) return <SkeletonRows />;
+  if (isError) return <AdminQueryError error={error} onRetry={() => void refetch()} />;
   return (
     <>
       <AddButton show={isSuperAdmin && !adding} onClick={() => setAdding(true)} />
@@ -295,7 +303,7 @@ function ModelEditRow({
 }: {
   model: Partial<CarModelItem>;
   brands: CarBrandItem[];
-  onSave: (d: { brandId: number; name: string; bodyType: string; sortPosition: number; isActive: boolean }) => void;
+  onSave: (d: { brandId: number; name: string; bodyType?: string; sortPosition: number; isActive: boolean }) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -335,7 +343,7 @@ function ModelEditRow({
           disabled={!name.trim() || !brandId || saving}
           onCancel={onCancel}
           onSave={() =>
-            onSave({ brandId, name: name.trim(), bodyType: bodyType.trim(), sortPosition: Number(sort || 0), isActive })
+            onSave({ brandId, name: name.trim(), bodyType: bodyType.trim() || undefined, sortPosition: Number(sort || 0), isActive })
           }
         />
       </td>
@@ -353,7 +361,7 @@ function ModelsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const brands = brandsQ.data?.data ?? [];
   const brandName = (id: number) => brands.find((b) => b.id === id)?.name ?? `#${id}`;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin", "car-models", filterBrand],
     queryFn: () => listAdminCarModels(filterBrand === "" ? undefined : filterBrand),
   });
@@ -362,13 +370,15 @@ function ModelsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const createMut = useMutation({
     mutationFn: (input: Parameters<typeof createCarModel>[0]) => createCarModel(input),
     onSuccess: () => { invalidate(); setAdding(false); },
+    onError: toastAdminError,
   });
   const updateMut = useMutation({
     mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateCarModel>[1] }) =>
       updateCarModel(id, input),
     onSuccess: () => { invalidate(); setEditingId(null); },
+    onError: toastAdminError,
   });
-  const deleteMut = useMutation({ mutationFn: deleteCarModel, onSuccess: invalidate });
+  const deleteMut = useMutation({ mutationFn: deleteCarModel, onSuccess: invalidate, onError: toastAdminError });
 
   const models = data?.data ?? [];
   const headers = ["Марка", "Модель", "Кузов", "№", "Активна", isSuperAdmin ? "Действия" : ""];
@@ -390,6 +400,8 @@ function ModelsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       </div>
       {isLoading ? (
         <SkeletonRows />
+      ) : isError ? (
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
       ) : (
         <TableShell headers={headers}>
           {adding && (
@@ -504,24 +516,27 @@ function ColorsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "car-colors"], queryFn: listAdminCarColors });
+  const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ["admin", "car-colors"], queryFn: listAdminCarColors });
   const invalidate = () => void qc.invalidateQueries({ queryKey: ["admin", "car-colors"] });
 
   const createMut = useMutation({
     mutationFn: (input: Parameters<typeof createCarColor>[0]) => createCarColor(input),
     onSuccess: () => { invalidate(); setAdding(false); },
+    onError: toastAdminError,
   });
   const updateMut = useMutation({
     mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateCarColor>[1] }) =>
       updateCarColor(id, input),
     onSuccess: () => { invalidate(); setEditingId(null); },
+    onError: toastAdminError,
   });
-  const deleteMut = useMutation({ mutationFn: deleteCarColor, onSuccess: invalidate });
+  const deleteMut = useMutation({ mutationFn: deleteCarColor, onSuccess: invalidate, onError: toastAdminError });
 
   const colors = data?.data ?? [];
   const headers = ["Цвет (рус)", "Цвет (кырг)", "HEX", "№", "Активен", isSuperAdmin ? "Действия" : ""];
 
   if (isLoading) return <SkeletonRows />;
+  if (isError) return <AdminQueryError error={error} onRetry={() => void refetch()} />;
   return (
     <>
       <AddButton show={isSuperAdmin && !adding} onClick={() => setAdding(true)} />

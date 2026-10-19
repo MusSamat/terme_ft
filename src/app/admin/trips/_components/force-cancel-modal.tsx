@@ -24,7 +24,7 @@ interface ForceCancelModalProps {
   cancelReason: string;
   customReason: string;
   isPending: boolean;
-  isError: boolean;
+  errorMessage: string | null;
   onReasonChange: (reason: string) => void;
   onCustomReasonChange: (value: string) => void;
   onClose: () => void;
@@ -36,7 +36,7 @@ export function ForceCancelModal({
   cancelReason,
   customReason,
   isPending,
-  isError,
+  errorMessage,
   onReasonChange,
   onCustomReasonChange,
   onClose,
@@ -94,13 +94,14 @@ export function ForceCancelModal({
             value={customReason}
             onChange={(e) => onCustomReasonChange(e.target.value)}
             rows={2}
-            placeholder="Укажите причину…"
+            maxLength={500}
+            placeholder="Укажите причину (минимум 3 символа)…"
             className="mb-3 w-full rounded-xl border border-ink-200 p-3 text-[13px] outline-none focus:border-ink-400"
           />
         )}
-        {isError && (
+        {errorMessage && (
           <p className="mb-3 rounded-xl bg-danger-50 px-4 py-2 text-[12px] text-danger-700">
-            Ошибка при отмене. Попробуйте снова.
+            {errorMessage}
           </p>
         )}
         <div className="flex gap-2">
@@ -116,7 +117,7 @@ export function ForceCancelModal({
             variant="danger"
             size="lg"
             onClick={onConfirm}
-            disabled={!effectiveReason.trim() || isPending}
+            disabled={effectiveReason.trim().length < 3 || isPending}
             className="flex-1"
           >
             {isPending ? "Отменяем…" : "Подтвердить"}

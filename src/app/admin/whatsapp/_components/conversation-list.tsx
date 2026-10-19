@@ -11,9 +11,10 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
   isLoading: boolean;
+  isError: boolean;
 }
 
-export function ConversationList({ conversations, selectedId, onSelect, isLoading }: Props) {
+export function ConversationList({ conversations, selectedId, onSelect, isLoading, isError }: Props) {
   return (
     <aside className="flex min-h-0 w-80 flex-shrink-0 flex-col border-r border-ink-200 bg-white">
       <header className="flex items-center gap-2 border-b border-ink-200 px-4 py-4">
@@ -35,6 +36,10 @@ export function ConversationList({ conversations, selectedId, onSelect, isLoadin
           <div className="flex h-full items-center justify-center py-10">
             <Spinner />
           </div>
+        ) : isError && conversations.length === 0 ? (
+          <p role="alert" className="px-6 py-16 text-center text-[13px] text-danger-700">
+            Не удалось загрузить диалоги — повторим автоматически
+          </p>
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
             <MessageCircle className="h-8 w-8 text-ink-300" />

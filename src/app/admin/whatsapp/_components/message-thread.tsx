@@ -18,7 +18,7 @@ interface Props {
   isLoading: boolean;
   sending: boolean;
   replyError: ReplyError | null;
-  onSend: (text: string) => void;
+  onSend: (text: string) => Promise<unknown>;
   onClearError: () => void;
 }
 
@@ -88,9 +88,14 @@ export function MessageThread({
     const trimmed = text.trim();
     if (!trimmed || sending) return;
     stickToBottom.current = true; // always follow our own outgoing message
-    onSend(trimmed);
-    setText("");
-    if (inputRef.current) inputRef.current.style.height = "auto";
+    // Clear only once sent — a failed send (e.g. closed 24h window) keeps the draft.
+    onSend(trimmed).then(
+      () => {
+        setText("");
+        if (inputRef.current) inputRef.current.style.height = "auto";
+      },
+      () => {},
+    );
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {

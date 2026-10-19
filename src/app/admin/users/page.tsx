@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 import { Search, ChevronRight, ChevronLeft, Star, Car } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { AdminQueryError } from "@/components/admin/admin-query-error";
 
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", {
@@ -34,7 +35,7 @@ export default function AdminUsersPage() {
     setCursors([]);
   }, [debouncedQ, roleFilter, blockedFilter, sort, regFrom, regTo]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin", "users", debouncedQ, roleFilter, blockedFilter, sort, regFrom, regTo, cursor],
     queryFn: () =>
       listAdminUsers({
@@ -118,6 +119,8 @@ export default function AdminUsersPage() {
             <div key={i} className="h-16 animate-pulse rounded-2xl bg-white" />
           ))}
         </div>
+      ) : isError ? (
+        <AdminQueryError error={error} onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <div className="rounded-2xl bg-white p-10 text-center">
           <p className="font-bold text-ink-600">Пользователи не найдены</p>

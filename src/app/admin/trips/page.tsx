@@ -15,6 +15,8 @@ import { Car, ChevronLeft, ChevronRight } from "lucide-react";
 import { TripDetailPanel } from "./_components/trip-detail-panel";
 import { ForceCancelModal } from "./_components/force-cancel-modal";
 import { TripSearchBar } from "./_components/trip-search-bar";
+import { AdminQueryError, adminErrorMessage } from "@/components/admin/admin-query-error";
+import { toastSuccess } from "@/components/layout/quick-toast";
 
 function fmtDateShort(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", {
@@ -82,7 +84,10 @@ export default function AdminTripsPage() {
       setCancelReason("");
       setCustomReason("");
       void qc.invalidateQueries({ queryKey: ["admin", "trips"] });
-      if (selectedId) void qc.invalidateQueries({ queryKey: ["admin", "trip", selectedId] });
+      void qc.invalidateQueries({ queryKey: ["admin", "trip"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "user"] });
+      void qc.invalidateQueries({ queryKey: ["admin", "kpi"] });
+      toastSuccess("Поездка отменена, пассажиры уведомлены");
     },
   });
 
@@ -144,6 +149,8 @@ export default function AdminTripsPage() {
                 <div key={i} className="h-16 animate-pulse rounded-2xl bg-white" />
               ))}
             </div>
+          ) : tripsQuery.isError ? (
+            <AdminQueryError error={tripsQuery.error} onRetry={() => void tripsQuery.refetch()} />
           ) : trips.length === 0 ? (
             <div className="rounded-2xl bg-white p-10 text-center">
               <Car className="mx-auto mb-3 h-10 w-10 text-ink-300" />
@@ -251,11 +258,11 @@ export default function AdminTripsPage() {
           cancelReason={cancelReason}
           customReason={customReason}
           isPending={cancelMut.isPending}
-          isError={cancelMut.isError}
+          errorMessage={cancelMut.error ? adminErrorMessage(cancelMut.error) : null}
           onReasonChange={setCancelReason}
           onCustomReasonChange={setCustomReason}
-          onClose={() => setCancelTarget(null)}
-          onConfirm={() => cancelMut.mutate({ id: cancelTarget.id, reason: effectiveReason })}
+          onClose={() => { cancelMut.reset(); setCancelTarget(null); }}
+          onConfirm={() => cancelMut.mutate({ id: cancelTarget.id, reason: effectiveReason.trim() })}
         />
       )}
     </div>
