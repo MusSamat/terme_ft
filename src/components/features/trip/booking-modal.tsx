@@ -29,6 +29,7 @@ export function BookingModal({ open, onOpenChange, tripId, pricePerSeat, seatsAv
           pricePerSeat={pricePerSeat}
           seatsAvailable={seatsAvailable}
           initialSeats={initialSeats}
+          onCancel={() => onOpenChange(false)}
         />
       </ModalContent>
     </Modal>

@@ -22,10 +22,12 @@ interface Props {
   pricePerSeat: number;
   seatsAvailable: number;
   initialSeats?: number;
+  /** Close the hosting modal (default: navigate back). */
+  onCancel?: () => void;
   bookingId?: string;
 }
 
-export function BookForm({ tripId, pricePerSeat, seatsAvailable, initialSeats = 1 }: Props) {
+export function BookForm({ tripId, pricePerSeat, seatsAvailable, initialSeats = 1, onCancel }: Props) {
   const t = useTranslations("book_form");
   const router = useRouter();
   const status = useAuth((s) => s.status);
@@ -227,7 +229,7 @@ export function BookForm({ tripId, pricePerSeat, seatsAvailable, initialSeats = 
       </div>
 
       <div className="flex gap-2">
-        <Button type="button" variant="ghost" size="lg" className="flex-1" onClick={() => router.back()}>
+        <Button type="button" variant="ghost" size="lg" className="flex-1" onClick={() => (onCancel ? onCancel() : router.back())}>
           {t("cancel")}
         </Button>
         <Button type="submit" variant="submit" size="lg" disabled={disabled} className="min-w-0 flex-[2]">

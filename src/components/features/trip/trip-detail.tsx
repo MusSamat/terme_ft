@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { listMyBookings } from "@/lib/api/bookings";
+import { getTrip } from "@/lib/api/trips";
+import { setRouteParams } from "@/lib/places";
 import { useRecordView } from "@/lib/hooks/use-record-view";
 import { saveDeferredAction } from "@/lib/auth/deferred-action";
 import { formatDepartureLabel } from "@/lib/utils/date";
@@ -49,8 +51,8 @@ export interface DetailTripData {
   driverId?: string | null;
   originCity?: string;
   destinationCity?: string;
-  origin?: { nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null;
-  destination?: { nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null;
+  origin?: { id?: number; nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null;
+  destination?: { id?: number; nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null;
   originPoint?: { lat: number; lng: number; address?: string | null; area?: { nameRu?: string; nameKg?: string } | null } | null;
   destinationPoint?: { lat: number; lng: number; address?: string | null; area?: { nameRu?: string; nameKg?: string } | null } | null;
   stops?: Array<{ kind?: string; place?: { nameRu?: string; nameKg?: string; lat?: number | null; lng?: number | null } | null }>;
@@ -87,6 +89,8 @@ interface Props {
   autoOpenBook?: boolean;
   /** Rendered in a sheet: show a close (×) button in the header icon row. */
   onClose?: () => void;
+  /** Seats pre-selected in the booking modal (deferred book_trip intent). */
+  initialSeats?: number;
 }
 
 function useDetailModel(trip: DetailTripData) {
@@ -162,7 +166,8 @@ function InfoTiles({ model }: { model: Model }) {
         return (
           <div key={i} className="rounded-2xl bg-ink-50 p-3 text-center dark:bg-ink-800">
             <Icon className="mx-auto mb-1 h-4 w-4 text-brand-600" aria-hidden="true" />
-            <div className="truncate text-[13px] font-900 text-ink-900 dark:text-white">{tile.value}</div>
+            {/* line-clamp, not truncate: «Сегодня, 06:00–11:00» must not lose the time at 375px */}
+            <div className="line-clamp-2 break-words text-[13px] font-900 leading-tight text-ink-900 dark:text-white">{tile.value}</div>
             <div className="text-[13px] font-600 text-ink-400">{tile.sub}</div>
           </div>
         );
@@ -221,17 +226,18 @@ function DetailCta({
   role,
   onBook,
   onSignin,
-  originCity,
-  destinationCity,
+  similarHref,
   myBooking,
+  unavailable = null,
   size = "mobile",
 }: {
   role: "guest" | "passenger" | "driver";
   onBook: () => void;
   onSignin: () => void;
-  originCity?: string;
-  destinationCity?: string;
+  similarHref: string;
   myBooking?: { id: string; status: string } | null;
+  /** Why booking is impossible (full / no longer active) — replaces the CTA. */
+  unavailable?: "full" | "closed" | null;
   size?: "mobile" | "desktop";
 }) {
   const t = useTranslations("detail");
@@ -248,14 +254,20 @@ function DetailCta({
     );
   }
   if (role === "driver") {
-    const href = `/trips/create?from=${encodeURIComponent(originCity ?? "")}&to=${encodeURIComponent(destinationCity ?? "")}`;
     return (
-      <Link href={href} className="block">
+      <Link href={similarHref} className="block">
         <Button variant="brand" className={cn("w-full", h)}>
           <CarFront className="h-5 w-5" aria-hidden="true" />
           {t("cta_create_similar")}
         </Button>
       </Link>
+    );
+  }
+  if (unavailable) {
+    return (
+      <Button variant="outline" disabled className={cn("w-full", h)}>
+        {unavailable === "full" ? t("cta_full") : t("cta_closed")}
+      </Button>
     );
   }
   if (role === "guest") {
@@ -274,7 +286,7 @@ function DetailCta({
   );
 }
 
-export function TripDetailView({ trip, variant = "page", autoOpenBook = false, onClose }: Props) {
+export function TripDetailView({ trip, variant = "page", autoOpenBook = false, onClose, initialSeats = 1 }: Props) {
   const rn = useRouteNames();
   const router = useRouter();
   const model = useDetailModel(trip);
@@ -301,8 +313,45 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
         ["pending", "viewed", "accepted"].includes(b.status as string),
     ) ?? null;
   const myBookingRef = myBooking ? { id: myBooking.id ?? "", status: myBooking.status as string } : null;
+  // `liked` is per-viewer: the SSR copy is fetched without a token, so read it
+  // from the authed detail (shared ["trip", id] cache with the feed rail).
+  const { data: viewerTrip } = useQuery({
+    queryKey: ["trip", tripId],
+    queryFn: () => getTrip(tripId),
+    enabled: authed && Boolean(tripId),
+    staleTime: 30_000,
+  });
+  const liked = Boolean(viewerTrip?.liked ?? trip.liked);
+
+  const isActive = trip.status === "active";
+  const departed = trip.departureAt ? new Date(trip.departureAt).getTime() < Date.now() : false;
+  const unavailable: "full" | "closed" | null =
+    !isActive || departed ? "closed" : (trip.seatsAvailable ?? 0) <= 0 ? "full" : null;
+
+  const similarQs = new URLSearchParams();
+  setRouteParams(
+    similarQs,
+    trip.origin?.id ? { id: trip.origin.id, nameRu: trip.origin.nameRu ?? "", nameKg: trip.origin.nameKg ?? "" } : null,
+    trip.destination?.id ? { id: trip.destination.id, nameRu: trip.destination.nameRu ?? "", nameKg: trip.destination.nameKg ?? "" } : null,
+  );
+  const similarHref = `/trips/create?${similarQs.toString()}`;
 
   const [bookOpen, setBookOpen] = useState(autoOpenBook);
+  // A deep-linked ?book=1 must not keep the form open for a trip already booked
+  // or closed — decided once, when the viewer's bookings are known (a booking
+  // made inside the modal must not close its own success step).
+  const autoChecked = useRef(!autoOpenBook);
+  useEffect(() => {
+    if (autoChecked.current) return;
+    if (unavailable) {
+      autoChecked.current = true;
+      setBookOpen(false);
+      return;
+    }
+    if (!authed || myBookings === undefined) return;
+    autoChecked.current = true;
+    if (myBooking) setBookOpen(false);
+  }, [authed, myBookings, myBooking, unavailable]);
 
   const handleShare = () => {
     const url = typeof window !== "undefined" ? window.location.href : `/trips/${tripId}`;
@@ -316,11 +365,15 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
 
   const handleBook = () => setBookOpen(true);
   const handleSignin = () => {
-    saveDeferredAction({ action: "book_trip", trip_id: tripId, seats: 1 });
+    saveDeferredAction({ action: "book_trip", trip_id: tripId, seats: initialSeats });
     router.push("/auth/login");
   };
   // Ownership, not the driver/passenger mode, decides the listing actions.
-  const showMessage = authed && !isOwner;
+  // The chat exists per booking — the message icon opens it once booked.
+  const showMessage = authed && !isOwner && Boolean(myBookingRef);
+  const openChat = () => {
+    if (myBookingRef) router.push(`/my/bookings/${myBookingRef.id}/chat`);
+  };
 
   const price = trip.pricePerSeat ?? 0;
 
@@ -357,7 +410,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
           {/* A finished/cancelled trip is read-only — hide its like in history. */}
           {tripId && !isOwner && trip.status === "active" && (
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-              <LikeButton targetType="trip" id={tripId} liked={!!trip.liked} size="sm" />
+              <LikeButton targetType="trip" id={tripId} liked={liked} size="sm" />
             </span>
           )}
           {/* Sheet context: close lives in the card header, no extra bar */}
@@ -410,7 +463,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
   // the seats tile — everything above the fold so the CTA needs no scrolling.
   const body = (
     <div className="space-y-3 px-5 py-4">
-      <DriverCard model={model} showMessage={showMessage} onMessage={handleBook} />
+      <DriverCard model={model} showMessage={showMessage} onMessage={openChat} />
       <InfoTiles model={model} />
       <RouteSection
         origin={trip.origin}
@@ -430,9 +483,9 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
 
   const cta = (
     <div className="space-y-2">
-      <DetailCta role={isOwner ? "driver" : authed ? "passenger" : "guest"} onBook={handleBook} onSignin={handleSignin} originCity={rn(trip).from} destinationCity={rn(trip).to} myBooking={myBookingRef} />
-      {/* Call-first flow: phone behind one tap. Never on own trips. */}
-      {(!viewerId || trip.driverId !== viewerId) && tripId && (
+      <DetailCta role={isOwner ? "driver" : authed ? "passenger" : "guest"} onBook={handleBook} onSignin={handleSignin} similarHref={similarHref} myBooking={myBookingRef} unavailable={unavailable} />
+      {/* Call-first flow: phone behind one tap. Never on own or inactive trips. */}
+      {(!viewerId || trip.driverId !== viewerId) && tripId && isActive && !departed && (
         <ContactRevealButton target="trip" id={tripId} />
       )}
     </div>
@@ -445,7 +498,7 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
       tripId={tripId}
       pricePerSeat={price}
       seatsAvailable={model.seatsAvailable}
-      initialSeats={1}
+      initialSeats={initialSeats}
     />
   );
 
@@ -520,6 +573,14 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
           </div>
           {trip.metrics && <StatsRow metrics={trip.metrics} />}
           <InfoTiles model={model} />
+          <RouteSection
+            origin={trip.origin}
+            destination={trip.destination}
+            originPoint={trip.originPoint}
+            destinationPoint={trip.destinationPoint}
+            stops={trip.stops}
+            pickupLabel={t("pickup_point")}
+          />
           {model.seatsTotal > 0 && <SeatsCard model={model} />}
           {trip.comment && (
             <div className="flex gap-3 rounded-3xl bg-accent-50 p-5 dark:bg-accent-500/10">
@@ -559,16 +620,17 @@ export function TripDetailView({ trip, variant = "page", autoOpenBook = false, o
           {isOwner && tripId ? (
             <DriverPanel trip={trip as never} tripId={tripId} />
           ) : (
-            <div className="mt-auto">
+            <div className="mt-auto space-y-2">
               <DetailCta
                 role={isOwner ? "driver" : authed ? "passenger" : "guest"}
                 onBook={handleBook}
                 onSignin={handleSignin}
-                originCity={rn(trip).from}
-                destinationCity={rn(trip).to}
+                similarHref={similarHref}
                 myBooking={myBookingRef}
+                unavailable={unavailable}
                 size="desktop"
               />
+              {tripId && isActive && !departed && <ContactRevealButton target="trip" id={tripId} />}
             </div>
           )}
         </aside>

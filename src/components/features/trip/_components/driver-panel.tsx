@@ -48,6 +48,7 @@ function TripEditModal({ trip, tripId, onClose }: { trip: TripDetail; tripId: st
   const tToasts = useTranslations("toasts");
   const fe = useFriendlyError();
   const qc = useQueryClient();
+  const router = useRouter();
   const [price, setPrice] = useState(String((trip.pricePerSeat as number | undefined) ?? ""));
   const [comment, setComment] = useState((trip.comment as string | undefined) ?? "");
   const [luggage, setLuggage] = useState<"yes" | "small" | "no">((trip.luggage as "yes" | "small" | "no" | undefined) ?? "small");
@@ -60,6 +61,8 @@ function TripEditModal({ trip, tripId, onClose }: { trip: TripDetail; tripId: st
       toastSuccess(tToasts("saved"));
       void qc.invalidateQueries({ queryKey: ["trip", tripId] });
       void qc.invalidateQueries({ queryKey: ["my-trips"] });
+      void qc.invalidateQueries({ queryKey: ["my-posts"] });
+      router.refresh(); // the page renders the SSR trip prop
       onClose();
     },
     onError: (e) => toastError(fe(extractError(e))),
@@ -114,7 +117,7 @@ function TripEditModal({ trip, tripId, onClose }: { trip: TripDetail; tripId: st
           <div className="mt-1 flex flex-col gap-2">
             <p className="text-center text-[14px] font-800 text-ink-700 dark:text-ink-200">{t("edit_confirm")}</p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setConfirming(false)} className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+              <button type="button" onClick={() => setConfirming(false)} aria-label={t("back_btn")} className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
                 <X className="h-5 w-5" />
               </button>
               <button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="h-11 flex-[2] rounded-xl bg-brand-600 text-[15px] font-900 text-white hover:bg-brand-700 disabled:opacity-50">
@@ -143,6 +146,8 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
   const fe = useFriendlyError();
   const qc = useQueryClient();
 
+  const router = useRouter();
+
   const REJECT_REASONS = [
     t("reject_reason_no_seats"),
     t("reject_reason_not_route"),
@@ -169,11 +174,13 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
       toastSuccess(tToasts("booking_accepted"));
       qc.invalidateQueries({ queryKey: ["bookings", "incoming", tripId] });
       qc.invalidateQueries({ queryKey: ["trips"] });
+      qc.invalidateQueries({ queryKey: ["my-posts"] });
+      router.refresh(); // free-seat count comes from the SSR trip prop
     },
     onError: (e) => toastError(fe(extractError(e))),
   });
   const rejectMut = useMutation({
-    mutationFn: (id: string) => rejectBooking(id),
+    mutationFn: (id: string) => rejectBooking(id, rejectReason || undefined),
     onSuccess: () => {
       toastSuccess(tToasts("booking_rejected"));
       qc.invalidateQueries({ queryKey: ["bookings", "incoming", tripId] });
@@ -185,7 +192,6 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
   // Manual ±1 seats («занято по телефону» / «освободилось») — call-first flow.
   // `trip` arrives as an SSR prop, so the fresh count comes from the mutation
   // response (local state) + router.refresh() re-syncs the server payload.
-  const router = useRouter();
   const [seatsLocal, setSeatsLocal] = useState<number | null>(null);
   const seatsFree = seatsLocal ?? (trip.seatsAvailable as number | undefined) ?? 0;
   const tripActive = (trip.status as string | undefined) === "active";
@@ -217,6 +223,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
       qc.invalidateQueries({ queryKey: ["my-posts"] });
       qc.invalidateQueries({ queryKey: ["bookings"] });
       setCancelTripOpen(false);
+      router.refresh();
     },
     onError: (e) => toastError(fe(extractError(e))),
   });
@@ -226,6 +233,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
       toastSuccess(tToasts("booking_cancelled"));
       qc.invalidateQueries({ queryKey: ["bookings", "incoming", tripId] });
       setCancelBookingTarget(null);
+      router.refresh();
     },
     onError: (e) => toastError(fe(extractError(e))),
   });
@@ -391,7 +399,7 @@ export function DriverPanel({ trip, tripId }: { trip: TripDetail; tripId: string
               rejectReasons={REJECT_REASONS}
               showRejectFor={showRejectFor}
               rejectReason={rejectReason}
-              acceptPending={acceptMut.isPending}
+              acceptPending={acceptMut.isPending && acceptMut.variables === b.id}
               rejectPending={rejectMut.isPending}
               onAccept={() => acceptMut.mutate(b.id!)}
               onStartReject={() => { setShowRejectFor(b.id!); setRejectReason(""); }}

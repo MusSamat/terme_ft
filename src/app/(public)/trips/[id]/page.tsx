@@ -14,7 +14,7 @@ export const revalidate = 60;
 
 interface Props {
   params: { id: string };
-  searchParams: { book?: string };
+  searchParams: { book?: string; seats?: string };
 }
 
 // Deduped across generateMetadata + the page render within one request.
@@ -23,8 +23,9 @@ const fetchTrip = cache(async (id: string): Promise<TripDetail | null> => {
     return await getTrip(id);
   } catch (e) {
     const err = extractError(e);
-    if (err.code === "NOT_FOUND") return null;
-    return null;
+    if (err.code === "NOT_FOUND" || err.code === "VALIDATION_ERROR") return null;
+    // Outage / 5xx: surface the error boundary instead of a (cached) 404.
+    throw e;
   }
 });
 
@@ -98,6 +99,7 @@ export default async function TripDetailsPage({ params, searchParams }: Props) {
         trip={trip as DetailTripData}
         variant="page"
         autoOpenBook={searchParams.book === "1"}
+        initialSeats={Math.min(Math.max(Number(searchParams.seats) || 1, 1), 8)}
       />
     </>
   );
