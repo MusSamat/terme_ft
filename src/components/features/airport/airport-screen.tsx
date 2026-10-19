@@ -87,9 +87,9 @@ export function AirportScreen() {
   }, [from, to]);
   const mapHref = useMemo(() => {
     const qs = new URLSearchParams({ ride: "airport", kind: tab });
-    setRouteParams(qs, null, to);
+    setRouteParams(qs, from, to);
     return `/map?${qs.toString()}`;
-  }, [tab, to]);
+  }, [tab, from, to]);
 
   const list = tab === "trips" ? trips : requests;
   const rows = list.data?.data ?? [];

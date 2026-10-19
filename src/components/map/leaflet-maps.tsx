@@ -6,6 +6,7 @@ import { memo, useEffect, useMemo, useRef, type RefObject } from "react";
 import L, { type LatLngTuple } from "leaflet";
 import { Circle, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import { glyphPathsMarkup, type GlyphKind } from "@/components/icons/glyphs";
+import { CLUSTER_MAX_ZOOM, type PinCluster } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
 
 const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -152,7 +153,7 @@ export function PointPickerInner({
   );
 }
 
-// ─── Listings map (/map) ───────────────────────────────────────────────
+// ─── Route results map ───────────────────────────────────────────────
 export interface MapListing {
   id: string;
   lat: number;
@@ -161,12 +162,6 @@ export interface MapListing {
   label: string;
   /** Free seats (trips) / passengers (requests); hidden when null. */
   badge: number | null;
-}
-
-export interface MapCluster {
-  lat: number;
-  lng: number;
-  count: number;
 }
 
 export interface Viewport {
@@ -304,15 +299,29 @@ const ListingMarker = memo(function ListingMarker({
   );
 });
 
-// Tap a cluster → zoom +2 around it.
-const ClusterMarker = memo(function ClusterMarker({ cluster, label }: { cluster: MapCluster; label: string }) {
+// Tap a cluster → zoom +2 around it; pins stacked on one spot (zoomed in
+// already) can't spread out, so those open as a list instead.
+const ClusterMarker = memo(function ClusterMarker({
+  cluster,
+  label,
+  onOpen,
+}: {
+  cluster: PinCluster;
+  label: string;
+  onOpen: (ids: string[]) => void;
+}) {
   const map = useMap();
   const ref = useRef<L.Marker>(null);
   useAriaLabel(ref, label);
   const icon = useMemo(() => clusterIcon(cluster.count), [cluster.count]);
   const handlers = useMemo(
-    () => ({ click: () => map.setView([cluster.lat, cluster.lng], Math.min(map.getZoom() + 2, 18)) }),
-    [map, cluster.lat, cluster.lng],
+    () => ({
+      click: () =>
+        map.getZoom() >= CLUSTER_MAX_ZOOM
+          ? onOpen(cluster.ids)
+          : map.setView([cluster.lat, cluster.lng], Math.min(map.getZoom() + 2, 18)),
+    }),
+    [map, cluster, onOpen],
   );
   return <Marker ref={ref} position={[cluster.lat, cluster.lng]} icon={icon} eventHandlers={handlers} />;
 });
@@ -337,6 +346,7 @@ function MeMarker({ me }: { me: MeLocation }) {
 export function ListingsMapInner({
   items,
   clusters,
+  onClusterOpen,
   glyph,
   selectedId,
   onSelect,
@@ -349,7 +359,9 @@ export function ListingsMapInner({
   className,
 }: {
   items: MapListing[];
-  clusters: MapCluster[];
+  clusters: PinCluster[];
+  /** Keep stable — a stacked cluster that can't zoom apart. */
+  onClusterOpen: (ids: string[]) => void;
   glyph: GlyphKind;
   selectedId: string | null;
   /** Keep stable (useCallback) — markers are memoized on it. */
@@ -369,7 +381,7 @@ export function ListingsMapInner({
         <ViewportWatcher onChange={onViewport} onInteract={onInteract} />
         <CommandRunner command={command} padding={fitPadding} />
         {clusters.map((c) => (
-          <ClusterMarker key={`c${c.lat}-${c.lng}-${c.count}`} cluster={c} label={clusterLabel(c.count)} />
+          <ClusterMarker key={c.ids.join(",")} cluster={c} label={clusterLabel(c.count)} onOpen={onClusterOpen} />
         ))}
         {items.map((it) => (
           <ListingMarker key={it.id} item={it} glyph={glyph} selected={it.id === selectedId} onSelect={onSelect} />

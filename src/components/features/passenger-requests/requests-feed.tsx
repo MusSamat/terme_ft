@@ -1,8 +1,8 @@
 "use client";
 
 import { useInfiniteQuery, useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useState, useEffect, useCallback, memo } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import {
@@ -27,6 +27,9 @@ import { PullToRefresh } from "@/components/ui";
 import { useInfiniteScroll } from "@/lib/hooks/use-infinite-scroll";
 import { useScrollRestoration } from "@/lib/hooks/use-scroll-restoration";
 import { useUiRole } from "@/lib/hooks/use-role-colors";
+import { RouteResultsMap } from "@/components/features/map/route-results-map";
+import { ResultsViewToggle, useResultsView } from "@/components/features/map/results-view";
+import { originOf, requestPins } from "@/components/features/map/result-pins";
 
 /** Role-aware empty state for the requests feed (feed.empty_* keys). */
 function RequestsEmpty() {
@@ -156,6 +159,12 @@ export function RequestsFeed() {
 
   const nearby = data?.pages[0]?.nearby === true;
 
+  // «Список | Карта» — the map shows exactly these requests where passengers wait.
+  const locale = useLocale();
+  const [view, setView] = useResultsView();
+  const pins = useMemo(() => (view === "map" ? requestPins(requests, locale) : []), [view, data, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fitKey = JSON.stringify(filters);
+
   // Pick a route from the entry hints — update the URL on THIS page (no nav),
   // so only the body swaps to results while the header stays put.
   const router = useRouter();
@@ -169,7 +178,7 @@ export function RequestsFeed() {
   };
 
   return (
-    <PullToRefresh onRefresh={() => refetch()}>
+    <PullToRefresh onRefresh={() => refetch()} disabled={view === "map"}>
       <BackToTop showOnDesktop />
 
       {/* ONE structure for all widths (same concept as the trips feed): header
@@ -188,11 +197,27 @@ export function RequestsFeed() {
             <RequestsEmpty />
           ) : (
             <>
+              <div className="mb-2.5 flex justify-end">
+                <ResultsViewToggle view={view} onChange={setView} />
+              </div>
               {nearby && (
                 <div className="mb-2.5 rounded-2xl bg-accent-50 px-4 py-2.5 text-[14px] font-700 text-accent-700 dark:bg-accent-500/10 dark:text-accent-300">
                   {t("nearby_notice")}
                 </div>
               )}
+              {view === "map" ? (
+                <RouteResultsMap
+                  kind="requests"
+                  pins={pins}
+                  origin={originOf(requests)}
+                  fitKey={fitKey}
+                  hasMore={Boolean(hasNextPage)}
+                  loadingMore={isFetchingNextPage}
+                  onLoadMore={() => void fetchNextPage()}
+                  onOpen={handleSelect}
+                />
+              ) : (
+              <>
               <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
                 {requests.map((req, i) => (
                   <FeedRequestRow key={req.id} request={req} index={i} active={false} onSelect={handleSelect} />
@@ -205,6 +230,8 @@ export function RequestsFeed() {
                 )}
               </div>
               {!hasNextPage && <NextDayCta kind="requests" />}
+              </>
+              )}
             </>
           )}
         </div>

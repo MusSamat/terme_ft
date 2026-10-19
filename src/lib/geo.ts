@@ -1,22 +1,13 @@
-// Client-side geo helpers for the map: distances, Kyrgyzstan bounds and the
-// «nearest first» radius expansion (10 → 30 → 100 km → whole country).
+// Client-side geo helpers for the results map: distances, Kyrgyzstan bounds,
+// nearest-first sorting and pin clustering.
 
 export interface LatLng {
   lat: number;
   lng: number;
 }
 
-export interface BBox {
-  west: number;
-  south: number;
-  east: number;
-  north: number;
-}
-
 /** Same bounds the API enforces for near_lat / near_lng and meeting points. */
-export const KG_BBOX: BBox = { west: 69, south: 39, east: 81, north: 43.5 };
-
-export const NEARBY_RADII_KM = [10, 30, 100] as const;
+const KG_BBOX = { west: 69, south: 39, east: 81, north: 43.5 };
 
 const R_KM = 6371;
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -33,13 +24,6 @@ export function inKg(p: LatLng): boolean {
   return p.lat >= KG_BBOX.south && p.lat <= KG_BBOX.north && p.lng >= KG_BBOX.west && p.lng <= KG_BBOX.east;
 }
 
-/** Bounding box enclosing a circle of `km` around `c`. */
-export function bboxAround(c: LatLng, km: number): BBox {
-  const dLat = km / 111.32;
-  const dLng = km / (111.32 * Math.max(0.01, Math.cos(rad(c.lat))));
-  return { west: c.lng - dLng, south: c.lat - dLat, east: c.lng + dLng, north: c.lat + dLat };
-}
-
 export type WithDistance<T> = T & { distanceKm: number };
 
 /** Nearest first (stable for equal distances). */
@@ -50,30 +34,62 @@ export function sortByDistance<T extends LatLng>(items: readonly T[], from: LatL
     .map((x) => x.it);
 }
 
-export interface NearbyResult<T> {
-  items: WithDistance<T>[];
-  /** Radius step that produced results; null = whole country. */
-  radiusKm: number | null;
-  /** True when the first step was empty and the search had to widen. */
-  expanded: boolean;
+export interface PinCluster {
+  lat: number;
+  lng: number;
+  count: number;
+  ids: string[];
+}
+
+/** Below this zoom pins are grid-clustered; from it only identical points merge. */
+export const CLUSTER_MAX_ZOOM = 15;
+
+/**
+ * Grid clustering (cell ≈ 64 px at `zoom`, as the server map used to do). From
+ * CLUSTER_MAX_ZOOM only pins on the very same spot merge — e.g. several rides
+ * without a pin all sitting at the settlement centre.
+ */
+export function clusterPins<T extends LatLng & { id: string }>(
+  pins: readonly T[],
+  zoom: number,
+): { singles: T[]; clusters: PinCluster[] } {
+  const cell = zoom >= CLUSTER_MAX_ZOOM ? null : 90 / 2 ** zoom;
+  const groups = new Map<string, T[]>();
+  for (const p of pins) {
+    const k = cell === null ? `${p.lat.toFixed(5)}:${p.lng.toFixed(5)}` : `${Math.floor(p.lat / cell)}:${Math.floor(p.lng / cell)}`;
+    const g = groups.get(k);
+    if (g) g.push(p);
+    else groups.set(k, [p]);
+  }
+  const singles: T[] = [];
+  const clusters: PinCluster[] = [];
+  for (const g of groups.values()) {
+    if (g.length === 1) singles.push(g[0]!);
+    else
+      clusters.push({
+        lat: g.reduce((a, p) => a + p.lat, 0) / g.length,
+        lng: g.reduce((a, p) => a + p.lng, 0) / g.length,
+        count: g.length,
+        ids: g.map((p) => p.id),
+      });
+  }
+  return { singles, clusters };
 }
 
 /**
- * Asks `fetchBox` for successively larger boxes around `center` and returns the
- * first non-empty step (items within the circle, nearest first). Falls back to
- * the whole country; an empty country yields `{ items: [], radiusKm: null }`.
+ * What the results map fits: every pickup (or the origin when there are none),
+ * plus the user when they are within `nearKm` of the origin settlement.
  */
-export async function findNearest<T extends LatLng>(
-  center: LatLng,
-  fetchBox: (box: BBox) => Promise<T[]>,
-  radii: readonly number[] = NEARBY_RADII_KM,
-): Promise<NearbyResult<T>> {
-  for (const [i, km] of radii.entries()) {
-    const found = sortByDistance(await fetchBox(bboxAround(center, km)), center).filter((x) => x.distanceKm <= km);
-    if (found.length) return { items: found, radiusKm: km, expanded: i > 0 };
-  }
-  const all = sortByDistance(await fetchBox(KG_BBOX), center);
-  return { items: all, radiusKm: null, expanded: radii.length > 0 && all.length > 0 };
+export function routeFitPoints(
+  pins: readonly LatLng[],
+  origin: LatLng | null,
+  me: LatLng | null,
+  nearKm = 50,
+): LatLng[] {
+  const pts = pins.map((p) => ({ lat: p.lat, lng: p.lng }));
+  if (!pts.length && origin) pts.push({ lat: origin.lat, lng: origin.lng });
+  if (me && origin && haversineKm(me, origin) <= nearKm) pts.push({ lat: me.lat, lng: me.lng });
+  return pts;
 }
 
 /** «1,2 км» / «850 м» — distance label in the UI language's number format. */

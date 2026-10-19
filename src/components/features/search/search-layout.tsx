@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { searchTrips, getTrip, type SearchTripsParams, type TripSearchResult, type TripCardItem } from "@/lib/api/trips";
 import { buildTripSearchParams } from "@/lib/trip-search-params";
 import { cn } from "@/lib/utils/cn";
@@ -29,6 +29,9 @@ import { FeedEntryHints } from "./feed-entry-hints";
 import { addRecentRoute } from "@/lib/recent-routes";
 import { routeFromParams, setRouteParams, type RoutePlace } from "@/lib/places";
 import { BecomeDriverBanner } from "@/components/features/driver/become-driver-banner";
+import { RouteResultsMap } from "@/components/features/map/route-results-map";
+import { ResultsViewToggle, useResultsView } from "@/components/features/map/results-view";
+import { originOf, tripPins } from "@/components/features/map/result-pins";
 
 interface Props {
   /** SSR-seeded first page (from /trips). Omitted on the unified home `/`,
@@ -188,6 +191,12 @@ export function SearchLayout({ initial }: Props) {
 
   const nearby = data?.pages[0]?.nearby === true;
 
+  // «Список | Карта» — the map shows exactly these results at their pickups.
+  const locale = useLocale();
+  const [view, setView] = useResultsView();
+  const pins = useMemo(() => (view === "map" ? tripPins(trips, locale) : []), [view, data, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fitKey = useMemo(() => JSON.stringify(params), [params]);
+
   // Pick a route from the entry hints — updates the URL on THIS page (no
   // navigation), so only the body swaps to results (header stays put).
   const router = useRouter();
@@ -201,7 +210,7 @@ export function SearchLayout({ initial }: Props) {
   };
 
   return (
-    <PullToRefresh onRefresh={() => refetch()}>
+    <PullToRefresh onRefresh={() => refetch()} disabled={view === "map"}>
       <BackToTop showOnDesktop />
 
       {/* ONE structure for all widths (spec: same concept, responsive build):
@@ -225,11 +234,27 @@ export function SearchLayout({ initial }: Props) {
             )
           ) : (
             <>
+              <div className="mb-2.5 flex justify-end">
+                <ResultsViewToggle view={view} onChange={setView} />
+              </div>
               {nearby && (
                 <div className="mb-2.5 rounded-2xl bg-accent-50 px-4 py-2.5 text-[14px] font-700 text-accent-700 dark:bg-accent-500/10 dark:text-accent-300">
                   {t("nearby_notice")}
                 </div>
               )}
+              {view === "map" ? (
+                <RouteResultsMap
+                  kind="trips"
+                  pins={pins}
+                  origin={originOf(trips)}
+                  fitKey={fitKey}
+                  hasMore={Boolean(hasNextPage)}
+                  loadingMore={isFetchingNextPage}
+                  onLoadMore={() => void fetchNextPage()}
+                  onOpen={handleSelect}
+                />
+              ) : (
+              <>
               <div className={cn("grid grid-cols-1 gap-2.5 md:grid-cols-2", filtering && "opacity-50 transition-opacity duration-150")}>
                 {trips.map((trip, i) => (
                   <FeedTripRow
@@ -250,6 +275,8 @@ export function SearchLayout({ initial }: Props) {
               </div>
               {/* List ended → offer the next day that has rides. */}
               {!hasNextPage && <NextDayCta kind="trips" />}
+              </>
+              )}
             </>
           )}
         </div>

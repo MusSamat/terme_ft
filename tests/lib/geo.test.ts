@@ -1,11 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
-import { bboxAround, findNearest, formatDistance, haversineKm, inKg, KG_BBOX, sortByDistance, type BBox } from "@/lib/geo";
+import { describe, expect, it } from "vitest";
+import { clusterPins, CLUSTER_MAX_ZOOM, formatDistance, haversineKm, inKg, routeFitPoints, sortByDistance } from "@/lib/geo";
 
 const BISHKEK = { lat: 42.8746, lng: 74.5698 };
 const OSH = { lat: 40.5283, lng: 72.7985 };
-
-const inBox = (b: BBox) => (p: { lat: number; lng: number }) =>
-  p.lat >= b.south && p.lat <= b.north && p.lng >= b.west && p.lng <= b.east;
 
 describe("haversineKm", () => {
   it("Бишкек → Ош ≈ 300 km great-circle", () => {
@@ -33,12 +30,7 @@ describe("sortByDistance", () => {
   });
 });
 
-describe("bboxAround / inKg", () => {
-  it("box encloses the circle", () => {
-    const b = bboxAround(BISHKEK, 10);
-    expect(haversineKm(BISHKEK, { lat: b.north, lng: BISHKEK.lng })).toBeCloseTo(10, 0);
-    expect(haversineKm(BISHKEK, { lat: BISHKEK.lat, lng: b.east })).toBeCloseTo(10, 0);
-  });
+describe("inKg", () => {
   it("knows Kyrgyzstan bounds", () => {
     expect(inKg(BISHKEK)).toBe(true);
     expect(inKg({ lat: 43.24, lng: 76.89 })).toBe(true); // Almaty is inside the bbox, as on the API
@@ -46,53 +38,47 @@ describe("bboxAround / inKg", () => {
   });
 });
 
-describe("findNearest (radius expansion 10 → 30 → 100 km → country)", () => {
-  const listings = [
-    { id: "kant", lat: 42.891, lng: 74.851 }, // ~23 km
-    { id: "tokmok", lat: 42.842, lng: 75.301 }, // ~60 km
+describe("clusterPins", () => {
+  const pins = [
+    { id: "a", lat: 42.8746, lng: 74.5698 },
+    { id: "b", lat: 42.8746, lng: 74.5698 }, // same spot (no pin → settlement centre)
+    { id: "c", lat: 42.876, lng: 74.6 }, // ~2.5 km east
     { id: "osh", ...OSH },
   ];
-  const fetcher = (data: typeof listings) =>
-    vi.fn(async (box: BBox) => data.filter(inBox(box)));
 
-  it("stops at the first radius with results", async () => {
-    const near = [{ id: "near", lat: 42.88, lng: 74.58 }, ...listings];
-    const f = fetcher(near);
-    const r = await findNearest(BISHKEK, f);
-    expect(r.radiusKm).toBe(10);
-    expect(r.expanded).toBe(false);
-    expect(r.items.map((i) => i.id)).toEqual(["near"]);
-    expect(f).toHaveBeenCalledTimes(1);
+  it("groups nearby pins at a low zoom", () => {
+    const { singles, clusters } = clusterPins(pins, 9);
+    expect(singles.map((s) => s.id)).toEqual(["osh"]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0]!.count).toBe(3);
+    expect(clusters[0]!.ids.sort()).toEqual(["a", "b", "c"]);
   });
 
-  it("widens to 30 km and drops box corners outside the circle", async () => {
-    const f = fetcher(listings);
-    const r = await findNearest(BISHKEK, f);
-    expect(r.radiusKm).toBe(30);
-    expect(r.expanded).toBe(true);
-    expect(r.items.map((i) => i.id)).toEqual(["kant"]);
-    expect(f).toHaveBeenCalledTimes(2);
+  it("from CLUSTER_MAX_ZOOM only identical points merge", () => {
+    const { singles, clusters } = clusterPins(pins, CLUSTER_MAX_ZOOM);
+    expect(singles.map((s) => s.id).sort()).toEqual(["c", "osh"]);
+    expect(clusters).toEqual([{ lat: 42.8746, lng: 74.5698, count: 2, ids: ["a", "b"] }]);
   });
 
-  it("widens to 100 km", async () => {
-    const r = await findNearest(BISHKEK, fetcher(listings.slice(1)));
-    expect(r.radiusKm).toBe(100);
-    expect(r.items.map((i) => i.id)).toEqual(["tokmok"]);
+  it("no pins → nothing", () => {
+    expect(clusterPins([], 12)).toEqual({ singles: [], clusters: [] });
+  });
+});
+
+describe("routeFitPoints", () => {
+  const pickups = [{ lat: 42.88, lng: 74.6 }, { lat: 42.86, lng: 74.55 }];
+
+  it("frames every pickup plus the user near the origin", () => {
+    const me = { lat: 42.9, lng: 74.7 };
+    expect(routeFitPoints(pickups, BISHKEK, me)).toEqual([...pickups, me]);
   });
 
-  it("falls back to the whole country, nearest first", async () => {
-    const f = fetcher([{ id: "osh", ...OSH }, { id: "batken", lat: 40.06, lng: 70.82 }]);
-    const r = await findNearest(BISHKEK, f);
-    expect(r.radiusKm).toBeNull();
-    expect(r.expanded).toBe(true);
-    expect(r.items.map((i) => i.id)).toEqual(["osh", "batken"]);
-    expect(f).toHaveBeenLastCalledWith(KG_BBOX);
-    expect(f).toHaveBeenCalledTimes(4);
+  it("leaves out a user far from the origin", () => {
+    expect(routeFitPoints(pickups, BISHKEK, OSH)).toEqual(pickups);
   });
 
-  it("empty country → no items, not expanded", async () => {
-    const r = await findNearest(BISHKEK, fetcher([]));
-    expect(r).toEqual({ items: [], radiusKm: null, expanded: false });
+  it("falls back to the origin when there are no pickups", () => {
+    expect(routeFitPoints([], BISHKEK, null)).toEqual([BISHKEK]);
   });
 });
 
