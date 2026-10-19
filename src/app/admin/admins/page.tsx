@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { listAdmins, createAdmin, type AdminMember } from "@/lib/api/admin";
+import { listAdmins, createAdmin, adminTotpDisable, type AdminMember } from "@/lib/api/admin";
 import { useAdminAuth } from "@/store/admin-auth";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 import { Plus, X, UserCog, Calendar } from "lucide-react";
 import { AdminQueryError, adminErrorMessage } from "@/components/admin/admin-query-error";
-import { toastSuccess } from "@/components/layout/quick-toast";
+import { toastError, toastSuccess } from "@/components/layout/quick-toast";
 
 function fmt(iso?: string | null): string {
   if (!iso) return "Никогда";
@@ -26,6 +26,7 @@ export default function AdminAdminsPage() {
   // TZ §6.3/§17.1 — creating administrators is superadmin-only. Gate the UI so a
   // regular admin doesn't see an action the backend would 403 anyway.
   const isSuperadmin = useAdminAuth((s) => s.admin?.role) === "superadmin";
+  const selfId = useAdminAuth((s) => s.admin?.id);
   const [modalOpen, setModalOpen] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -55,6 +56,16 @@ export default function AdminAdminsPage() {
       toastSuccess("Администратор создан");
     },
     onError: (err) => setFormError(adminErrorMessage(err)),
+  });
+
+  // Lost device: a superadmin resets another admin's 2FA (they re-enrol at login).
+  const resetTotpMut = useMutation({
+    mutationFn: (adminId: string) => adminTotpDisable({ adminId }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin", "admins"] });
+      toastSuccess("2FA сброшена");
+    },
+    onError: (err) => toastError(adminErrorMessage(err)),
   });
 
   return (
@@ -116,6 +127,11 @@ export default function AdminAdminsPage() {
                     >
                       {a.role}
                     </span>
+                    {a.totpEnabled && (
+                      <span className="rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">
+                        2FA
+                      </span>
+                    )}
                     {!a.isActive && (
                       <span className="rounded bg-danger-100 px-1.5 py-0.5 text-[10px] font-bold text-danger-700">
                         неактивен
@@ -125,9 +141,25 @@ export default function AdminAdminsPage() {
                   <p className="text-[12px] text-ink-500">{a.email}</p>
                 </div>
               </div>
-              <div className="hidden items-center gap-1.5 text-[12px] text-ink-400 sm:flex">
-                <Calendar className="h-3.5 w-3.5" />
-                Последний вход: {fmt(a.lastLoginAt)}
+              <div className="flex items-center gap-4">
+                <div className="hidden items-center gap-1.5 text-[12px] text-ink-400 sm:flex">
+                  <Calendar className="h-3.5 w-3.5" />
+                  Последний вход: {fmt(a.lastLoginAt)}
+                </div>
+                {isSuperadmin && a.totpEnabled && a.id !== selfId && (
+                  <button
+                    type="button"
+                    disabled={resetTotpMut.isPending}
+                    onClick={() => {
+                      if (window.confirm(`Сбросить 2FA для ${a.name}? Все его сеансы завершатся.`)) {
+                        resetTotpMut.mutate(a.id);
+                      }
+                    }}
+                    className="text-[12px] font-semibold text-danger-600 hover:text-danger-700 disabled:opacity-50"
+                  >
+                    Сбросить 2FA
+                  </button>
+                )}
               </div>
             </div>
           ))}

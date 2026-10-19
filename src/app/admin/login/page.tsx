@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/store/admin-auth";
 import { adminLogin } from "@/lib/api/admin";
+import { adminGuardRedirect, ADMIN_HOME, ADMIN_LOGIN } from "@/lib/admin-guard";
 import { Button } from "@/components/ui";
 import type { AxiosError } from "axios";
 
@@ -13,15 +14,16 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [totp, setTotp] = useState("");
-  const [showTotp, setShowTotp] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { setSession } = useAdminAuth();
   const router = useRouter();
-  const [changed, setChanged] = useState(false);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    setChanged(new URLSearchParams(window.location.search).get("changed") === "1");
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("changed") === "1") setNotice("Пароль изменён — войдите с новым паролем");
+    else if (q.get("totp") === "off") setNotice("Двухфакторная защита отключена — войдите снова");
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,22 +38,25 @@ export default function AdminLoginPage() {
         accessTokenExpiresIn: result.accessTokenExpiresIn,
         refreshToken: result.refreshToken,
       });
-      // Temp password must be replaced before entering the panel.
-      router.replace(result.admin.mustChangePassword ? "/admin/change-password" : "/admin/dashboard");
+      // Temp password first, then 2FA enrolment (if required), then the panel.
+      router.replace(
+        adminGuardRedirect({
+          pathname: ADMIN_LOGIN,
+          hasToken: true,
+          mustChangePassword: result.admin.mustChangePassword,
+          totpEnrollmentRequired: result.admin.totpEnrollmentRequired,
+        }) ?? ADMIN_HOME,
+      );
     } catch (err: unknown) {
       const body = (err as AxiosError<ApiErr>)?.response?.data?.error;
       const code = body?.code;
       const reason = (body?.details as { reason?: string } | undefined)?.reason;
-      if (reason === "totp_required") {
-        setShowTotp(true);
-        setError("Введите код из приложения аутентификатора");
-      } else if (reason === "totp_invalid") {
-        setShowTotp(true);
-        setError("Неверный код аутентификатора");
-      } else if (reason === "admin_credentials") {
-        setError("Неверный email или пароль");
+      if (reason === "admin_credentials") {
+        // The backend answers the same for a wrong password and a wrong or
+        // missing 2FA code — it never confirms which one was wrong.
+        setError("Неверный email, пароль или код 2FA");
       } else if (code === "VALIDATION_ERROR") {
-        setError("Проверьте формат: email и пароль не короче 8 символов");
+        setError("Проверьте формат: email, пароль не короче 8 символов, код 2FA — 6 цифр");
       } else if (code === "RATE_LIMITED") {
         setError("Слишком много попыток — вход временно заблокирован, попробуйте через 15 минут");
       } else {
@@ -104,27 +109,27 @@ export default function AdminLoginPage() {
           />
         </div>
 
-        {showTotp && (
-          <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-ink-500">
-              Код 2FA
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={totp}
-              onChange={(e) => setTotp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              className="w-full rounded-xl border border-ink-200 px-4 py-3 text-[14px] tracking-widest outline-none focus:border-ink-500"
-              placeholder="000000"
-              maxLength={6}
-            />
-          </div>
-        )}
-
-        {changed && !error && (
-          <p className="rounded-xl bg-ink-50 px-4 py-3 text-[13px] text-ink-700">
-            Пароль изменён — войдите с новым паролем
+        <div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-ink-500">
+            Код 2FA
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={totp}
+            onChange={(e) => setTotp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            className="w-full rounded-xl border border-ink-200 px-4 py-3 text-[14px] tracking-widest outline-none focus:border-ink-500"
+            placeholder="000000"
+            maxLength={6}
+          />
+          <p className="mt-1 text-[12px] text-ink-400">
+            Оставьте пустым, если двухфакторная защита ещё не настроена
           </p>
+        </div>
+
+        {notice && !error && (
+          <p className="rounded-xl bg-ink-50 px-4 py-3 text-[13px] text-ink-700">{notice}</p>
         )}
 
         {error && (

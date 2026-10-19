@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAdminAuth } from "@/store/admin-auth";
-import { adminChangePassword } from "@/lib/api/admin";
+import { adminChangePassword, adminLogout } from "@/lib/api/admin";
 import { Button } from "@/components/ui";
 import type { AxiosError } from "axios";
 
@@ -107,7 +107,8 @@ export default function AdminChangePasswordPage() {
         {forced ? (
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
+              await adminLogout().catch(() => undefined);
               clearSession();
               router.replace("/admin/login");
             }}

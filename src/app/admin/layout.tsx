@@ -7,6 +7,8 @@ import { useAdminAuth } from "@/store/admin-auth";
 import { AdminAuthBootstrap } from "@/components/admin-auth-bootstrap";
 import { AdminNotificationListener } from "@/components/admin/admin-notification-listener";
 import { QuickToastContainer } from "@/components/layout/quick-toast";
+import { adminLogout } from "@/lib/api/admin";
+import { adminGuardRedirect, ADMIN_2FA, ADMIN_CHANGE_PASSWORD, ADMIN_LOGIN } from "@/lib/admin-guard";
 import { cn } from "@/lib/utils/cn";
 import {
   LayoutDashboard,
@@ -24,6 +26,7 @@ import {
   ChevronRight,
   MessageCircle,
   KeyRound,
+  ShieldHalf,
 } from "lucide-react";
 
 const NAV = [
@@ -57,8 +60,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarReady, setSidebarReady] = useState(false);
 
-  const isLoginPage = pathname === "/admin/login";
-  const isChangePasswordPage = pathname === "/admin/change-password";
+  const isLoginPage = pathname === ADMIN_LOGIN;
+  const isChangePasswordPage = pathname === ADMIN_CHANGE_PASSWORD;
+  const isTotpPage = pathname === ADMIN_2FA;
 
   // Read collapsed preference after mount to avoid SSR mismatch
   useEffect(() => {
@@ -67,11 +71,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, []);
 
   const mustChange = !!admin?.mustChangePassword;
+  const enrollTotp = !!admin?.totpEnrollmentRequired;
   useEffect(() => {
-    if (!isLoginPage && !token) router.replace("/admin/login");
-    if (isLoginPage && token) router.replace(mustChange ? "/admin/change-password" : "/admin/dashboard");
-    if (token && mustChange && !isLoginPage && !isChangePasswordPage) router.replace("/admin/change-password");
-  }, [token, isLoginPage, isChangePasswordPage, mustChange, router]);
+    const target = adminGuardRedirect({
+      pathname,
+      hasToken: !!token,
+      mustChangePassword: mustChange,
+      totpEnrollmentRequired: enrollTotp,
+    });
+    if (target) router.replace(target);
+  }, [token, pathname, mustChange, enrollTotp, router]);
+
+  async function logout() {
+    // Revoke the refresh cookie server-side first; sign out locally regardless.
+    await adminLogout().catch(() => undefined);
+    clearSession();
+    router.replace(ADMIN_LOGIN);
+  }
 
   function toggleCollapsed() {
     const next = !collapsed;
@@ -83,7 +99,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // it mounts once — a remount per branch re-ran the cookie refresh after each
   // login/redirect. The root toast container sits under this z-[100] overlay,
   // so the panel mounts its own.
-  if (isLoginPage || (isChangePasswordPage && token)) {
+  if (isLoginPage || ((isChangePasswordPage || isTotpPage) && token)) {
     return (
       <>
         <AdminAuthBootstrap />
@@ -200,13 +216,33 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <KeyRound className="h-4 w-4 flex-shrink-0" />
               {!collapsed && "Сменить пароль"}
             </Link>
+            <Link
+              href={ADMIN_2FA}
+              title={collapsed ? `Двухфакторная защита: ${admin?.totpEnabled ? "вкл." : "выкл."}` : undefined}
+              className={cn(
+                "flex w-full items-center rounded-lg px-2 py-2 text-[12px] font-semibold text-ink-400 transition-colors hover:bg-ink-800 hover:text-white",
+                collapsed ? "justify-center" : "gap-2 px-3",
+              )}
+            >
+              <ShieldHalf className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 truncate">Двухфакторная защита</span>
+                  <span
+                    className={cn(
+                      "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase",
+                      admin?.totpEnabled ? "bg-brand-500/20 text-brand-300" : "bg-ink-700 text-ink-400",
+                    )}
+                  >
+                    {admin?.totpEnabled ? "вкл." : "выкл."}
+                  </span>
+                </>
+              )}
+            </Link>
             <button
               type="button"
               title={collapsed ? "Выйти" : undefined}
-              onClick={() => {
-                clearSession();
-                router.replace("/admin/login");
-              }}
+              onClick={() => void logout()}
               className={cn(
                 "flex w-full items-center rounded-lg px-2 py-2 text-[12px] font-semibold text-ink-400 transition-colors hover:bg-ink-800 hover:text-danger-400",
                 collapsed ? "justify-center" : "gap-2 px-3",

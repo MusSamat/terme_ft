@@ -34,6 +34,21 @@ export async function doAdminRefresh(): Promise<{
   return data;
 }
 
+// One in-flight refresh shared by the HTTP interceptor and the admin socket.
+export function refreshAdminAccessToken(): Promise<string> {
+  if (!adminRefreshPromise) {
+    adminRefreshPromise = doAdminRefresh()
+      .then((r) => {
+        useAdminAuth.getState().setAccessToken(r.accessToken, r.accessTokenExpiresIn);
+        return r.accessToken;
+      })
+      .finally(() => {
+        adminRefreshPromise = null;
+      });
+  }
+  return adminRefreshPromise;
+}
+
 adminApi.interceptors.response.use(
   (r) => r,
   async (error: AxiosError) => {
@@ -54,17 +69,7 @@ adminApi.interceptors.response.use(
     ) {
       original._retry = true;
       try {
-        if (!adminRefreshPromise) {
-          adminRefreshPromise = doAdminRefresh()
-            .then((r) => {
-              useAdminAuth.getState().setAccessToken(r.accessToken, r.accessTokenExpiresIn);
-              return r.accessToken;
-            })
-            .finally(() => {
-              adminRefreshPromise = null;
-            });
-        }
-        const token = await adminRefreshPromise;
+        const token = await refreshAdminAccessToken();
         original.headers = { ...original.headers, Authorization: `Bearer ${token}` };
         return adminApi(original);
       } catch {
@@ -73,8 +78,8 @@ adminApi.interceptors.response.use(
       }
     }
 
-    // Wrong credentials / TOTP on login and a wrong current password are 401s
-    // too — the page shows them inline; reloading would drop the TOTP step.
+    // Wrong credentials (incl. a missing/wrong 2FA code) on login and a wrong
+    // current password are 401s too — the page shows them inline.
     if (status === 401 && !isChangePasswordCall && !isLoginCall && typeof window !== "undefined") {
       useAdminAuth.getState().clearSession();
       window.location.assign("/admin/login");
@@ -86,6 +91,10 @@ adminApi.interceptors.response.use(
       window.location.pathname !== "/admin/change-password"
     ) {
       window.location.assign("/admin/change-password");
+    }
+    if (status === 403 && reason === "totp_enrollment_required" && typeof window !== "undefined") {
+      useAdminAuth.getState().updateAdmin({ totpEnrollmentRequired: true, totpEnabled: false });
+      if (window.location.pathname !== "/admin/2fa") window.location.assign("/admin/2fa");
     }
     return Promise.reject(error);
   },
@@ -104,6 +113,8 @@ export interface AdminLoginResult {
     name: string;
     role: "admin" | "superadmin";
     mustChangePassword: boolean;
+    totpEnabled: boolean;
+    totpEnrollmentRequired: boolean;
   };
 }
 
@@ -257,6 +268,7 @@ export interface AdminMember {
   name: string;
   role: "admin" | "superadmin";
   isActive: boolean;
+  totpEnabled: boolean;
   lastLoginAt: string | null;
   createdAt: string;
 }
@@ -295,6 +307,32 @@ export async function adminLogin(
 
 export async function adminChangePassword(currentPassword: string, newPassword: string): Promise<void> {
   await adminApi.post("/auth/admin/change-password", { currentPassword, newPassword });
+}
+
+// Revokes every admin refresh token (cookie sent withCredentials) and drops the
+// cookie. Public on the backend, so it works with an expired access token.
+export async function adminLogout(): Promise<void> {
+  await axios.post(`${baseURL}/auth/admin/logout`, { channel: "web" }, { withCredentials: true });
+}
+
+export async function adminTotpSetup(): Promise<{ secret: string; otpauthUri: string }> {
+  const { data } = await adminApi.post<{ secret: string; otpauthUri: string }>("/auth/admin/totp/setup");
+  return data;
+}
+
+// Enabling 2FA ends every other session and returns a fresh pair; the refresh
+// token arrives as the HttpOnly cookie (channel=web).
+export async function adminTotpConfirm(code: string): Promise<AdminLoginResult> {
+  const { data } = await adminApi.post<AdminLoginResult>("/auth/admin/totp/confirm", {
+    code,
+    channel: "web",
+  });
+  return data;
+}
+
+// Self: needs a current code. Superadmin may pass another admin's id (lost device).
+export async function adminTotpDisable(input: { code: string } | { adminId: string }): Promise<void> {
+  await adminApi.post("/auth/admin/totp/disable", input);
 }
 
 // ─── Analytics ───────────────────────────────────────────────────────────────

@@ -11,6 +11,9 @@ export interface AdminUser {
   role: "admin" | "superadmin";
   // Set from the login response; a temp password must be replaced first.
   mustChangePassword?: boolean;
+  totpEnabled?: boolean;
+  // Backend requires 2FA and it is not set up yet — enrolment comes first.
+  totpEnrollmentRequired?: boolean;
 }
 
 interface AdminAuthState {
@@ -25,6 +28,7 @@ interface AdminAuthState {
   }) => void;
   hydrateAdmin: (accessToken: string, admin: AdminUser, expiresAt: number) => void;
   setAccessToken: (token: string, expiresIn: number) => void;
+  updateAdmin: (patch: Partial<AdminUser>) => void;
   clearSession: () => void;
 }
 
@@ -45,6 +49,16 @@ export const useAdminAuth = create<AdminAuthState>((set) => ({
 
   setAccessToken: (token, expiresIn) =>
     set((s) => ({ token, expiresAt: Date.now() + expiresIn * 1000, admin: s.admin })),
+
+  updateAdmin: (patch) =>
+    set((s) => {
+      if (!s.admin) return s;
+      const admin = { ...s.admin, ...patch };
+      try {
+        localStorage.setItem(ADMIN_INFO_KEY, JSON.stringify(admin));
+      } catch {}
+      return { admin };
+    }),
 
   clearSession: () => {
     try {
