@@ -20,4 +20,4 @@ export const ListingsMap = dynamic(() => import("./leaflet-maps").then((m) => m.
   loading: MapSkeleton,
 });
 
-export type { MapPoint, MapListing, MapCluster, Viewport } from "./leaflet-maps";
+export type { MapPoint, MapListing, MapCluster, Viewport, MeLocation, MapCommand, FitPadding } from "./leaflet-maps";

@@ -1,38 +1,51 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowRight, CalendarDays, Crosshair, Plane, Users, X } from "lucide-react";
-import { getMapListings, type MapItem } from "@/lib/api/map";
-import { ListingsMap, type MapPoint, type Viewport } from "@/components/map";
+import { CalendarDays, Crosshair, Plane } from "lucide-react";
+import { getMapListings, type MapItem, type MapQuery } from "@/lib/api/map";
+import { ListingsMap, type FitPadding, type MapCommand, type MapListing, type MapPoint, type Viewport } from "@/components/map";
 import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 import { Chip } from "@/components/ui/chip";
-import { getCurrentPoint } from "@/lib/hooks/use-geolocation";
+import { CarGlyph } from "@/components/icons/car-glyph";
+import { PassengerGlyph } from "@/components/icons/passenger-glyph";
+import { findNearest, haversineKm, inKg, KG_BBOX, type LatLng } from "@/lib/geo";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { formatDepartureLabel } from "@/lib/utils/date";
-import { routeFromParams, setRouteParams, toRoutePlace } from "@/lib/places";
+import { placeName, routeFromParams, setRouteParams, toRoutePlace } from "@/lib/places";
+import { readLastRoute } from "@/lib/recent-routes";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/utils/cn";
 import type { Locale } from "@/i18n.config";
+import { useMapLocation } from "./use-map-location";
+import { GeoBanner, LocationCard } from "./location-prompt";
+import { NearbyPanel, type NearbyItem } from "./nearby-panel";
 
 const ymdKg = (offset = 0) =>
   new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
 
-// Rides on a map: every trip at its driver's boarding pin, every request where
-// the passenger waits (settlement centre when no pin). Server-side clustering;
-// tap a bubble to zoom in, tap a marker for the listing.
+// Unclustered on the server from z14 — the nearby list needs single listings.
+const NEARBY_ZOOM = 14;
+const USER_ZOOM = 13;
+const round3 = (n: number) => Math.round(n * 1000) / 1000;
+// Overlays over the map: filters + sheet (mobile), the left panel (lg).
+const FIT_MOBILE: FitPadding = { topLeft: [32, 210], bottomRight: [32, 330] };
+const FIT_WIDE: FitPadding = { topLeft: [430, 48], bottomRight: [80, 48] };
+
+// Rides on a map, nearest first: the user's position (asked via a
+// pre-permission card, never auto-prompted) or the last searched origin city;
+// the «Рядом» list widens 10 → 30 → 100 km → whole country until it finds some.
 export function MapScreen() {
   const t = useTranslations("map");
-  const tErr = useTranslations("errors");
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
   const mode = useAuth((s) => s.activeMode);
 
-  const kind: "trips" | "requests" =
+  const kind: MapQuery["kind"] =
     sp.get("kind") === "requests" || (!sp.get("kind") && mode === "driver") ? "requests" : "trips";
   const airport = sp.get("ride") === "airport";
   const date = sp.get("date") ?? "";
@@ -47,94 +60,208 @@ export function MapScreen() {
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
 
-  const [viewport, setViewport] = useState<Viewport | null>(null);
-  const [debounced, setDebounced] = useState<Viewport | null>(null);
+  const filters = useMemo(
+    () => ({
+      kind,
+      toId: to?.id ?? undefined,
+      ride: airport ? ("airport" as const) : undefined,
+      date: date ? `${date}T00:00:00+06:00` : undefined,
+    }),
+    [kind, to?.id, airport, date],
+  );
+
+  const loc = useMapLocation();
+  const meInKg = loc.me && inKg(loc.me) ? loc.me : null;
+
+  // Fallback centre: last searched origin (if the directory gave coordinates).
+  const [fallback, setFallback] = useState<(LatLng & { name: string }) | null>(null);
   useEffect(() => {
-    const id = setTimeout(() => setDebounced(viewport), 300);
-    return () => clearTimeout(id);
-  }, [viewport]);
+    const from = readLastRoute()?.from;
+    if (from?.lat != null && from.lng != null) setFallback({ lat: from.lat, lng: from.lng, name: placeName(from, locale) });
+  }, [locale]);
 
-  const [me, setMe] = useState<MapPoint | null>(null);
-  const [recenter, setRecenter] = useState<MapPoint | null>(null);
-  const [locating, setLocating] = useState(false);
-  const [geoDenied, setGeoDenied] = useState(false);
-  const locate = async () => {
-    setLocating(true);
-    const p = await getCurrentPoint();
-    setLocating(false);
-    setGeoDenied(!p);
-    if (p) {
-      setMe(p);
-      setRecenter({ ...p });
+  // ── Camera ──
+  const [command, setCommand] = useState<MapCommand | null>(null);
+  const userMoved = useRef(false);
+  const centered = useRef<"none" | "fallback" | "me">("none");
+  const onInteract = useCallback(() => {
+    userMoved.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!meInKg || centered.current === "me" || userMoved.current) return;
+    setCommand({ kind: "center", lat: meInKg.lat, lng: meInKg.lng, zoom: USER_ZOOM, animate: centered.current !== "none" });
+    centered.current = "me";
+  }, [meInKg]);
+
+  useEffect(() => {
+    if (!loc.requestSeq || !loc.me) return;
+    userMoved.current = false;
+    if (inKg(loc.me)) {
+      setCommand({ kind: "center", lat: loc.me.lat, lng: loc.me.lng, zoom: USER_ZOOM });
+      centered.current = "me";
     }
-  };
+    // Only on a fresh user-requested fix.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loc.requestSeq]);
 
-  const { data, isFetching, isError, refetch } = useQuery({
-    queryKey: ["map", kind, airport, date, to?.id, debounced],
-    queryFn: () =>
-      getMapListings({
-        kind,
-        bbox: debounced!,
-        zoom: debounced!.zoom,
-        toId: to?.id ?? undefined,
-        ride: airport ? "airport" : undefined,
-        date: date ? `${date}T00:00:00+06:00` : undefined,
-      }),
+  const waitingForFix = loc.perm === "checking" || (loc.perm === "granted" && !loc.me && loc.locating);
+  useEffect(() => {
+    if (waitingForFix || meInKg || centered.current !== "none" || !fallback) return;
+    setCommand({ kind: "center", lat: fallback.lat, lng: fallback.lng, zoom: 11, animate: false });
+    centered.current = "fallback";
+  }, [waitingForFix, meInKg, fallback]);
+
+  // ── Viewport listings (markers + clusters) ──
+  const [viewport, setViewport] = useState<Viewport | null>(null);
+  const debounced = useDebounce(viewport, 300);
+  const view = useQuery({
+    queryKey: ["map", filters, debounced],
+    queryFn: () => getMapListings({ ...filters, bbox: debounced!, zoom: debounced!.zoom }),
     enabled: Boolean(debounced),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
 
-  const [selected, setSelected] = useState<MapItem | null>(null);
-  useEffect(() => setSelected(null), [kind, airport, date, to?.id]);
+  // ── Nearby list (radius expansion around the reference point) ──
+  const ref = meInKg ?? (waitingForFix ? null : fallback);
+  const refKey = ref ? `${round3(ref.lat)},${round3(ref.lng)}` : waitingForFix ? "wait" : "country";
+  const nearby = useQuery({
+    queryKey: ["map-nearby", filters, refKey],
+    queryFn: async () => {
+      const fetchBox = (bbox: MapQuery["bbox"]) =>
+        getMapListings({ ...filters, bbox, zoom: NEARBY_ZOOM }).then((r) => r.items);
+      if (ref) return findNearest<MapItem>(ref, fetchBox);
+      return { items: (await fetchBox(KG_BBOX)).map((i) => ({ ...i, distanceKm: null })), radiusKm: null, expanded: false };
+    },
+    enabled: refKey !== "wait",
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  });
 
-  const items = useMemo(() => data?.items ?? [], [data]);
-  const markers = useMemo(
-    () =>
-      items.map((it) => ({
-        id: it.id,
-        lat: it.lat,
-        lng: it.lng,
-        exact: it.exact,
-        label: `${it.originCity} → ${it.destinationCity}`,
-      })),
-    [items],
-  );
-  const total = items.length + (data?.clusters ?? []).reduce((a, c) => a + c.count, 0);
-  const isRequests = kind === "requests";
+  // Widened search → show the user (or city) together with the first results.
+  useEffect(() => {
+    const r = nearby.data;
+    if (!r?.expanded || !ref || userMoved.current || nearby.isPlaceholderData) return;
+    const first = r.items.slice(0, 3).map((i): MapPoint => ({ lat: i.lat, lng: i.lng }));
+    if (first.length) setCommand({ kind: "fit", points: [ref, ...first], maxZoom: USER_ZOOM });
+    // Once per result set.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nearby.data]);
+
+  // ── Selection ──
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  useEffect(() => setSelectedId(null), [filters]);
+
+  const nearbyRows: NearbyItem[] = useMemo(() => nearby.data?.items ?? [], [nearby.data]);
+  const viewItems = useMemo(() => view.data?.items ?? [], [view.data]);
+
+  // A marker outside the nearby set still gets a row (pinned on top).
+  const rows = useMemo(() => {
+    if (!selectedId || nearbyRows.some((r) => r.id === selectedId)) return nearbyRows;
+    const it = viewItems.find((i) => i.id === selectedId);
+    if (!it) return nearbyRows;
+    return [{ ...it, distanceKm: ref ? haversineKm(ref, it) : null }, ...nearbyRows];
+  }, [selectedId, nearbyRows, viewItems, ref]);
+
+  const markers = useMemo(() => {
+    const toMarker = (it: MapItem): MapListing => ({
+      id: it.id,
+      lat: it.lat,
+      lng: it.lng,
+      badge: it.seats,
+      label: `${it.originCity} → ${it.destinationCity}, ${formatDepartureLabel(it.departureAt, locale)}`,
+    });
+    const list = viewItems.map(toMarker);
+    // A row picked from the list keeps its pin even while the viewport query lags.
+    const sel = selectedId && !viewItems.some((i) => i.id === selectedId) && rows.find((r) => r.id === selectedId);
+    if (sel) list.push(toMarker(sel));
+    return list;
+  }, [viewItems, rows, selectedId, locale]);
+
+  const onMarkerSelect = useCallback((id: string) => setSelectedId(id), []);
+  const onPick = useCallback((it: NearbyItem) => {
+    setSelectedId(it.id);
+    setSheetOpen(false);
+    setCommand({ kind: "center", lat: it.lat, lng: it.lng, zoom: NEARBY_ZOOM });
+  }, []);
+  const clusterLabel = useCallback((n: number) => t("cluster_aria", { n }), [t]);
+
+  const onRecenter = () => {
+    if (loc.me && inKg(loc.me)) {
+      userMoved.current = false;
+      setCommand({ kind: "center", lat: loc.me.lat, lng: loc.me.lng, zoom: USER_ZOOM });
+      loc.refresh();
+    } else if (loc.perm === "granted") {
+      loc.request();
+    } else {
+      loc.openCard();
+    }
+  };
+
+  // lg: the side panel covers the map's left 400px.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const on = () => setWide(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
+  const r = nearby.data;
+  const chip =
+    r?.expanded && ref && r.items[0]?.distanceKm != null
+      ? t("nearest_chip", { km: Math.max(1, Math.ceil(r.items[0].distanceKm)) })
+      : null;
+  const hint = meInKg ? t("nearby_sorted_hint") : ref && fallback ? t("nearby_sorted_city", { city: fallback.name }) : null;
+  const showCard = loc.cardOpen;
+  const banner =
+    loc.me && !meInKg
+      ? { text: t("outside_kg") }
+      : !loc.me && !waitingForFix && !showCard
+        ? { text: t("banner_enable"), action: t("banner_enable_btn"), onAction: loc.openCard }
+        : null;
 
   return (
-    <div className="relative h-[100dvh] w-full md:h-[calc(100dvh-64px)]">
+    <div className="relative h-[100dvh] w-full overflow-hidden md:h-[calc(100dvh-64px)]">
       <ListingsMap
         items={markers}
-        clusters={data?.clusters ?? []}
+        clusters={view.data?.clusters ?? []}
+        glyph={kind === "trips" ? "car" : "passenger"}
+        selectedId={selectedId}
+        onSelect={onMarkerSelect}
         onViewport={setViewport}
-        onSelect={(id) => setSelected(items.find((i) => i.id === id) ?? null)}
-        me={me}
-        recenter={recenter}
-        color="#0D9488"
+        onInteract={onInteract}
+        me={loc.me}
+        command={command}
+        fitPadding={wide ? FIT_WIDE : FIT_MOBILE}
+        clusterLabel={clusterLabel}
       />
 
-      {/* Controls */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] p-3">
-        <div className="pointer-events-auto mx-auto max-w-[640px] space-y-2 rounded-3xl bg-white/95 p-3 shadow-lift backdrop-blur dark:bg-ink-900/95">
-          <div className="grid grid-cols-2 rounded-2xl bg-ink-100 p-1 dark:bg-ink-800">
-            {(["trips", "requests"] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setParam({ kind: k })}
-                aria-pressed={kind === k}
-                className={cn(
-                  "h-9 rounded-xl text-[13.5px] font-900 transition-colors",
-                  kind === k
-                    ? "bg-brand-600 text-white"
-                    : "text-ink-500 dark:text-ink-400",
-                )}
-              >
-                {k === "trips" ? t("tab_trips") : t("tab_requests")}
-              </button>
-            ))}
+      {/* One column: filters on top, «Рядом» at the bottom (mobile) / filling the left panel (lg). */}
+      <div className="pointer-events-none absolute inset-0 z-[500] flex flex-col gap-2 p-3 pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-3 lg:right-auto lg:w-[400px]">
+        <div className="pointer-events-auto mx-auto w-full max-w-[640px] space-y-2 rounded-3xl bg-white/95 p-3 shadow-lift backdrop-blur dark:bg-ink-900/95">
+          <div role="group" aria-label={t("tab_trips") + " / " + t("tab_requests")} className="grid grid-cols-2 rounded-2xl bg-ink-100 p-1 dark:bg-ink-800">
+            {(["trips", "requests"] as const).map((k) => {
+              const Glyph = k === "trips" ? CarGlyph : PassengerGlyph;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setParam({ kind: k })}
+                  aria-pressed={kind === k}
+                  className={cn(
+                    "flex h-9 items-center justify-center gap-1.5 rounded-xl text-[13.5px] font-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
+                    kind === k ? "bg-brand-600 text-white" : "text-ink-500 dark:text-ink-400",
+                  )}
+                >
+                  <Glyph size={18} />
+                  {k === "trips" ? t("tab_trips") : t("tab_requests")}
+                </button>
+              );
+            })}
           </div>
           <CityAutocomplete
             compact
@@ -150,102 +277,66 @@ export function MapScreen() {
             <Chip kind="filter" selected={!date} onClick={() => setParam({ date: null })}>
               {t("any_day")}
             </Chip>
-            <Chip
-              kind="filter"
-              selected={date === ymdKg(0)}
-              onClick={() => setParam({ date: ymdKg(0) })}
-            >
+            <Chip kind="filter" selected={date === ymdKg(0)} onClick={() => setParam({ date: ymdKg(0) })}>
               <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" /> {t("today")}
             </Chip>
-            <Chip
-              kind="filter"
-              selected={date === ymdKg(1)}
-              onClick={() => setParam({ date: ymdKg(1) })}
-            >
+            <Chip kind="filter" selected={date === ymdKg(1)} onClick={() => setParam({ date: ymdKg(1) })}>
               {t("tomorrow")}
             </Chip>
-            <Chip
-              kind="filter"
-              selected={airport}
-              onClick={() => setParam({ ride: airport ? null : "airport" })}
-            >
+            <Chip kind="filter" selected={airport} onClick={() => setParam({ ride: airport ? null : "airport" })}>
               <Plane className="h-3.5 w-3.5" aria-hidden="true" /> {t("airport")}
             </Chip>
           </div>
         </div>
-      </div>
 
-      <div className="absolute bottom-[calc(108px+env(safe-area-inset-bottom))] right-3 z-[500] flex flex-col items-end gap-2 md:bottom-6">
-        {isError && !isFetching ? (
-          // A failed load is not «0 on the map» — say so and offer a retry.
+        {banner && (
+          <div className="mx-auto w-full max-w-[640px]">
+            <GeoBanner {...banner} />
+          </div>
+        )}
+
+        <div className="flex-1 lg:hidden" />
+
+        <div className="flex justify-end lg:fixed lg:bottom-6 lg:right-6">
           <button
             type="button"
-            onClick={() => void refetch()}
-            className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-danger-600 shadow-card dark:bg-ink-900/95"
+            onClick={onRecenter}
+            disabled={loc.locating}
+            aria-label={t("my_location")}
+            className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-brand-600 shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60 dark:bg-ink-900"
           >
-            {tErr("page_title")} · {tErr("retry")}
+            <Crosshair className={cn("h-5 w-5", loc.locating && "animate-pulse")} aria-hidden="true" />
           </button>
-        ) : (
-          <span className="rounded-full bg-white/95 px-3 py-1.5 text-[12.5px] font-800 text-ink-700 shadow-card dark:bg-ink-900/95 dark:text-ink-200">
-            {isFetching ? t("loading") : t("count", { n: total })}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={() => void locate()}
-          disabled={locating}
-          aria-label={t("my_location")}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-brand-600 shadow-lift disabled:opacity-60 dark:bg-ink-900"
-        >
-          <Crosshair className={cn("h-5 w-5", locating && "animate-pulse")} aria-hidden="true" />
-        </button>
-        {geoDenied && (
-          <span className="max-w-[220px] rounded-xl bg-white/95 px-3 py-2 text-[12px] font-700 text-danger-600 shadow-card dark:bg-ink-900/95">
-            {t("geo_denied")}
-          </span>
+        </div>
+
+        {!(showCard && !wide) && (
+          <div className="mx-auto flex min-h-0 w-full max-w-[640px] flex-col lg:flex-1">
+            <NearbyPanel
+              rows={rows}
+              kind={kind}
+              selectedId={selectedId}
+              expanded={sheetOpen}
+              onToggle={() => setSheetOpen((v) => !v)}
+              onPick={onPick}
+              loading={!nearby.data && (nearby.isFetching || refKey === "wait")}
+              error={nearby.isError && !nearby.isFetching}
+              onRetry={() => void nearby.refetch()}
+              chip={chip}
+              hint={hint}
+            />
+          </div>
         )}
       </div>
 
-      {selected && (
-        <div className="absolute inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] z-[600] px-3 md:bottom-6">
-          <div className="mx-auto flex max-w-[480px] items-center gap-3 rounded-3xl bg-white p-4 shadow-lift dark:bg-ink-900">
-            <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 truncate text-[16px] font-900 text-ink-900 dark:text-white">
-                {selected.originCity}
-                <ArrowRight className="h-4 w-4 shrink-0 text-ink-400" aria-hidden="true" />
-                {selected.destinationCity}
-              </p>
-              <p className="mt-0.5 flex items-center gap-2 text-[13px] font-700 text-ink-500">
-                {formatDepartureLabel(selected.departureAt, locale)}
-                <span className="inline-flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                  {selected.seats}
-                </span>
-                {selected.price != null && (
-                  <span>
-                    {selected.price.toLocaleString("ru-RU")} {t("som")}
-                  </span>
-                )}
-              </p>
-              {!selected.exact && (
-                <p className="mt-0.5 text-[12px] font-600 text-ink-400">{t("city_point")}</p>
-              )}
-            </div>
-            <Link
-              href={isRequests ? `/requests/${selected.id}` : `/trips/${selected.id}`}
-              className="shrink-0 rounded-2xl bg-ink-900 px-4 py-2.5 text-[14px] font-900 text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
-            >
-              {t("open")}
-            </Link>
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              aria-label={t("close")}
-              className="shrink-0 rounded-full p-1.5 text-ink-400 hover:bg-ink-100 dark:hover:bg-ink-800"
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
+      {showCard && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[700] px-3 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-6 lg:left-[400px]">
+          <LocationCard
+            denied={loc.perm === "denied"}
+            failed={loc.failed}
+            locating={loc.locating}
+            onAllow={loc.request}
+            onLater={loc.dismissCard}
+          />
         </div>
       )}
     </div>

@@ -2,9 +2,10 @@
 
 // Client-only Leaflet maps (imported through ./index with ssr:false). OSM tiles,
 // HTML div icons — no image assets, crisp on every DPR.
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef, type RefObject } from "react";
 import L, { type LatLngTuple } from "leaflet";
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { Circle, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { glyphPathsMarkup, type GlyphKind } from "@/components/icons/glyphs";
 import "leaflet/dist/leaflet.css";
 
 const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -27,16 +28,6 @@ function pin(color: string) {
     html: `<svg width="34" height="44" viewBox="0 0 34 44" xmlns="http://www.w3.org/2000/svg"><path d="M17 43C17 43 32 27.6 32 17A15 15 0 0 0 2 17C2 27.6 17 43 17 43Z" fill="${color}" stroke="#fff" stroke-width="3"/><circle cx="17" cy="17" r="5.5" fill="#fff"/></svg>`,
     iconSize: [34, 44],
     iconAnchor: [17, 43],
-  });
-}
-
-function bubble(count: number, color: string) {
-  const size = count < 10 ? 34 : count < 100 ? 40 : 46;
-  return L.divIcon({
-    className: "",
-    html: `<span style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:${color};color:#fff;font:800 13px/1 Manrope,system-ui,sans-serif;border:3px solid rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(0,0,0,.25)">${count}</span>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
   });
 }
 
@@ -161,13 +152,15 @@ export function PointPickerInner({
   );
 }
 
-// ─── Listings map (/map, airport) ──────────────────────────────────────
+// ─── Listings map (/map) ───────────────────────────────────────────────
 export interface MapListing {
   id: string;
   lat: number;
   lng: number;
-  exact: boolean;
+  /** Accessible name + hover tooltip («Бишкек → Ош, 14:30»). */
   label: string;
+  /** Free seats (trips) / passengers (requests); hidden when null. */
+  badge: number | null;
 }
 
 export interface MapCluster {
@@ -184,10 +177,73 @@ export interface Viewport {
   zoom: number;
 }
 
-function ViewportWatcher({ onChange }: { onChange: (v: Viewport) => void }) {
+export interface MeLocation extends MapPoint {
+  accuracy?: number;
+}
+
+/** Map area hidden under overlays (filters, sheet, side panel) when fitting bounds. */
+export interface FitPadding {
+  topLeft: [number, number];
+  bottomRight: [number, number];
+}
+
+const DEFAULT_FIT_PADDING: FitPadding = { topLeft: [48, 48], bottomRight: [48, 48] };
+
+/** One-shot camera instruction; a new object identity re-runs it. */
+export type MapCommand =
+  | { kind: "center"; lat: number; lng: number; zoom: number; animate?: boolean }
+  | { kind: "fit"; points: MapPoint[]; maxZoom?: number };
+
+// divIcons are cached per look so re-renders never rebuild DOM for unchanged pins.
+const iconCache = new Map<string, L.DivIcon>();
+
+function listingIcon(glyph: GlyphKind, badge: number | null, selected: boolean): L.DivIcon {
+  const key = `${glyph}|${badge ?? ""}|${selected ? 1 : 0}`;
+  let icon = iconCache.get(key);
+  if (!icon) {
+    const badgeHtml = badge != null ? `<span class="tm-pin__badge">${badge > 99 ? "99+" : badge}</span>` : "";
+    icon = L.divIcon({
+      className: "",
+      // Ø40 circle (2.5px white ring) + 8px pointer; the tip is the coordinate.
+      html: `<div class="tm-pin${selected ? " tm-pin--sel" : ""}"><svg width="40" height="48" viewBox="0 0 40 48" aria-hidden="true"><path d="M20 47 L13.3 37.5 A18.75 18.75 0 1 1 26.7 37.5 Z" fill="currentColor" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><svg class="tm-pin__glyph" x="9" y="9" width="22" height="22" viewBox="0 0 24 24">${glyphPathsMarkup(glyph)}</svg></svg>${badgeHtml}</div>`,
+      iconSize: [40, 48],
+      iconAnchor: [20, 48],
+      tooltipAnchor: [0, -48],
+    });
+    iconCache.set(key, icon);
+  }
+  return icon;
+}
+
+function clusterIcon(count: number): L.DivIcon {
+  const size = Math.round(Math.min(52, 36 + 5.4 * Math.log10(Math.max(1, count))));
+  return L.divIcon({
+    className: "",
+    html: `<span class="tm-cluster">${count > 999 ? "999+" : count}</span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+const meIcon = () =>
+  L.divIcon({
+    className: "",
+    html: '<div class="tm-me"><span class="tm-me__halo"></span><span class="tm-me__dot"></span></div>',
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+  });
+
+/** Leaflet makes keyboard markers focusable buttons; give them a name. */
+function useAriaLabel(ref: RefObject<L.Marker>, label: string) {
+  useEffect(() => {
+    ref.current?.getElement()?.setAttribute("aria-label", label);
+  }, [ref, label]);
+}
+
+function ViewportWatcher({ onChange, onInteract }: { onChange: (v: Viewport) => void; onInteract?: () => void }) {
   const map = useMapEvents({
     moveend: () => emit(),
-    zoomend: () => emit(),
+    dragstart: () => onInteract?.(),
   });
   const emit = () => {
     const b = map.getBounds();
@@ -200,70 +256,126 @@ function ViewportWatcher({ onChange }: { onChange: (v: Viewport) => void }) {
   return null;
 }
 
-function Recenter({ to }: { to: MapPoint | null }) {
+function CommandRunner({ command, padding }: { command: MapCommand | null; padding: FitPadding }) {
   const map = useMap();
   useEffect(() => {
-    if (to) map.flyTo([to.lat, to.lng], 13, { duration: 0.6 });
-  }, [map, to]);
+    if (!command) return;
+    if (command.kind === "center") {
+      if (command.animate === false) map.setView([command.lat, command.lng], command.zoom, { animate: false });
+      else map.flyTo([command.lat, command.lng], command.zoom, { duration: 0.6 });
+    } else if (command.points.length) {
+      map.flyToBounds(L.latLngBounds(command.points.map((p): LatLngTuple => [p.lat, p.lng])), {
+        paddingTopLeft: padding.topLeft,
+        paddingBottomRight: padding.bottomRight,
+        maxZoom: command.maxZoom ?? 14,
+        duration: 0.6,
+      });
+    }
+    // Run once per command object; padding is read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, command]);
   return null;
+}
+
+const ListingMarker = memo(function ListingMarker({
+  item,
+  glyph,
+  selected,
+  onSelect,
+}: {
+  item: MapListing;
+  glyph: GlyphKind;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const ref = useRef<L.Marker>(null);
+  useAriaLabel(ref, item.label);
+  const handlers = useMemo(() => ({ click: () => onSelect(item.id) }), [onSelect, item.id]);
+  return (
+    <Marker
+      ref={ref}
+      position={[item.lat, item.lng]}
+      icon={listingIcon(glyph, item.badge, selected)}
+      zIndexOffset={selected ? 1000 : 0}
+      eventHandlers={handlers}
+    >
+      <Tooltip direction="top">{item.label}</Tooltip>
+    </Marker>
+  );
+});
+
+// Tap a cluster → zoom +2 around it.
+const ClusterMarker = memo(function ClusterMarker({ cluster, label }: { cluster: MapCluster; label: string }) {
+  const map = useMap();
+  const ref = useRef<L.Marker>(null);
+  useAriaLabel(ref, label);
+  const icon = useMemo(() => clusterIcon(cluster.count), [cluster.count]);
+  const handlers = useMemo(
+    () => ({ click: () => map.setView([cluster.lat, cluster.lng], Math.min(map.getZoom() + 2, 18)) }),
+    [map, cluster.lat, cluster.lng],
+  );
+  return <Marker ref={ref} position={[cluster.lat, cluster.lng]} icon={icon} eventHandlers={handlers} />;
+});
+
+function MeMarker({ me }: { me: MeLocation }) {
+  const icon = useMemo(meIcon, []);
+  return (
+    <>
+      {me.accuracy != null && me.accuracy < 1000 && (
+        <Circle
+          center={[me.lat, me.lng]}
+          radius={me.accuracy}
+          interactive={false}
+          pathOptions={{ stroke: false, fillColor: "#0D9488", fillOpacity: 0.08 }}
+        />
+      )}
+      <Marker position={[me.lat, me.lng]} icon={icon} interactive={false} keyboard={false} zIndexOffset={-500} />
+    </>
+  );
 }
 
 export function ListingsMapInner({
   items,
   clusters,
-  onViewport,
+  glyph,
+  selectedId,
   onSelect,
+  onViewport,
+  onInteract,
   me,
-  recenter,
-  color,
+  command,
+  fitPadding = DEFAULT_FIT_PADDING,
+  clusterLabel,
   className,
 }: {
   items: MapListing[];
   clusters: MapCluster[];
-  onViewport: (v: Viewport) => void;
+  glyph: GlyphKind;
+  selectedId: string | null;
+  /** Keep stable (useCallback) — markers are memoized on it. */
   onSelect: (id: string) => void;
-  me: MapPoint | null;
-  recenter: MapPoint | null;
-  color: string;
+  onViewport: (v: Viewport) => void;
+  onInteract?: () => void;
+  me: MeLocation | null;
+  command: MapCommand | null;
+  fitPadding?: FitPadding;
+  clusterLabel: (count: number) => string;
   className?: string;
 }) {
-  const exactIcon = useMemo(() => pin(color), [color]);
-  const cityIcon = useMemo(() => dot(color, 18), [color]);
-  const meIcon = useMemo(() => dot("#1C1917", 16), []);
   return (
     <div className={className ?? "isolate h-full w-full"}>
-      <MapContainer center={KG_CENTER} zoom={7} style={{ height: "100%", width: "100%" }}>
+      <MapContainer center={KG_CENTER} zoom={7} zoomControl={false} style={{ height: "100%", width: "100%" }}>
         <TileLayer attribution={ATTRIBUTION} url={TILE_URL} />
-        <ViewportWatcher onChange={onViewport} />
-        <Recenter to={recenter} />
-        {clusters.map((c, i) => (
-          <ClusterMarker key={`c${i}-${c.lat}-${c.lng}`} cluster={c} color={color} />
+        <ViewportWatcher onChange={onViewport} onInteract={onInteract} />
+        <CommandRunner command={command} padding={fitPadding} />
+        {clusters.map((c) => (
+          <ClusterMarker key={`c${c.lat}-${c.lng}-${c.count}`} cluster={c} label={clusterLabel(c.count)} />
         ))}
         {items.map((it) => (
-          <Marker
-            key={it.id}
-            position={[it.lat, it.lng]}
-            icon={it.exact ? exactIcon : cityIcon}
-            eventHandlers={{ click: () => onSelect(it.id) }}
-          >
-            <Tooltip direction="top" offset={[0, it.exact ? -40 : -10]}>{it.label}</Tooltip>
-          </Marker>
+          <ListingMarker key={it.id} item={it} glyph={glyph} selected={it.id === selectedId} onSelect={onSelect} />
         ))}
-        {me && <Marker position={[me.lat, me.lng]} icon={meIcon} />}
+        {me && <MeMarker me={me} />}
       </MapContainer>
     </div>
-  );
-}
-
-// Tap a cluster → zoom in on it.
-function ClusterMarker({ cluster, color }: { cluster: MapCluster; color: string }) {
-  const map = useMap();
-  const icon = useMemo(() => bubble(cluster.count, color), [cluster.count, color]);
-  return (
-    <Marker
-      position={[cluster.lat, cluster.lng]}
-      icon={icon}
-      eventHandlers={{ click: () => map.flyTo([cluster.lat, cluster.lng], Math.min(map.getZoom() + 2, 16)) }}
-    />
   );
 }
