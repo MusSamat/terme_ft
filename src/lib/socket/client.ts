@@ -1,8 +1,9 @@
 import { io, type Socket } from "socket.io-client";
-import { getAccessToken, refreshAccessToken } from "@/lib/api/client";
+import { getAccessToken, hasSessionHint, refreshAccessToken } from "@/lib/api/client";
+import { attachAuthRecovery } from "./auth-recovery";
 
 let socket: Socket | null = null;
-let refreshingSocket = false;
+let detachRecovery: (() => void) | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
@@ -17,27 +18,11 @@ export function getSocket(): Socket {
       autoConnect: false,
     });
 
-    // Handshake rejected by the auth middleware: no token (auth_required),
-    // unknown user (auth_failed) or an expired / invalid access token (the
-    // AppError message, e.g. "Access token has expired"). socket.io does NOT
-    // auto-reconnect after a middleware rejection — refresh, then reconnect.
-    socket.on("connect_error", (err) => {
-      const msg = (err as Error).message;
-      const authError = msg === "auth_required" || msg === "auth_failed" || /token|unauthori/i.test(msg);
-      if (!authError || refreshingSocket) return;
-      refreshingSocket = true;
-      refreshAccessToken()
-        .then(() => {
-          if (!socket) return;
-          socket.auth = { token: getAccessToken() };
-          if (!socket.connected) socket.connect();
-        })
-        .catch(() => {
-          // refresh failed — the API layer logs the user out on its next 401
-        })
-        .finally(() => {
-          refreshingSocket = false;
-        });
+    // Expired token (server drop or rejected handshake) → refresh, new
+    // handshake token, reconnect; stops once signed out (no session hint).
+    detachRecovery = attachAuthRecovery(socket, {
+      refresh: refreshAccessToken,
+      isLoggedIn: hasSessionHint,
     });
   }
   // Always stamp the current token — covers the case where the socket was
@@ -48,6 +33,8 @@ export function getSocket(): Socket {
 }
 
 export function disconnectSocket() {
+  detachRecovery?.();
+  detachRecovery = null;
   if (socket) {
     socket.disconnect();
     socket = null;

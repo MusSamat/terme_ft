@@ -1,11 +1,14 @@
 import { io, type Socket } from "socket.io-client";
 import { getAdminToken } from "@/store/admin-auth";
+import { refreshAdminAccessToken } from "@/lib/api/admin";
+import { attachAuthRecovery } from "./auth-recovery";
 
 // Dedicated admin socket. The shared user socket (lib/socket/client) is stamped
 // with the *user* access token; admin realtime needs the admin access token so
 // the backend can auto-join the `admin:<id>` room. Kept separate so the two
 // connections never clobber each other's `auth.token`.
 let socket: Socket | null = null;
+let detachRecovery: (() => void) | null = null;
 
 export function getAdminSocket(): Socket {
   if (!socket) {
@@ -19,6 +22,12 @@ export function getAdminSocket(): Socket {
       reconnectionAttempts: Infinity,
       autoConnect: false,
     });
+    // Token expiry drops the socket (auth:expired / server disconnect) →
+    // refresh the admin token, re-stamp the handshake, reconnect.
+    detachRecovery = attachAuthRecovery(socket, {
+      refresh: refreshAdminAccessToken,
+      isLoggedIn: () => !!getAdminToken(),
+    });
   }
   // Always stamp the current admin token before (re)connecting.
   socket.auth = { token: getAdminToken() };
@@ -27,6 +36,8 @@ export function getAdminSocket(): Socket {
 }
 
 export function disconnectAdminSocket() {
+  detachRecovery?.();
+  detachRecovery = null;
   if (socket) {
     socket.disconnect();
     socket = null;
