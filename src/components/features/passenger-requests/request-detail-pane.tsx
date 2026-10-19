@@ -17,6 +17,7 @@ import { ListingTypeBadge } from "@/components/ui/listing-type-badge";
 import { SeatStack } from "@/components/ui/seat-meter";
 import { useAuth } from "@/store/auth";
 import { useRecordView } from "@/lib/hooks/use-record-view";
+import { saveDeferredAction } from "@/lib/auth/deferred-action";
 import { RespondModal } from "./_components/respond-modal";
 import { ContactRevealButton } from "@/components/ui/contact-reveal-button";
 import { useRouteNames } from "@/lib/hooks/use-route-names";
@@ -50,6 +51,7 @@ export function RequestDetailPane({ request }: Props) {
   const qc = useQueryClient();
   const fe = useFriendlyError();
   const [showModal, setShowModal] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const showRating = passenger.rating !== null && passenger.ratingCount >= 3;
   // The request owner never sees respond/call on their OWN request — only
   // edit / cancel (mirrors the Flutter owner-aware detail).
@@ -58,12 +60,16 @@ export function RequestDetailPane({ request }: Props) {
   const isDriver = authStatus === "authenticated" && !isOwner;
   const isGuest = authStatus === "anonymous" || authStatus === "idle";
   const isOpen = request.status === "open";
+  // A pending offer can't be re-sent (backend 409); declined/expired ones can.
+  const myPending = request.myResponse?.status === "pending";
 
   const cancelMut = useMutation({
     mutationFn: () => cancelPassengerRequest(request.id),
     onSuccess: () => {
       toastSuccess(tToasts("request_cancelled"));
       void qc.invalidateQueries({ queryKey: ["passenger-requests"] });
+      void qc.invalidateQueries({ queryKey: ["passenger-request", request.id] });
+      void qc.invalidateQueries({ queryKey: ["my-posts"] });
       router.push("/my/bookings?tab=requests");
     },
     onError: (e) => toastError(fe(extractError(e))),
@@ -237,12 +243,13 @@ export function RequestDetailPane({ request }: Props) {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => cancelMut.mutate()}
+                  onClick={() => (confirmCancel ? cancelMut.mutate() : setConfirmCancel(true))}
+                  onBlur={() => setConfirmCancel(false)}
                   disabled={cancelMut.isPending}
                   className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-coral-200 bg-white text-[15px] font-bold text-coral-600 transition-colors hover:bg-coral-50 disabled:opacity-50 dark:border-coral-500/40 dark:bg-ink-900"
                 >
                   <X className="h-4 w-4" aria-hidden />
-                  {cancelMut.isPending ? "…" : tCard("cancel")}
+                  {cancelMut.isPending ? "…" : confirmCancel ? t("cancel_confirm") : tCard("cancel")}
                 </button>
               </div>
             ) : (
@@ -253,20 +260,17 @@ export function RequestDetailPane({ request }: Props) {
           ) : isGuest ? (
             <Link
               href="/auth/login"
+              onClick={() => saveDeferredAction({ action: "view_request", id: request.id })}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-grape-600 text-[15px] font-bold text-white hover:bg-grape-700"
             >
               {t("login_to_respond")}
             </Link>
-          ) : isDriver && request.myResponse ? (
-            // Already responded → no duplicate; edit-resend or just show state.
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-grape-300 bg-grape-50 text-[15px] font-bold text-grape-700 transition-colors hover:bg-grape-100"
-            >
+          ) : isDriver && isOpen && myPending ? (
+            // Offer already sent and awaiting the passenger — read-only state.
+            <div className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-grape-300 bg-grape-50 text-[15px] font-bold text-grape-700">
               <CheckCircle className="h-4 w-4" aria-hidden />
-              {t("responded_edit")}
-            </button>
+              {t("responded_pending")}
+            </div>
           ) : isDriver && isOpen ? (
             <button
               type="button"
@@ -280,7 +284,7 @@ export function RequestDetailPane({ request }: Props) {
             <div className="flex items-center justify-center rounded-2xl border border-ink-200 bg-ink-50 px-4 py-3 dark:bg-ink-800 dark:border-ink-700">
               <p className="text-[14px] font-semibold text-ink-500">{t("closed")}</p>
             </div>
-          ) : (
+          ) : authStatus === "loading" ? null : (
             <div className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-ink-50 px-4 py-3 dark:bg-ink-800 dark:border-ink-700">
               <MessageCircle className="h-4 w-4 flex-shrink-0 text-ink-400" aria-hidden />
               <p className="text-[13px] text-ink-500">{t("switch_to_driver")}</p>

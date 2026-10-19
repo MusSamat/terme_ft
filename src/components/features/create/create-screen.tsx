@@ -20,6 +20,7 @@ import { Modal, ModalContent, ModalTitle } from "@/components/ui/modal";
 import { IntentToggle } from "@/components/features/search/intent-toggle";
 import { saveDeferredAction } from "@/lib/auth/deferred-action";
 import { Spinner } from "@/components/ui";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ActionModal } from "@/components/ui/action-modal";
 import type { ChipAccent } from "@/components/ui";
@@ -90,10 +91,19 @@ function defaults(isDriver: boolean): Draft {
   };
 }
 
+// Calendar day in Kyrgyzstan (UTC+6) — not the UTC date (off by one 00–06h).
 function dstr(offset: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().split("T")[0]!;
+  return new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
+}
+
+// A flexible departure is anchored at 12:00 KG; for today after ~11:30 that is
+// already "too soon" server-side, so anchor it a bit ahead of now instead.
+function flexibleTime(day: string): string {
+  if (day !== dstr(0)) return "12:00";
+  const kgNow = new Date(Date.now() + 6 * 3_600_000 + 40 * 60_000);
+  const mins = Math.min(Math.ceil((kgNow.getUTCHours() * 60 + kgNow.getUTCMinutes()) / 5) * 5, 23 * 60 + 55);
+  const hhmm = `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+  return hhmm > "12:00" ? hhmm : "12:00";
 }
 
 interface Props {
@@ -134,10 +144,10 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
     if (status === "anonymous") {
       // Return the guest to the create screen after login — not a bogus
       // /trips//book URL (empty trip_id) from a book_trip intent.
-      saveDeferredAction({ action: "create_trip" });
+      saveDeferredAction({ action: isDriver ? "create_trip" : "create_request" });
       router.replace("/auth/login");
     }
-  }, [status, router]);
+  }, [status, router, isDriver]);
 
 
   // Whether the user (or a persisted draft) already chose a seat count — the
@@ -226,10 +236,16 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
     if (!isDriver || !carSeats || seatsCustomized.current) return;
     setDraft((prev) => ({ ...prev, seats: Math.min(Math.max(carSeats, 1), 7) }));
   }, [isDriver, carSeats]);
+  // A saved draft or a car switch must never leave more seats than the car has
+  // (backend seats_exceed_vehicle).
+  useEffect(() => {
+    if (!isDriver || !carSeats) return;
+    setDraft((prev) => (prev.seats > carSeats ? { ...prev, seats: Math.max(carSeats, 1) } : prev));
+  }, [isDriver, carSeats, draft.seats]);
 
   const departureAt = (): string => {
     const day = /^\d{4}-\d{2}-\d{2}$/.test(draft.date) ? draft.date : dstr(1);
-    const time = draft.flexible ? "12:00" : draft.time;
+    const time = draft.flexible ? flexibleTime(day) : draft.time;
     // Anchor to Kyrgyzstan time (+06:00), NOT the device's local zone: the
     // wall-clock the user picked is a KG time. `.toISOString()` on a
     // local-parsed Date would shift the instant for non-UTC+6 devices.
@@ -573,7 +589,20 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
         hint={t("dropoff_point_hint")}
         color="#F59E0B"
       />
-      <PrefsCollapsible role={intent} prefs={draft.prefs} onToggle={(k) => patch({ prefs: { ...draft.prefs, [k]: !draft.prefs[k] } })} />
+      {/* Preferences exist only on trips — the request API has no field for them. */}
+      {isDriver && (
+        <PrefsCollapsible role={intent} prefs={draft.prefs} onToggle={(k) => patch({ prefs: { ...draft.prefs, [k]: !draft.prefs[k] } })} />
+      )}
+      <label className="block">
+        <span className="mb-1.5 block text-[14px] font-800 text-ink-700 dark:text-ink-200">{t("comment_label")}</span>
+        <Textarea
+          rows={3}
+          value={draft.comment}
+          maxLength={isDriver ? 300 : 450}
+          placeholder={isDriver ? t("comment_ph_driver") : t("comment_ph_passenger")}
+          onChange={(e) => patch({ comment: e.target.value })}
+        />
+      </label>
     </>
   );
 
@@ -673,7 +702,7 @@ export function CreateScreen({ intent, initialFrom, initialTo }: Props) {
             className="w-full"
             onClick={() => {
               setPublishedId(null);
-              setDraft(defaults(isDriver)); // stay on Create with a clean form
+              setDraft({ ...defaults(isDriver), date: dstr(1) }); // stay on Create with a clean form
             }}
           >
             {t("publish_another")}

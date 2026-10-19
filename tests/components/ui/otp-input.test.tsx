@@ -30,9 +30,9 @@ describe("OtpInput", () => {
     expect(screen.getAllByRole("textbox")).toHaveLength(4);
   });
 
-  it("has group role with SMS label", () => {
+  it("has group role with WhatsApp code label", () => {
     render(<OtpInput />);
-    expect(screen.getByRole("group", { name: "Код из SMS" })).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Код из WhatsApp" })).toBeInTheDocument();
   });
 
   it("each cell has an individual aria-label", () => {

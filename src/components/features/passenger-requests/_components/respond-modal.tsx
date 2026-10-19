@@ -29,14 +29,16 @@ export function RespondModal({ request, onClose }: Props) {
   const tToasts = useTranslations("toasts");
   const fe = useFriendlyError();
   const [price, setPrice] = useState("");
-  const [date, setDate] = useState(request.departureDate.split("T")[0] ?? "");
+  // Calendar day in Kyrgyzstan (UTC+6), not the UTC date of the instant.
+  const kgDay = new Date(new Date(request.departureDate).getTime() + 6 * 3_600_000).toISOString().slice(0, 10);
+  const [date, setDate] = useState(kgDay);
   const [time, setTime] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
-      const iso = new Date(`${date}T${time}:00`).toISOString();
+      const iso = new Date(`${date}T${time}:00+06:00`).toISOString();
       const input: RespondInput = {
         price: Number(price),
         departureTime: iso,
@@ -48,14 +50,15 @@ export function RespondModal({ request, onClose }: Props) {
       toastSuccess(tToasts("offer_sent"));
       void qc.invalidateQueries({ queryKey: ["request-responses", request.id] });
       void qc.invalidateQueries({ queryKey: ["passenger-requests"] });
+      void qc.invalidateQueries({ queryKey: ["passenger-request", request.id] });
       onClose();
     },
     onError: (e) => setError(fe(extractError(e))),
   });
 
-  // Backend RespondBody: price int 1..100000, departureTime required.
+  // Backend RespondBody: price int 50..10000, departureTime required.
   const priceNum = Number(price);
-  const priceValid = Boolean(price) && Number.isFinite(priceNum) && priceNum >= 1 && priceNum <= 100_000;
+  const priceValid = Boolean(price) && Number.isFinite(priceNum) && Number.isInteger(priceNum) && priceNum >= 50 && priceNum <= 10_000;
   const priceError = price && !priceValid ? t("price_range") : null;
   const canSubmit = priceValid && Boolean(date) && Boolean(time);
 
@@ -95,7 +98,7 @@ export function RespondModal({ request, onClose }: Props) {
               <div className="min-w-0">
                 <p className={FIELD_LABEL}>{t("date_label")}</p>
                 <DatePicker
-                  min={request.departureDate.split("T")[0]}
+                  min={kgDay}
                   value={date}
                   onChange={setDate}
                   triggerClassName="h-12 w-full rounded-2xl border-2 border-ink-200 bg-ink-50 px-3 text-[15px] dark:bg-ink-800 dark:border-ink-700"

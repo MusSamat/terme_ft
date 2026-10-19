@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowDownUp, ArrowLeft, CalendarDays, SlidersHorizontal } from "lucide-react";
 import { DatePickerModal } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils/cn";
+import { placeName, routeFromParams, setRouteParams } from "@/lib/places";
 
 // Results-page header (Yandex «Межгород» style): a compact bar — back +
 // «Когда хотите поехать?» + the route + swap — over a row of quick date chips
@@ -32,8 +33,10 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
   const params = useSearchParams();
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const from = params.get("from") ?? params.get("from_city") ?? "";
-  const to = params.get("to") ?? params.get("to_city") ?? "";
+  const locale = useLocale();
+  const route = routeFromParams((k) => params.get(k));
+  const from = placeName(route.from, locale);
+  const to = placeName(route.to, locale);
   const grape = tab === "requests";
 
   const today = ymdKg(0);
@@ -47,6 +50,16 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
       if (v === null || v === "") next.delete(k);
       else next.set(k, v);
     }
+    next.delete("cursor");
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
+
+  // Swap the whole route (ids drive the API), not just the display names.
+  const swap = () => {
+    const next = new URLSearchParams(params);
+    next.delete("from_city");
+    next.delete("to_city");
+    setRouteParams(next, route.to, route.from);
     next.delete("cursor");
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   };
@@ -91,7 +104,7 @@ export function FeedHeader({ tab, onOpenFilters }: FeedHeaderProps) {
         </div>
         <button
           type="button"
-          onClick={() => update({ from: to || null, to: from || null })}
+          onClick={swap}
           disabled={!from || !to}
           aria-label={t("swap_aria")}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-600 transition-colors disabled:opacity-40 dark:bg-ink-800 dark:text-ink-300"

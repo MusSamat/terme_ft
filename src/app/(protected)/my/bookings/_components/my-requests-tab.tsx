@@ -54,6 +54,10 @@ function OfferCard({
     onSuccess: ({ bookingId }) => {
       toastSuccess(tToasts("offer_accepted"));
       void qc.invalidateQueries({ queryKey: ["passenger-requests", "my"] });
+      void qc.invalidateQueries({ queryKey: ["request-responses", requestId] });
+      void qc.invalidateQueries({ queryKey: ["passenger-request", requestId] });
+      void qc.invalidateQueries({ queryKey: ["bookings"] });
+      void qc.invalidateQueries({ queryKey: ["my-posts"] });
       onAccepted(bookingId);
     },
     onError: (e) => toastError(fe(extractError(e))),
