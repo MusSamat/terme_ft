@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { Award, Car, Hash, Palette, Calendar, Users, Star } from "lucide-react";
 import { getPublicUser, getUserRatings, type PublicUser, type PublicRating } from "@/lib/api/users";
+import Link from "next/link";
 import { extractError } from "@/lib/api/client";
+import { normalizeMediaUrl } from "@/lib/utils/media-url";
 import { BackButton, Container, DriverAvatar, RatingStars, VerifiedBadge } from "@/components/ui";
 
 export const revalidate = 300;
@@ -20,8 +22,10 @@ async function fetchData(id: string): Promise<{ user: PublicUser; ratings: Publi
     ]);
     return { user, ratings: ratings.data };
   } catch (e) {
-    if (extractError(e).code === "NOT_FOUND") return null;
-    return null;
+    const code = extractError(e).code;
+    if (code === "NOT_FOUND" || code === "VALIDATION_ERROR") return null;
+    // Outage / 5xx: error boundary, not a 404 cached for revalidate=300.
+    throw e;
   }
 }
 
@@ -35,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ratingCount = user.ratingCount ?? 0;
   const roleLabel = isDriver ? t("driver_role") : t("passenger_role");
   const title = `${user.name} — ${roleLabel} Terme`;
-  const desc = `${user.name}${ratingCount >= 3 ? ` · ${rating.toFixed(1)}★ (${ratingCount} ${t("ratings_count")})` : ` · ${t("new_role", { role: roleLabel })}`} · попутчик Kyrgyzstan`;
+  const desc = `${user.name}${ratingCount >= 3 ? ` · ${rating.toFixed(1)}★ (${ratingCount} ${t("ratings_count")})` : ` · ${t("new_role", { role: roleLabel })}`} · Terme`;
   return {
     title,
     description: desc,
@@ -62,6 +66,11 @@ function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label
 
 export default async function UserProfilePage({ params }: Props) {
   const t = await getTranslations("drivers");
+  // Raw codes (tier / rating tags) → labels; unknown codes fall back to the code.
+  const messages = (await getMessages()) as { loyalty?: { tiers?: Record<string, string> }; ratings?: { tags?: Record<string, string> } };
+  const tierLabel = (k: string) => messages.loyalty?.tiers?.[k] ?? k;
+  const tagLabel = (k: string) => messages.ratings?.tags?.[k] ?? k;
+  const tComplaint = await getTranslations("complaint");
   const d = await fetchData(params.id);
   if (!d) notFound();
   const { user, ratings } = d;
@@ -86,7 +95,7 @@ export default async function UserProfilePage({ params }: Props) {
             {loyaltyTier && (
               <span className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[12px] font-800 ${TIER_COLORS[loyaltyTier] ?? ""}`}>
                 <Award className="h-3 w-3" aria-hidden="true" />
-                {loyaltyTier}
+                {tierLabel(loyaltyTier)}
               </span>
             )}
           </div>
@@ -131,7 +140,7 @@ export default async function UserProfilePage({ params }: Props) {
           {car.carPhotoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={car.carPhotoUrl}
+              src={normalizeMediaUrl(car.carPhotoUrl) ?? car.carPhotoUrl}
               alt={`${car.make} ${car.model}`}
               className="h-52 w-full object-cover sm:h-64"
             />
@@ -209,7 +218,7 @@ export default async function UserProfilePage({ params }: Props) {
                       <ul className="mt-2 flex flex-wrap gap-1.5">
                         {r.tags.map((tag) => (
                           <li key={tag} className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[13px] font-700 text-brand-800 dark:bg-brand-500/15 dark:text-brand-300">
-                            {tag}
+                            {tagLabel(tag)}
                           </li>
                         ))}
                       </ul>
@@ -221,6 +230,15 @@ export default async function UserProfilePage({ params }: Props) {
           </ul>
         )}
       </section>
+      {/* Complaint entry point (the form needs a target user). */}
+      <div className="mt-6 text-center">
+        <Link
+          href={`/complaint?user=${params.id}`}
+          className="text-[14px] font-700 text-ink-400 underline-offset-2 hover:text-ink-600 hover:underline dark:hover:text-ink-200"
+        >
+          {tComplaint("title")}
+        </Link>
+      </div>
     </Container>
   );
 }

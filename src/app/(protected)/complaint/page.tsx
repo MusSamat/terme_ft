@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,13 +27,14 @@ type FormData = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ user?: string; trip?: string }>;
+  // Next 14: a plain object (React use() throws on non-thenables).
+  searchParams: { user?: string; trip?: string };
 }
 
 export default function ComplaintPage({ searchParams }: PageProps) {
   const t = useTranslations("complaint");
   const fe = useFriendlyError();
-  const params = use(searchParams);
+  const params = searchParams;
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

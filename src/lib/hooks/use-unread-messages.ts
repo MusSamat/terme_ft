@@ -35,7 +35,8 @@ export function useUnreadMessages() {
     placeholderData: keepPreviousData,
     select: (chats) =>
       chats
-        .filter((c) => c.bookingStatus === "accepted")
+        // Same set the chat hub lists — pre-booking chats count too.
+        .filter((c) => c.bookingStatus === "pending" || c.bookingStatus === "viewed" || c.bookingStatus === "accepted")
         .reduce((sum, c) => sum + c.unreadCount, 0),
   });
 }

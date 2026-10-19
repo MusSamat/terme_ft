@@ -8,8 +8,9 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: ["notifications", "unread-count"],
     queryFn: async () => {
-      const res = await getNotifications({ unread: true, limit: 50 });
-      return res.data.length;
+      // The backend returns the exact total; data.length would cap at the page size.
+      const res = await getNotifications({ unread: true, limit: 1 });
+      return res.unreadCount ?? res.data.length;
     },
     enabled: isAuthenticated,
     staleTime: 60_000,

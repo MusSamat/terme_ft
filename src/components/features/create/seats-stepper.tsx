@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 
 // Seats — compact row: label (+ optional car-capacity hint) left, −/+ stepper
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText, onChange }: Props) {
+  const t = useTranslations("trips.create");
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-xs ring-1 ring-ink-100 dark:bg-ink-900 dark:ring-ink-800">
       <div className="min-w-0">
@@ -28,7 +30,7 @@ export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
-          aria-label="−"
+          aria-label={t("seats_less_aria")}
           className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-ink-200 text-[20px] font-900 text-ink-600 disabled:opacity-40 dark:border-ink-700 dark:text-ink-300"
         >
           −
@@ -38,7 +40,7 @@ export function SeatsStepper({ value, min = 1, max = 8, label, hint, counterText
           type="button"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          aria-label="+"
+          aria-label={t("seats_more_aria")}
           className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-ink-200 text-[20px] font-900 text-ink-600 disabled:opacity-40 dark:border-ink-700 dark:text-ink-300"
         >
           +

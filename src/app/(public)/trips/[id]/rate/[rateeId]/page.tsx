@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { extractError } from "@/lib/api/client";
+import { useFriendlyError } from "@/lib/hooks/use-api-error";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -27,6 +29,8 @@ export default function RatePage({ params }: Props) {
   const { id: tripId, rateeId } = params;
   const router = useRouter();
   const t = useTranslations("rate");
+  const fe = useFriendlyError();
+  const qc = useQueryClient();
   const tTags = useTranslations("ratings.tags");
   const status = useAuth((s) => s.status);
 
@@ -65,6 +69,7 @@ export default function RatePage({ params }: Props) {
     mutationFn: (input: SubmitRatingInput) => submitRating(input),
     onSuccess: () => {
       setSubmitted(true);
+      void qc.invalidateQueries({ queryKey: ["ratings", "pending"] });
       setTimeout(() => router.push("/my/bookings"), 2000);
     },
   });
@@ -132,10 +137,7 @@ export default function RatePage({ params }: Props) {
   }
 
   const errMsg =
-    error &&
-    ((error as { code?: string }).code === "ALREADY_RATED"
-      ? t("already_rated")
-      : t("error"));
+    error ? fe(extractError(error)) : null; // CONFLICT already_rated, rating_window_closed, …
 
   return (
     <div className="mx-auto max-w-[520px] px-4 py-8">

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getSocket } from "@/lib/socket/client";
 import { useAuth } from "@/store/auth";
+import { getMe } from "@/lib/api/auth";
 import { pushToast } from "@/components/layout/quick-toast";
 
 export function NotificationListener() {
@@ -24,7 +25,8 @@ export function NotificationListener() {
 
     const invalidateBookings = () => {
       void queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      void queryClient.invalidateQueries({ queryKey: ["bookings-my-all"] });
+      // «Мои» posts show seat counts that bookings change.
+      void queryClient.invalidateQueries({ queryKey: ["my-posts"] });
       // singular detail query used by the open chat screen — without this the
       // pre-booking banner/template mode survives an acceptance that happens
       // while the chat is on screen (stale status, staleTime 30s)
@@ -32,7 +34,6 @@ export function NotificationListener() {
     };
 
     const onNewMessage = (data: { message?: { bookingId?: string; text?: string } }) => {
-      void queryClient.invalidateQueries({ queryKey: ["bookings-my-all"] });
       void queryClient.invalidateQueries({ queryKey: ["chat", "summaries"] });
       const bookingId = data?.message?.bookingId;
       const chatPath = bookingId ? `/my/bookings/${bookingId}/chat` : null;
@@ -40,7 +41,7 @@ export function NotificationListener() {
         pushToast({
           type: "chat_message",
           title: t("new_message_title"),
-          body: data.message?.text?.slice(0, 80) ?? "...",
+          body: data.message?.text?.slice(0, 80) ?? "",
         });
       }
     };
@@ -105,11 +106,12 @@ export function NotificationListener() {
       pushToast({ type: "booking_expired", title: t("expired_title"), body: t("expired_body") });
     };
 
-    const onTripCancelled = (data: { originCity?: string; destinationCity?: string }) => {
+    // Payload: { trip: { id, originCity, destinationCity }, … }.
+    const onTripCancelled = (data: { trip?: { originCity?: string; destinationCity?: string } }) => {
       invalidateBookings();
       invalidateNotifications();
-      const route = data?.originCity && data?.destinationCity
-        ? `${data.originCity} → ${data.destinationCity}`
+      const route = data?.trip?.originCity && data?.trip?.destinationCity
+        ? `${data.trip.originCity} → ${data.trip.destinationCity}`
         : null;
       pushToast({
         type: "booking_cancelled",
@@ -154,6 +156,18 @@ export function NotificationListener() {
       });
     };
 
+    // Verification decided by moderation → refresh the driver status + roles
+    // (otherwise the profile keeps «Стать водителем» until a reload).
+    const onNotification = (data?: { type?: string }) => {
+      invalidateNotifications();
+      if (data?.type?.startsWith("verification_")) {
+        void queryClient.invalidateQueries({ queryKey: ["driver-status"] });
+        getMe()
+          .then((u) => useAuth.getState().hydrate(u))
+          .catch(() => undefined);
+      }
+    };
+
     // Driver saw the request → passenger's list shows «просмотрено» live.
     const onBookingViewed = () => invalidateBookings();
 
@@ -181,7 +195,7 @@ export function NotificationListener() {
     };
 
     socket.on("connect", onReconnect);
-    socket.on("notification:new", invalidateNotifications);
+    socket.on("notification:new", onNotification);
     socket.on("booking:new_request", onBookingNewRequest);
     socket.on("booking:accepted", onBookingAccepted);
     socket.on("booking:request_confirmed", onBookingRequestConfirmed);
@@ -199,7 +213,7 @@ export function NotificationListener() {
 
     return () => {
       socket.off("connect", onReconnect);
-      socket.off("notification:new", invalidateNotifications);
+      socket.off("notification:new", onNotification);
       socket.off("booking:new_request", onBookingNewRequest);
       socket.off("booking:accepted", onBookingAccepted);
       socket.off("booking:request_confirmed", onBookingRequestConfirmed);

@@ -119,8 +119,10 @@ export function buildBody(notif: AppNotification, t: Translator, locale: Locale)
         : t("body_booking_cancelled_by_driver_fallback");
     }
     case "trip_cancelled": {
-      const from = str("originCity");
-      const to = str("destinationCity");
+      // Payload is { trip: PublicTrip } (trips.service / admin force-cancel).
+      const trip = p["trip"] as Record<string, unknown> | undefined;
+      const from = (trip?.["originCity"] as string | undefined) ?? str("originCity");
+      const to = (trip?.["destinationCity"] as string | undefined) ?? str("destinationCity");
       return from && to
         ? t("body_trip_cancelled", { route: `${from} → ${to}` })
         : t("body_trip_cancelled_fallback");
@@ -231,7 +233,7 @@ export function buildDeepLink(notif: AppNotification): string | null {
     case "trip_cancelled": {
       // Payload key style varies by emitter (DTO events camelCase, raw/cron
       // events snake_case) — accept both, fall back to the list.
-      const tripId = (p["tripId"] ?? p["trip_id"]) as string | undefined;
+      const tripId = ((p["trip"] as { id?: string } | undefined)?.id ?? p["tripId"] ?? p["trip_id"]) as string | undefined;
       return tripId ? `/trips/${tripId}` : "/trips";
     }
     case "trip_reminder":

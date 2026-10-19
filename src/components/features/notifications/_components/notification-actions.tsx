@@ -8,6 +8,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { markNotificationRead, type AppNotification } from "@/lib/api/notifications";
 import { acceptBooking, getBooking, rejectBooking } from "@/lib/api/bookings";
 import { Spinner } from "@/components/ui";
+import { extractError } from "@/lib/api/client";
+import { useFriendlyError } from "@/lib/hooks/use-api-error";
+import { toastError } from "@/components/layout/quick-toast";
 
 type ActionResult = "accepted" | "rejected" | "error" | null;
 
@@ -16,6 +19,7 @@ const softLinkClass = "inline-flex items-center gap-1 text-[14px] font-semibold 
 
 export function NotificationActions({ notification }: { notification: AppNotification }) {
   const t = useTranslations("notif_actions");
+  const fe = useFriendlyError();
   const queryClient = useQueryClient();
   const p = notification.payload as Record<string, unknown>;
   const [result, setResult] = useState<ActionResult>(null);
@@ -40,13 +44,15 @@ export function NotificationActions({ notification }: { notification: AppNotific
   const { mutate: accept, isPending: accepting } = useMutation({
     mutationFn: () => acceptBooking(bookingId!),
     onSuccess: () => { setResult("accepted"); settle(); },
-    onError: () => { setResult("error"); settle(); },
+    // A failed request (network, conflict) must not mark the notification read.
+    onError: (e) => { setResult("error"); invalidate(); toastError(fe(extractError(e))); },
   });
 
   const { mutate: decline, isPending: declining } = useMutation({
     mutationFn: () => rejectBooking(bookingId!),
     onSuccess: () => { setResult("rejected"); settle(); },
-    onError: () => { setResult("error"); settle(); },
+    // A failed request (network, conflict) must not mark the notification read.
+    onError: (e) => { setResult("error"); invalidate(); toastError(fe(extractError(e))); },
   });
 
   // Source of truth for the request card: the booking's CURRENT status — a
@@ -54,7 +60,9 @@ export function NotificationActions({ notification }: { notification: AppNotific
   const { data: liveBooking } = useQuery({
     queryKey: ["booking", bookingId],
     queryFn: () => getBooking(bookingId!),
-    enabled: notification.type === "new_booking_request" && Boolean(bookingId),
+    // GET /bookings/:id marks it «viewed» for the driver — fetch only for
+    // unread requests, not for every old row in the feed.
+    enabled: notification.type === "new_booking_request" && Boolean(bookingId) && !notification.readAt,
     staleTime: 15_000,
   });
 
@@ -73,7 +81,11 @@ export function NotificationActions({ notification }: { notification: AppNotific
       if (result === "rejected" || status === "rejected") {
         return <span className="text-[14px] font-semibold text-ink-500">{t("booking_rejected")}</span>;
       }
-      if (result === "error" || (status && status !== "pending" && status !== "viewed")) {
+      if (
+        result === "error" ||
+        (status && status !== "pending" && status !== "viewed") ||
+        (!status && !result && notification.readAt)
+      ) {
         // Cancelled / expired / unknown-decided — no actions, just a way in.
         return (
           <Link href={`/my/bookings`} className={softLinkClass}>

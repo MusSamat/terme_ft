@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { extractError } from "@/lib/api/client";
+import { useFriendlyError } from "@/lib/hooks/use-api-error";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Star, X } from "lucide-react";
@@ -19,6 +21,7 @@ interface Props {
 export function RateModal({ rating, onClose }: Props) {
   const qc = useQueryClient();
   const t = useTranslations("rate");
+  const fe = useFriendlyError();
   const tTags = useTranslations("ratings.tags");
   const [score, setScore] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
   const [hover, setHover] = useState(0);
@@ -47,10 +50,7 @@ export function RateModal({ rating, onClose }: Props) {
   });
 
   const errMsg =
-    error &&
-    ((error as { code?: string }).code === "ALREADY_RATED"
-      ? t("already_rated")
-      : t("error"));
+    error ? fe(extractError(error)) : null; // CONFLICT already_rated, rating_window_closed, …
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">

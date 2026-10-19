@@ -24,8 +24,10 @@ const TIER_COLORS: Record<Tier, {
   elite:    { textColor: "text-accent-700 dark:text-accent-300", bgColor: "bg-accent-50 dark:bg-accent-500/10", ringColor: "ring-accent-400",                 progressBg: "bg-accent-500",  borderColor: "border-accent-200 dark:border-accent-500/30" },
 };
 
-const HOW_TO_EARN_ICONS = ["🚗", "🎯", "⭐"] as const;
-const HOW_TO_EARN_POINTS = ["+10", "+5", "+3"] as const;
+// Backend POINTS_PER_TRIP = 10 for the driver and every passenger of a
+// completed trip; there is no rating bonus.
+const HOW_TO_EARN_ICONS = ["🚗", "🎯"] as const;
+const HOW_TO_EARN_POINTS = ["+10", "+10"] as const;
 
 export default function LoyaltyPage() {
   const t = useTranslations("loyalty");
@@ -178,7 +180,7 @@ export default function LoyaltyPage() {
           <div className="mb-4 rounded-3xl border border-ink-100 bg-white p-5 shadow-card dark:border-ink-800 dark:bg-ink-900">
             <h2 className="mb-4 font-disp text-[16px] font-900 text-ink-900 dark:text-white">{t("how_to_earn_section")}</h2>
             <div className="flex flex-col divide-y divide-ink-100 dark:divide-ink-800">
-              {(["driver", "passenger", "five_stars"] as const).map((key, idx) => (
+              {(["driver", "passenger"] as const).map((key, idx) => (
                 <div key={key} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <div className="flex items-center gap-3">
                     <span className="text-[20px]" aria-hidden="true">{HOW_TO_EARN_ICONS[idx]}</span>

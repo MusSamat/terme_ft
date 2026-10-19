@@ -169,6 +169,8 @@ function RequestEditModal({
 }) {
   const t = useTranslations("requests.my");
   const tToasts = useTranslations("toasts");
+  const tCard = useTranslations("card");
+  const tCreate = useTranslations("requests.create");
   const fe = useFriendlyError();
   const qc = useQueryClient();
 
@@ -225,11 +227,11 @@ function RequestEditModal({
           <div>
             <label className="mb-1.5 block text-[13px] font-800 uppercase tracking-wide text-ink-400">{t("seats_label")}</label>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setSeats((s) => Math.max(1, s - 1))} className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-100 text-ink-700 disabled:opacity-40 dark:bg-ink-800 dark:text-ink-200" disabled={seats <= 1}>
+              <button type="button" onClick={() => setSeats((s) => Math.max(1, s - 1))} aria-label={tCreate("seats_less_aria")} className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-100 text-ink-700 disabled:opacity-40 dark:bg-ink-800 dark:text-ink-200" disabled={seats <= 1}>
                 <Minus className="h-4 w-4" />
               </button>
               <span className="min-w-[32px] text-center text-[18px] font-900 text-ink-900 dark:text-white">{seats}</span>
-              <button type="button" onClick={() => setSeats((s) => Math.min(8, s + 1))} className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-100 text-ink-700 disabled:opacity-40 dark:bg-ink-800 dark:text-ink-200" disabled={seats >= 8}>
+              <button type="button" onClick={() => setSeats((s) => Math.min(8, s + 1))} aria-label={tCreate("seats_more_aria")} className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink-100 text-ink-700 disabled:opacity-40 dark:bg-ink-800 dark:text-ink-200" disabled={seats >= 8}>
                 <Plus className="h-4 w-4" />
               </button>
             </div>
@@ -258,7 +260,7 @@ function RequestEditModal({
             <div className="flex flex-col gap-2">
               <p className="text-center text-[14px] font-800 text-ink-700 dark:text-ink-200">{t("edit_confirm")}</p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setConfirming(false)} aria-label="cancel" className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+                <button type="button" onClick={() => setConfirming(false)} aria-label={tCard("cancel")} className="flex h-11 flex-1 items-center justify-center rounded-xl bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300">
                   <X className="h-5 w-5" />
                 </button>
                 <button type="button" onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="h-11 flex-[2] rounded-xl bg-sky-600 text-[15px] font-900 text-white hover:bg-sky-700 disabled:opacity-50">
@@ -365,7 +367,7 @@ export function RequestWithOffers({
                 key={r.id}
                 response={r}
                 requestId={request.id}
-                onAccepted={(bookingId) => router.push(`/my/bookings?booking=${bookingId}`)}
+                onAccepted={(bookingId) => router.push(`/my/bookings/${bookingId}/chat`)}
               />
             ))
           )}

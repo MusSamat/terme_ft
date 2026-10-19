@@ -187,7 +187,7 @@ export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, re
           >
             <option value="">{t("color_ph")}</option>
             {colors.map((c) => (
-              <option key={c.id} value={c.nameRu}>{locale === "ky" ? c.nameKy : c.nameRu}</option>
+              <option key={c.id} value={c.nameRu}>{locale === "kg" ? c.nameKy : c.nameRu}</option>
             ))}
             <option value="__manual__">{t("manual_entry")}</option>
           </select>
@@ -224,7 +224,7 @@ export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, re
         <span className="flex items-center gap-2.5">
           <button
             type="button"
-            aria-label="−"
+            aria-label={tReg("seats_less_aria")}
             disabled={seats <= 1}
             onClick={() => setSeats((s) => Math.max(1, s - 1))}
             className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-ink-600 ring-1 ring-ink-200 disabled:opacity-35 dark:bg-ink-900 dark:text-ink-300 dark:ring-ink-700"
@@ -234,7 +234,7 @@ export function CarForm({ onSubmit, onChange, pending, submitLabel, showYear, re
           <span className="min-w-[20px] text-center text-[17px] font-900 text-ink-900 dark:text-white">{seats}</span>
           <button
             type="button"
-            aria-label="+"
+            aria-label={tReg("seats_more_aria")}
             disabled={seats >= 7}
             onClick={() => setSeats((s) => Math.min(7, s + 1))}
             className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand-600 ring-1 ring-ink-200 disabled:opacity-35 dark:bg-ink-900 dark:text-brand-300 dark:ring-ink-700"

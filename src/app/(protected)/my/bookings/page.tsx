@@ -134,6 +134,8 @@ export default function MyBookingsPage() {
       setCancelTarget(null);
       toastSuccess(tToasts("booking_cancelled"));
       void qc.invalidateQueries({ queryKey: ["bookings"] });
+      void qc.invalidateQueries({ queryKey: ["booking"] });
+      void qc.invalidateQueries({ queryKey: ["chat", "summaries"] });
     },
     onError: (e) => toastError(fe(extractError(e))),
   });
@@ -150,8 +152,12 @@ export default function MyBookingsPage() {
       .filter((b) => b.status === "accepted")
       .find((b) => {
         const key = `terme_celebrated_${b.id}`;
-        if (localStorage.getItem(key)) return false;
-        localStorage.setItem(key, "1");
+        try {
+          if (localStorage.getItem(key)) return false;
+          localStorage.setItem(key, "1");
+        } catch {
+          return false;
+        }
         return true;
       });
     if (newlyAccepted) setShowConfetti(true);
@@ -212,7 +218,7 @@ export default function MyBookingsPage() {
             )}
             {pendingList.slice(0, 3).map((pr) => (
               <Link
-                key={pr.tripId}
+                key={`${pr.tripId}:${pr.counterpartId}`}
                 href={`/trips/${pr.tripId}/rate/${pr.counterpartId}`}
                 className="flex shrink-0 items-center gap-1.5 rounded-full border border-accent-600/30 bg-accent-500/10 px-3 py-1.5 text-[13px] font-800 text-accent-600"
               >

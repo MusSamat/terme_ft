@@ -16,8 +16,10 @@ export function getNotifications(params?: {
   cursor?: string;
   limit?: number;
   unread?: boolean;
-}): Promise<Paginated<AppNotification>> {
-  return api.get<Paginated<AppNotification>>("/notifications", { params }).then((r) => r.data);
+}): Promise<Paginated<AppNotification> & { unreadCount?: number }> {
+  return api
+    .get<Paginated<AppNotification> & { unreadCount?: number }>("/notifications", { params })
+    .then((r) => r.data);
 }
 
 export function markNotificationRead(id: string): Promise<void> {

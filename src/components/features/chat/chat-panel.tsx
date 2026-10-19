@@ -56,18 +56,31 @@ export function ChatPanel({ bookingId }: Props) {
 
   const historyQuery = useQuery({
     queryKey: ["chat", bookingId, "history"],
-    queryFn: async () => {
-      const res = await getChatHistory(bookingId);
-      setMessages((prev) => (prev.length === 0 ? [...res.data].reverse() : prev));
-      setHistoryLoaded(true);
-      return res;
-    },
+    queryFn: () => getChatHistory(bookingId),
     staleTime: 10_000,
   });
+  // Seed from the query result (also when served from cache — a side effect in
+  // queryFn would not run then and an empty chat would spin forever).
+  useEffect(() => {
+    if (!historyQuery.data) return;
+    const history = historyQuery.data.data;
+    setMessages((prev) => (prev.length === 0 ? [...history].reverse() : prev));
+    setHistoryLoaded(true);
+  }, [historyQuery.data]);
 
   const qc = useQueryClient();
 
-  const onHistory = useCallback((history: ChatMessage[]) => setMessages([...history].reverse()), []);
+  // chat:joined fires on every (re)connect: replace with the server history but
+  // keep local messages still pending/failed so a reconnect doesn't drop them.
+  const onHistory = useCallback((history: ChatMessage[]) => {
+    setMessages((prev) => {
+      const server = [...history].reverse();
+      const known = new Set(server.map((m) => m.id));
+      const unsent = prev.filter((m) => (m.pending || m.failed) && !known.has(m.id));
+      return [...server, ...unsent];
+    });
+    setHistoryLoaded(true);
+  }, []);
 
   const onMessage = useCallback((msg: ChatMessage, clientMsgId?: string) => {
     setMessages((prev) => {
@@ -116,11 +129,18 @@ export function ChatPanel({ bookingId }: Props) {
     );
   }, []);
 
+  const typingTimerRef = useRef<number | null>(null);
   const onTyping = useCallback((userId: string) => {
     if (userId === me?.id) return;
     setTypingUserId(userId);
-    window.setTimeout(() => setTypingUserId(null), 2500);
+    // Restart the timer on each event — otherwise the first one hides the
+    // indicator while the other side is still typing.
+    if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = window.setTimeout(() => setTypingUserId(null), 2500);
   }, [me?.id]);
+  useEffect(() => () => {
+    if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+  }, []);
 
   const onRead = useCallback((messageId: string, readAt: string) => {
     setMessages((prev) => {
@@ -202,8 +222,8 @@ export function ChatPanel({ bookingId }: Props) {
   useEffect(() => {
     if (!document.hidden || messages.length === 0) return;
     const unread = messages.filter((m) => m.senderId !== me?.id && !m.isRead).length;
-    document.title = unread > 0 ? `(${unread}) Terme — новые сообщения` : originalTitleRef.current;
-  }, [messages, me?.id]);
+    document.title = unread > 0 ? `(${unread}) ${t("tab_title_new")}` : originalTitleRef.current;
+  }, [messages, me?.id, t]);
 
   const handleSend = (text: string) => {
     setSendError(null);
@@ -264,7 +284,8 @@ export function ChatPanel({ bookingId }: Props) {
   const otherPhone = iAmDriver
     ? (rawBooking?.passenger as { phone?: string } | undefined)?.phone
     : rawBooking?.trip?.driver?.phone;
-  const isPreBooking = booking?.status === "pending";
+  // Backend treats viewed like pending (the driver opening it flips it).
+  const isPreBooking = booking?.status === "pending" || booking?.status === "viewed";
   const isReadOnly = !!booking && !["pending", "viewed", "accepted"].includes(booking.status ?? "");
   // Departure date + time for the pinned trip bar (parity with the Flutter app).
   const depAt = rawBooking?.trip?.departureAt ? new Date(rawBooking.trip.departureAt) : null;

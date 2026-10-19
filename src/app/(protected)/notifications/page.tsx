@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { CheckCheck, CheckCircle, Inbox, MessageCircle } from "lucide-react";
+import { CheckCheck, CheckCircle, Inbox } from "lucide-react";
 import { getNotifications, markAllNotificationsRead } from "@/lib/api/notifications";
 import { extractError } from "@/lib/api/client";
 import { useFriendlyError } from "@/lib/hooks/use-api-error";
@@ -17,12 +17,12 @@ import { cn } from "@/lib/utils/cn";
 const LIMIT = 20;
 const ADMIN_TYPES = new Set(["verification_sla_breach"]);
 
+// Types the backend actually persists (lib/notifier.ts + cron). Chat messages
+// are never stored as notifications, so there is no «messages» group.
 const NOTIF_TYPE_GROUPS: Record<string, string[]> = {
-  messages:      ["chat_message", "chat_unread"],
-  bookings:      ["booking_accepted", "booking_rejected", "booking_cancelled", "booking_cancelled_driver", "booking_cancelled_passenger", "booking_pending", "booking_viewed", "booking_no_show", "booking_completed"],
-  reminders:     ["trip_reminder_2h", "trip_reminder_1h", "trip_reminder_1d"],
-  ratings:       ["rating_request"],
-  marketing:     ["promo", "news", "marketing"],
+  bookings:      ["new_booking_request", "booking_request_confirmed", "booking_accepted", "booking_rejected", "booking_expired", "booking_cancelled_by_passenger", "booking_cancelled_by_driver", "trip_cancelled"],
+  reminders:     ["trip_reminder"],
+  ratings:       ["trip_completed_rate", "rating_received"],
 };
 
 interface NotifSetting {
@@ -32,14 +32,12 @@ interface NotifSetting {
 }
 
 const NOTIF_SETTING_KEYS: { key: string; defaultOn: boolean }[] = [
-  { key: "messages",  defaultOn: true  },
   { key: "bookings",  defaultOn: true  },
   { key: "reminders", defaultOn: true  },
   { key: "ratings",   defaultOn: true  },
-  { key: "marketing", defaultOn: false },
 ];
 
-type Filter = "all" | "bookings" | "messages";
+type Filter = "all" | "bookings";
 
 function loadPrefs(userId: string): Record<string, boolean> {
   try {
@@ -73,7 +71,7 @@ export default function NotificationsPage() {
 
   const NOTIF_SETTINGS: NotifSetting[] = NOTIF_SETTING_KEYS.map((s) => ({
     ...s,
-    label: t(`types.${s.key as "messages" | "bookings" | "reminders" | "ratings" | "marketing"}`),
+    label: t(`types.${s.key as "bookings" | "reminders" | "ratings"}`),
   }));
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>({});
@@ -126,8 +124,7 @@ export default function NotificationsPage() {
     .filter((n) => !ADMIN_TYPES.has(n.type) && !disabledTypes.has(n.type));
 
   const notifications = allNotifications.filter((n) => {
-    if (filter === "bookings") return n.type.includes("booking");
-    if (filter === "messages") return n.type.includes("message");
+    if (filter === "bookings") return NOTIF_TYPE_GROUPS.bookings!.includes(n.type);
     return true;
   });
 
@@ -196,7 +193,6 @@ export default function NotificationsPage() {
   const FILTERS: { key: Filter; label: string; icon: typeof Inbox }[] = [
     { key: "all", label: t("filter_all"), icon: Inbox },
     { key: "bookings", label: t("filter_bookings"), icon: CheckCircle },
-    { key: "messages", label: t("filter_messages"), icon: MessageCircle },
   ];
 
   const settingsCard = (
